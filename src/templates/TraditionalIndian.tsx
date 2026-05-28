@@ -24,7 +24,6 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         minHeight: '297mm',
         backgroundColor: '#ffffff',
         color: '#1a1a1a',
-        border: `2px solid ${accent}`,
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none',
         fontSize: '11px',

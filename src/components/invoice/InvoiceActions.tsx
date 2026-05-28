@@ -190,7 +190,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
       // @ts-ignore — html2pdf.js loaded as ESM
       const html2pdf = (await import('html2pdf.js')).default;
       const opt = {
-        margin: [5, 0, 5, 0], // Slight top/bottom margin for multi-page padding
+        margin: [5, 0, 5, 0] as [number, number, number, number], // Slight top/bottom margin for multi-page padding
         filename: `Invoice-${form.invoiceNumber || 'draft'}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },

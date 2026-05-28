@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { NewInvoicePage } from '@/pages/NewInvoicePage';
@@ -62,7 +62,7 @@ function AppInit() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppInit />
       <AppLayout>
         <KeyboardShortcuts />
@@ -78,6 +78,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AppLayout>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

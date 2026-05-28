@@ -100,6 +100,19 @@ export function Sidebar() {
           {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
       </div>
+      {/* Built By */}
+      {!sidebarCollapsed && (
+        <div className="px-4 pb-4 pt-2 text-center animate-fade-in border-t border-white/10 mt-auto">
+          <a
+            href="https://www.instagram.com/sathvik_nagesh/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[var(--color-sidebar-text)] hover:text-white transition-colors duration-200"
+          >
+            Built by <span className="font-semibold underline">Sathvik Nagesh</span>
+          </a>
+        </div>
+      )}
     </aside>
   );
 }

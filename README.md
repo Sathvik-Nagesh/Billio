@@ -21,89 +21,34 @@ Designed for speed and aesthetic excellence, Billio allows you to seamlessly man
 
 ---
 
-## 🚀 How to Bundle for Desktop (For Your Father)
+## 🚀 Getting Started
 
-To convert this project into a standalone `.exe` installer software with **Automatic Background Updates**, you will use **Electron**. 
+The application is pre-configured and fully packaged! 
 
-When you release a new version on GitHub, the app will automatically download it in the background and notify your father to update!
+### Download the Standalone Installer
+To install the app on any Windows machine:
+1. Navigate to the latest release in your GitHub repository.
+2. Download **`Billio Setup.exe`**.
+3. Run the installer, select your preferred install directory, and start generating invoices immediately!
 
-### 1. Install Bundling Dependencies
-Run this command in your terminal:
-```bash
-npm install -D electron electron-builder electron-is-dev concurrently wait-on
-npm install electron-updater
-```
+---
 
-### 2. Add Electron Main Process (`electron/main.js`)
-Create a folder named `electron` and a file named `main.js` inside it, and add this code:
-```javascript
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
-import { autoUpdater } from 'electron-updater';
-import isDev from 'electron-is-dev';
-import { fileURLToPath } from 'url';
+## 🔄 Releasing New Updates
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+The app is equipped with **Automatic Background Updates**. When you make changes to the app and want to deploy a new version for your father:
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 1024,
-    minHeight: 768,
-    title: "Billio",
-    autoHideMenuBar: true,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  });
+1. Increment the `"version"` number in `package.json` (e.g., from `"1.0.0"` to `"1.0.1"`).
+2. Run the build command:
+   ```bash
+   npm run build
+   ```
+3. Publish a new release using:
+   ```bash
+   npx electron-builder --win -p always
+   ```
+   *(Ensure you have set your `GH_TOKEN` environment variable).*
 
-  if (isDev) {
-    win.loadURL('http://localhost:5173');
-  } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
-}
-
-app.whenReady().then(() => {
-  createWindow();
-  
-  // Trigger Auto Updater
-  if (!isDev) {
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
-```
-
-### 3. Update your `package.json`
-Add the following to your `package.json`:
-```json
-"main": "electron/main.js",
-"build": {
-  "appId": "com.billio.app",
-  "productName": "Billio",
-  "directories": { "output": "release" },
-  "publish": [{
-    "provider": "github",
-    "owner": "YOUR_GITHUB_USERNAME",
-    "repo": "YOUR_REPO_NAME"
-  }]
-}
-```
-*Note: Replace `YOUR_GITHUB_USERNAME` and `YOUR_REPO_NAME` with your actual GitHub details.*
-
-### 4. Build the App!
-Run your React build, and then run electron-builder to generate the `.exe`:
-```bash
-npm run build
-npx electron-builder --win
-```
-🎉 You will find a **`Billio Setup.exe`** file inside the `release` folder! Give this `.exe` file to your father to install.
+Once uploaded, the app will automatically download the new update in the background when launched and apply it next time it starts up!
 
 ---
 

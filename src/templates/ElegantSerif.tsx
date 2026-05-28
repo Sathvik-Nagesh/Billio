@@ -19,7 +19,6 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         fontFamily: `'${font}', 'Merriweather', serif`,
         width: '210mm', minHeight: '297mm',
         backgroundColor: '#fdfcfb', color: '#1a1a1a',
-        border: `1px solid #d4c5a0`,
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none', fontSize: '11px', lineHeight: lineHeightVal, position: 'relative', padding: '0',
       }}
