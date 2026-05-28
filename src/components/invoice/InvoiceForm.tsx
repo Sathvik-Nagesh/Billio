@@ -1,0 +1,474 @@
+import React, { useEffect } from 'react';
+import { Plus, ChevronDown, RefreshCw } from 'lucide-react';
+import { Button, Input, Textarea, Label, Select, Card, CardHeader, CardTitle, CardContent, FormField, Separator } from '@/components/ui';
+import { useInvoiceStore } from '@/stores/useInvoiceStore';
+import { useBusinessStore } from '@/stores/useBusinessStore';
+import { CustomerAutocomplete } from './CustomerAutocomplete';
+import { LineItemRow } from './LineItemRow';
+import { formatINR, formatNumber } from '@/lib/utils/currency';
+import type { Customer } from '@/types';
+
+const TEMPLATES = [
+  { id: 'minimal-modern', name: 'Minimal Modern' },
+  { id: 'premium-corporate', name: 'Premium Corporate' },
+  { id: 'traditional-indian', name: 'Traditional Indian' },
+  { id: 'publication-focus', name: 'Publication Focus' },
+  { id: 'elegant-serif', name: 'Elegant Serif' },
+  { id: 'bold-contemporary', name: 'Bold Contemporary' },
+];
+
+const FONTS = [
+  { value: 'Inter', label: 'Inter (Modern Sans)' },
+  { value: 'Outfit', label: 'Outfit (Display)' },
+  { value: 'Roboto', label: 'Roboto (Clean)' },
+  { value: 'Merriweather', label: 'Merriweather (Serif)' },
+  { value: 'Playfair Display', label: 'Playfair Display (Elegant)' },
+];
+
+const ACCENT_COLORS = [
+  '#6366F1', '#8B5CF6', '#EC4899', '#EF4444',
+  '#F97316', '#EAB308', '#22C55E', '#14B8A6',
+  '#3B82F6', '#0EA5E9', '#1E293B', '#475569',
+];
+
+export function InvoiceForm() {
+  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem } = useInvoiceStore();
+  const { businesses, activeBusiness, setActiveBusiness } = useBusinessStore();
+
+  // Sync active business
+  useEffect(() => {
+    if (activeBusiness && !form.businessId) {
+      updateField('businessId', activeBusiness.id);
+    }
+  }, [activeBusiness]);
+
+  const handleCustomerSelect = (c: Customer) => {
+    updateField('customerName', c.name);
+    updateField('customerPhone', c.phone ?? '');
+    updateField('customerEmail', c.email ?? '');
+    updateField('customerAddress', c.address ?? '');
+    updateField('customerGstin', c.gstin ?? '');
+    updateField('customerNotes', c.notes ?? '');
+  };
+
+  const showIsbn = TEMPLATES.find(t => t.id === form.templateId)?.id === 'publication-focus' ||
+    form.items.some(i => i.isbn);
+
+  return (
+    <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
+
+      {/* Section: Invoice Details */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Invoice Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Business */}
+            <FormField label="Business" className="col-span-2">
+              <select
+                id="form-business-select"
+                value={form.businessId}
+                onChange={(e) => {
+                  updateField('businessId', e.target.value);
+                  setActiveBusiness(e.target.value);
+                }}
+                className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all"
+              >
+                <option value="">Select business...</option>
+                {businesses.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </FormField>
+
+            {/* Invoice Number */}
+            <FormField label="Invoice Number">
+              <Input
+                id="form-invoice-number"
+                value={form.invoiceNumber}
+                onChange={(e) => updateField('invoiceNumber', e.target.value)}
+                placeholder="Auto-generated"
+              />
+            </FormField>
+
+            {/* Date */}
+            <FormField label="Invoice Date">
+              <Input
+                id="form-invoice-date"
+                type="date"
+                value={form.invoiceDate}
+                onChange={(e) => updateField('invoiceDate', e.target.value)}
+              />
+            </FormField>
+
+            {/* Due Date */}
+            <FormField label="Due Date (optional)">
+              <Input
+                id="form-due-date"
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => updateField('dueDate', e.target.value)}
+              />
+            </FormField>
+
+            {/* Language */}
+            <FormField label="Invoice Language">
+              <select
+                id="form-language"
+                value={form.invoiceLanguage}
+                onChange={(e) => updateField('invoiceLanguage', e.target.value as 'en' | 'kn')}
+                className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              >
+                <option value="en">English</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              </select>
+            </FormField>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section: Customer */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Customer Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Customer Name" className="col-span-2">
+              <CustomerAutocomplete
+                id="form-customer-name"
+                value={form.customerName}
+                onChange={(v) => updateField('customerName', v)}
+                onSelect={handleCustomerSelect}
+                placeholder="Customer name"
+              />
+            </FormField>
+            <FormField label="Phone">
+              <Input
+                id="form-customer-phone"
+                value={form.customerPhone}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (val === '+91' || val === '+91 ') val = '';
+                  else if (val.length > 0 && !val.startsWith('+')) val = '+91 ' + val;
+                  updateField('customerPhone', val);
+                }}
+                placeholder="+91 XXXXX XXXXX"
+              />
+            </FormField>
+            <FormField label="Email (optional)">
+              <Input
+                id="form-customer-email"
+                type="email"
+                value={form.customerEmail}
+                onChange={(e) => updateField('customerEmail', e.target.value)}
+                placeholder="email@example.com"
+              />
+            </FormField>
+            <FormField label="Address" className="col-span-2">
+              <Textarea
+                id="form-customer-address"
+                value={form.customerAddress}
+                onChange={(e) => updateField('customerAddress', e.target.value)}
+                placeholder="Billing address"
+                className="min-h-[60px]"
+              />
+            </FormField>
+            <FormField label="GSTIN (optional)">
+              <Input
+                id="form-customer-gstin"
+                value={form.customerGstin}
+                onChange={(e) => updateField('customerGstin', e.target.value.toUpperCase())}
+                placeholder="22AAAAA0000A1Z5"
+                maxLength={15}
+              />
+            </FormField>
+            <FormField label="Notes (optional)">
+              <Input
+                id="form-customer-notes"
+                value={form.customerNotes}
+                onChange={(e) => updateField('customerNotes', e.target.value)}
+                placeholder="Any notes for this customer"
+              />
+            </FormField>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section: Items */}
+      <Card>
+        <CardHeader className="pb-2 flex-row items-center justify-between">
+          <CardTitle>Items</CardTitle>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showIsbn}
+                onChange={() => {}}
+                className="w-3.5 h-3.5 accent-[var(--color-primary)]"
+              />
+              Show ISBN
+            </label>
+          </div>
+        </CardHeader>
+        <CardContent className="px-2">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-10">#</th>
+                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)]">Book / Product</th>
+                  {showIsbn && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">ISBN</th>}
+                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">Qty</th>
+                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">Unit Price</th>
+                  <th className="py-2 px-2 text-right text-xs font-medium text-[var(--color-text-muted)] w-28">Total</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.items.map((item, idx) => (
+                  <LineItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdate={(k, v) => updateItem(item.id, k, v)}
+                    onRemove={() => removeItem(item.id)}
+                    showIsbn={showIsbn}
+                    isLast={idx === form.items.length - 1}
+                    onEnterAtEnd={addItem}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            type="button"
+            id="add-line-item-btn"
+            onClick={addItem}
+            className="mt-3 w-full flex items-center justify-center gap-2 h-8 text-xs font-medium text-[var(--color-primary)] border border-dashed border-[var(--color-primary-300)] rounded-lg hover:bg-[var(--color-primary-50)] dark:hover:bg-[var(--color-primary-900)]/30 transition-colors"
+          >
+            <Plus size={13} />
+            Add Row
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Section: Totals & Discount */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Discount & Totals</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {/* Discount */}
+            <div className="flex gap-2">
+              <FormField label="Discount Type" className="w-36 flex-shrink-0">
+                <select
+                  id="form-discount-type"
+                  value={form.discountType}
+                  onChange={(e) => updateField('discountType', e.target.value as 'percentage' | 'flat')}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="percentage">Percentage %</option>
+                  <option value="flat">Flat ₹</option>
+                </select>
+              </FormField>
+              <FormField label={form.discountType === 'percentage' ? 'Discount (%)' : 'Discount (₹)'} className="flex-1">
+                <Input
+                  id="form-discount-value"
+                  type="number"
+                  min="0"
+                  max={form.discountType === 'percentage' ? 100 : undefined}
+                  step={form.discountType === 'percentage' ? 1 : 0.01}
+                  value={form.discountValue || ''}
+                  onChange={(e) => updateField('discountValue', parseFloat(e.target.value) || 0)}
+                  placeholder={form.discountType === 'percentage' ? 'e.g. 30' : 'e.g. 500'}
+                />
+              </FormField>
+            </div>
+
+            <Separator />
+
+            {/* Summary */}
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Subtotal</span>
+                <span className="font-medium">₹{formatNumber(calculations.subtotal)}</span>
+              </div>
+              {calculations.discountAmount > 0 && (
+                <div className="flex justify-between text-red-600 dark:text-red-400">
+                  <span>Discount ({form.discountType === 'percentage' ? `${form.discountValue}%` : 'flat'})</span>
+                  <span>-₹{formatNumber(calculations.discountAmount)}</span>
+                </div>
+              )}
+              {calculations.roundOff !== 0 && (
+                <div className="flex justify-between text-[var(--color-text-muted)]">
+                  <span>Round Off</span>
+                  <span>{calculations.roundOff > 0 ? '+' : ''}₹{formatNumber(Math.abs(calculations.roundOff))}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-[var(--color-border)] text-base font-bold">
+                <span>Grand Total</span>
+                <span className="text-[var(--color-primary)]">{formatINR(calculations.grandTotal)}</span>
+              </div>
+              <div className="text-xs text-[var(--color-text-muted)] italic">
+                {calculations.amountInWords}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section: Template & Theme */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Template & Theme</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <FormField label="Invoice Template">
+              <select
+                id="form-template-select"
+                value={form.templateId}
+                onChange={(e) => updateField('templateId', e.target.value)}
+                className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+              >
+                {TEMPLATES.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Accent Color">
+              <div className="flex flex-wrap items-center gap-2">
+                {ACCENT_COLORS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => updateTheme({ accentColor: color })}
+                    className={`w-7 h-7 rounded-full transition-transform hover:scale-110 active:scale-95 ${
+                      (form.themeOverrides?.accentColor ?? activeBusiness?.accentColor ?? '#6366F1') === color
+                        ? 'ring-2 ring-offset-2 ring-[var(--color-primary)] scale-110'
+                        : ''
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+                    updateTheme({ accentColor: randomColor });
+                  }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white hover:scale-110 active:scale-95 transition-transform"
+                  title="Random color"
+                >
+                  <RefreshCw size={12} />
+                </button>
+                <input
+                  type="color"
+                  value={form.themeOverrides?.accentColor ?? activeBusiness?.accentColor ?? '#6366F1'}
+                  onChange={(e) => updateTheme({ accentColor: e.target.value })}
+                  className="w-7 h-7 rounded-full cursor-pointer border-2 border-[var(--color-border)] ml-1"
+                  title="Custom color"
+                />
+              </div>
+            </FormField>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Font Family">
+                <select
+                  id="form-font-family"
+                  value={form.themeOverrides?.fontFamily ?? 'Inter'}
+                  onChange={(e) => updateTheme({ fontFamily: e.target.value })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  {FONTS.map(f => (
+                    <option key={f.value} value={f.value}>{f.label}</option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField label="Logo Size">
+                <select
+                  id="form-logo-size"
+                  value={form.themeOverrides?.logoSize ?? 'medium'}
+                  onChange={(e) => updateTheme({ logoSize: e.target.value as 'small' | 'medium' | 'large' })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
+                </select>
+              </FormField>
+
+              <FormField label="Header Layout">
+                <select
+                  id="form-header-layout"
+                  value={form.themeOverrides?.headerLayout ?? 'split'}
+                  onChange={(e) => updateTheme({ headerLayout: e.target.value as 'centered' | 'left' | 'split' })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="split">Split (Logo Left / Info Right)</option>
+                  <option value="centered">Centered</option>
+                  <option value="left">Left Aligned</option>
+                </select>
+              </FormField>
+
+              <FormField label="Border Style">
+                <select
+                  id="form-border-style"
+                  value={form.themeOverrides?.borderStyle ?? 'lines'}
+                  onChange={(e) => updateTheme({ borderStyle: e.target.value as 'lines' | 'boxed' | 'minimal' | 'none' })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="lines">Lines</option>
+                  <option value="boxed">Boxed</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="none">None</option>
+                </select>
+              </FormField>
+
+              <FormField label="Line Spacing">
+                <select
+                  id="form-line-spacing"
+                  value={form.themeOverrides?.lineSpacing ?? 'normal'}
+                  onChange={(e) => updateTheme({ lineSpacing: e.target.value as 'compact' | 'normal' | 'relaxed' })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  <option value="compact">Compact</option>
+                  <option value="normal">Normal</option>
+                  <option value="relaxed">Relaxed</option>
+                </select>
+              </FormField>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.themeOverrides?.showWatermark ?? false}
+                  onChange={(e) => updateTheme({ showWatermark: e.target.checked })}
+                  className="w-4 h-4 accent-[var(--color-primary)] rounded"
+                  id="form-watermark-toggle"
+                />
+                Show Watermark
+              </label>
+              {form.themeOverrides?.showWatermark && (
+                <Input
+                  value={form.themeOverrides?.watermarkText ?? 'ORIGINAL'}
+                  onChange={(e) => updateTheme({ watermarkText: e.target.value })}
+                  placeholder="Watermark text"
+                  className="flex-1 h-8 text-xs"
+                />
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+    </div>
+  );
+}
