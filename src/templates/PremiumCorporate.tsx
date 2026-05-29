@@ -12,6 +12,9 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
   const borderStyle = themeOverrides?.borderStyle ?? 'lines';
   const logoSizePx = { small: 64, medium: 90, large: 120 }[logoSize];
   const lineHeightVal = { compact: '1.25', normal: '1.5', relaxed: '1.75' }[themeOverrides?.lineSpacing ?? 'normal'];
+  const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
+  const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
+  const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
   return (
     <div
@@ -19,7 +22,6 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
       style={{
         fontFamily: `'${font}', sans-serif`,
         width: '210mm',
-        minHeight: '297mm',
         backgroundColor: '#ffffff',
         color: '#1e293b',
         position: 'relative',
@@ -91,27 +93,33 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6mm', fontSize: '10px' }}>
           <thead>
             <tr>
-              <th style={{ padding: '3mm 4mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '8%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
-              <th style={{ padding: '3mm 4mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.description}</th>
-              {items.some((i: { isbn?: string }) => i.isbn) && (
-                <th style={{ padding: '3mm 4mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '8%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
+              {hasSlNo && (
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '12%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>Sel. No.</th>
               )}
-              <th style={{ padding: '3mm 4mm', textAlign: 'center', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '8%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
-              <th style={{ padding: '3mm 4mm', textAlign: 'right', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
-              <th style={{ padding: '3mm 4mm', textAlign: 'right', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.description}</th>
+              {hasIsbn && (
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
+              )}
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '8%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, borderBottom: `2px solid ${accent}`, width: '15%', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '3mm 4mm', color: '#94a3b8' }}>{item.srNo}</td>
-                <td style={{ padding: '3mm 4mm', fontWeight: 500 }}>{item.productName || '—'}</td>
-                {items.some((i: { isbn?: string }) => i.isbn) && (
-                  <td style={{ padding: '3mm 4mm', color: '#64748b', fontFamily: 'monospace', fontSize: '9px' }}>{item.isbn || '—'}</td>
+            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', pageBreakInside: 'avoid' }}>
+                <td style={{ padding: '1.5mm 3mm', color: '#94a3b8' }}>{item.srNo}</td>
+                {hasSlNo && (
+                  <td style={{ padding: '1.5mm 3mm', color: '#64748b', fontFamily: 'monospace', fontSize: '9px' }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '3mm 4mm', textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ padding: '3mm 4mm', textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ padding: '3mm 4mm', textAlign: 'right', fontWeight: 600, color: accent }}>₹{formatNumber(item.lineTotal)}</td>
+                <td style={{ padding: '1.5mm 3mm', fontWeight: 500 }}>{item.productName || '—'}</td>
+                {hasIsbn && (
+                  <td style={{ padding: '1.5mm 3mm', color: '#64748b', fontFamily: 'monospace', fontSize: '9px' }}>{item.isbn || '—'}</td>
+                )}
+                <td style={{ padding: '1.5mm 3mm', textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ padding: '1.5mm 3mm', textAlign: 'center' }}>{item.quantity}</td>
+                <td style={{ padding: '1.5mm 3mm', textAlign: 'right', fontWeight: 600, color: accent }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
             {items.length === 0 && (
@@ -120,8 +128,11 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
           </tbody>
         </table>
 
-        {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6mm' }}>
+        {/* Bottom sections (only on last page) */}
+        {isLastPage && (
+          <>
+            {/* Totals */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6mm' }}>
           <div style={{ minWidth: '68mm' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 3mm', fontSize: '10px' }}>
               <span style={{ color: '#64748b' }}>{L.subtotal}</span>
@@ -147,10 +158,11 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
               <span>{L.grandTotal}</span>
               <span>{formatINR(calculations.grandTotal)}</span>
             </div>
+            {/* Fixed div nesting — was broken in original (missing closing div) */}
             <div style={{ marginTop: '4mm', padding: '3mm', border: `1px solid ${accent}40`, borderRadius: '4px', backgroundColor: `${accent}05` }}>
-            <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
-          </div>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
+            </div>
           </div>
         </div>
 
@@ -194,10 +206,12 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             <div style={{ whiteSpace: 'pre-line' }}>{business.terms}</div>
           </div>
         )}
+          </>
+        )}
       </div>
 
       {/* Footer bar */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '6px', background: `linear-gradient(90deg, ${accent} 0%, ${accent}44 100%)` }} />
+      <div style={{ height: '6px', background: `linear-gradient(90deg, ${accent} 0%, ${accent}44 100%)` }} />
     </div>
   );
 }

@@ -8,6 +8,8 @@ export interface TemplateProps {
   calculations: InvoiceCalculations;
   language: 'en' | 'kn';
   themeOverrides?: ThemeOverrides;
+  pageNumber?: number;
+  totalPages?: number;
 }
 
 export type TemplateId =
@@ -18,7 +20,3 @@ export type TemplateId =
   | 'elegant-serif'
   | 'bold-contemporary';
 
-export function getTemplateComponent(id: string): React.ComponentType<TemplateProps> {
-  // Lazy import handled in InvoicePreview
-  return null as unknown as React.ComponentType<TemplateProps>;
-}

@@ -6,6 +6,7 @@ import { generateId } from '../lib/db';
 const defaultItem = (): InvoiceItemForm => ({
   id: generateId(),
   srNo: 1,
+  slNo: '',
   productName: '',
   isbn: '',
   quantity: 1,
@@ -31,6 +32,8 @@ const defaultState = (): InvoiceFormState => ({
   templateId: 'minimal-modern',
   themeOverrides: {},
   status: 'draft',
+  showIsbn: false,
+  showSlNo: false,
 });
 
 interface InvoiceStore {
@@ -45,6 +48,8 @@ interface InvoiceStore {
   removeItem: (id: string) => void;
   updateItem: <K extends keyof InvoiceItemForm>(id: string, key: K, value: InvoiceItemForm[K]) => void;
   reorderItems: (from: number, to: number) => void;
+  toggleShowIsbn: () => void;
+  toggleShowSlNo: () => void;
 }
 
 function recalculate(state: InvoiceStore) {
@@ -68,13 +73,29 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
   },
 
   loadInvoice: (form, id) => {
-    const calculations = calculateInvoice(form.items, form.discountType, form.discountValue);
-    set({ form, calculations, editingInvoiceId: id });
+    // Determine showIsbn from loaded form — if any item has ISBN data, default to showing it
+    const hasIsbnData = (form.items ?? []).some(i => i.isbn && i.isbn.trim() !== '');
+    const isPublicationTemplate = form.templateId === 'publication-focus';
+    const showIsbn = form.showIsbn ?? (hasIsbnData || isPublicationTemplate);
+
+    // Determine showSlNo — if any item has a selection number
+    const hasSlNoData = (form.items ?? []).some(i => i.slNo && i.slNo.trim() !== '');
+    const showSlNo = form.showSlNo ?? hasSlNoData;
+
+    const enrichedForm = { ...form, showIsbn, showSlNo };
+    const calculations = calculateInvoice(enrichedForm.items, enrichedForm.discountType, enrichedForm.discountValue);
+    set({ form: enrichedForm, calculations, editingInvoiceId: id });
   },
 
   updateField: (key, value) => {
     set(state => {
       const form = { ...state.form, [key]: value };
+
+      // Auto-show ISBN when publication-focus template is selected
+      if (key === 'templateId' && value === 'publication-focus') {
+        form.showIsbn = true;
+      }
+
       const { calculations } = recalculate({ ...state, form });
       return { form, calculations };
     });
@@ -133,6 +154,32 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
       const form = { ...state.form, items: reindexed };
       const calculations = calculateInvoice(reindexed, form.discountType, form.discountValue);
       return { form, calculations };
+    });
+  },
+
+  toggleShowIsbn: () => {
+    set(state => {
+      const newShowIsbn = !state.form.showIsbn;
+      // When hiding ISBN, clear all ISBN values from items
+      const items = newShowIsbn
+        ? state.form.items
+        : state.form.items.map(item => ({ ...item, isbn: '' }));
+      return {
+        form: { ...state.form, showIsbn: newShowIsbn, items },
+      };
+    });
+  },
+
+  toggleShowSlNo: () => {
+    set(state => {
+      const newShowSlNo = !state.form.showSlNo;
+      // When hiding Sl. No., clear all slNo values from items
+      const items = newShowSlNo
+        ? state.form.items
+        : state.form.items.map(item => ({ ...item, slNo: '' }));
+      return {
+        form: { ...state.form, showSlNo: newShowSlNo, items },
+      };
     });
   },
 }));

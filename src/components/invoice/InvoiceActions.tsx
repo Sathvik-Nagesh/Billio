@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Download, Printer, Share2, Copy, CheckCircle, Loader2, Save } from 'lucide-react';
-import { Button, Tooltip } from '@/components/ui';
+import { Download, Printer, Share2, CheckCircle, Loader2, Save } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { TEMPLATE_REGISTRY } from '@/templates';
@@ -8,7 +8,7 @@ import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { customerRepository } from '@/lib/db/repositories/customerRepository';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import type { InvoiceItem } from '@/types';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 
 interface InvoiceActionsProps {
   onSaved?: (id: string) => void;
@@ -19,6 +19,8 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
   const { businesses } = useBusinessStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Track the off-screen clone element to clean up properly
+  const cloneRef = useRef<HTMLElement | null>(null);
 
   const business = businesses.find(b => b.id === form.businessId) ?? null;
 
@@ -33,6 +35,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
     const items = form.items.map((item, idx) => ({
       id: item.id,
       srNo: idx + 1,
+      slNo: item.slNo || undefined,
       productName: item.productName,
       isbn: item.isbn,
       quantity: item.quantity,
@@ -121,12 +124,20 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
     }
   };
 
+  /**
+   * Get the invoice print area element and capture its current computed styles.
+   * Returns null if not found.
+   */
+  const getInvoiceElement = (): HTMLElement | null => {
+    return document.getElementById('invoice-pdf-layout');
+  };
+
+  // PDF/Print utilities removed in favor of live-DOM capture
+
   const handlePrint = async () => {
     await handleSave();
 
-    // Render the invoice to a hidden iframe for printing
-    const TemplateComponent = TEMPLATE_REGISTRY[form.templateId] ?? TEMPLATE_REGISTRY['minimal-modern'];
-    const invoiceEl = document.getElementById('invoice-print-area');
+    const invoiceEl = getInvoiceElement();
     if (!invoiceEl) {
       toast.error('Invoice preview not found');
       return;
@@ -138,6 +149,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
       toast.error('Could not open print window. Please allow popups.');
       return;
     }
+
     printWin.document.write(`
       <!DOCTYPE html>
       <html>
@@ -148,70 +160,141 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
             body { margin: 0; padding: 0; background: white; }
             @page { size: A4; margin: 0; }
-            table, tr, td, th { page-break-inside: avoid; }
-            #invoice-print-area { min-height: auto !important; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr { page-break-inside: avoid; }
+            #invoice-print-area { min-height: unset !important; width: 210mm !important; }
           </style>
         </head>
         <body>${printContent}</body>
       </html>
     `);
     printWin.document.close();
-    printWin.focus();
-    setTimeout(() => {
-      printWin.print();
-      printWin.close();
-    }, 600);
+
+    // Wait for fonts to load before printing to avoid blank/wrong-font output
+    printWin.onload = () => {
+      printWin.focus();
+      // Use document.fonts.ready if available
+      const doprint = () => {
+        setTimeout(() => {
+          printWin.print();
+          printWin.close();
+        }, 300);
+      };
+      if (printWin.document.fonts?.ready) {
+        printWin.document.fonts.ready.then(doprint);
+      } else {
+        doprint();
+      }
+    };
   };
 
   const handleDownloadPdf = async () => {
     await handleSave();
 
-    const invoiceEl = document.getElementById('invoice-print-area');
+    const invoiceEl = getInvoiceElement();
     if (!invoiceEl) {
       toast.error('Invoice preview not found. Please wait for it to load.');
       return;
     }
 
-    toast.loading('Generating PDF...');
+    const toastId = toast.loading('Generating PDF…');
+    let parentTransform = '';
+    let parentEl: HTMLElement | null = null;
+    
     try {
-      // Create an unscaled clone to fix blank/cut-off PDF bugs caused by CSS transform scale
-      const clone = invoiceEl.cloneNode(true) as HTMLElement;
-      clone.style.transform = 'none';
-      clone.style.position = 'fixed';
-      clone.style.top = '0';
-      clone.style.left = '0';
-      clone.style.zIndex = '-9999';
-      clone.style.width = '210mm';
-      // Remove minHeight so it doesn't force a huge blank space at the bottom if short,
-      // but keeps its natural height if long for pagination.
-      clone.style.minHeight = 'auto';
-      document.body.appendChild(clone);
+      // 1. Debug Logs & Validation
+      console.log('--- PDF Debug Init ---');
+      console.log('Invoice Element Exists:', !!invoiceEl);
+      
+      const expectedPages = invoiceEl.children.length;
+      console.log('Expected Page Count (DOM children):', expectedPages);
+      
+      let totalHeight = 0;
+      for (let i = 0; i < invoiceEl.children.length; i++) {
+        const child = invoiceEl.children[i] as HTMLElement;
+        const h = child.getBoundingClientRect().height;
+        totalHeight += h;
+        console.log(`Page ${i + 1} Height:`, h);
+      }
+      console.log('Total Document Height:', totalHeight);
+      
+      // Temporarily remove CSS scale from the parent container is NO LONGER NEEDED 
+      // because invoice-pdf-layout is rendered without scales!
+
+      // Wait for fonts to be available
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
 
       // @ts-ignore — html2pdf.js loaded as ESM
       const html2pdf = (await import('html2pdf.js')).default;
+
       const opt = {
-        margin: [5, 0, 5, 0] as [number, number, number, number], // Slight top/bottom margin for multi-page padding
+        margin: 0,
         filename: `Invoice-${form.invoiceNumber || 'draft'}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true, windowWidth: 794 },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-        pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: true, // Enabled for debugging
+          scrollX: 0,    // Force no scroll offset clipping
+          scrollY: 0,
+          windowWidth: 794,
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'portrait' as const,
+          compress: true,
+        },
+        pagebreak: {
+          mode: 'css',
+        },
       };
+
+      console.log('Starting html2pdf generation...');
       
-      await html2pdf().set(opt).from(clone).save();
+      const worker = html2pdf().set(opt).from(invoiceEl);
       
-      document.body.removeChild(clone);
-      toast.dismiss();
+      // Get the PDF object to log pages and validate
+      await worker.toPdf().get('pdf').then((pdf: any) => {
+         const actualPages = pdf.internal.getNumberOfPages();
+         console.log('Actual PDF Generated Page Count:', actualPages);
+         
+         if (actualPages > expectedPages) {
+           console.warn(`WARNING: Generated PDF has ${actualPages} pages, but expected ${expectedPages}. Blank page protection triggered. Automatically trimming trailing blank page.`);
+           
+           // Automatically remove trailing blank pages
+           let pagesToRemove = actualPages - expectedPages;
+           for (let i = 0; i < pagesToRemove; i++) {
+             pdf.deletePage(actualPages - i);
+           }
+         } else if (actualPages < expectedPages) {
+           throw new Error(`PDF generation failed: Expected ${expectedPages} pages but got ${actualPages}`);
+         }
+      });
+      
+      // Generate Blob
+      const pdfBlob = await worker.output('blob');
+      
+      console.log('PDF Blob Size:', pdfBlob.size, 'bytes');
+      
+      // Save manually so we can log the size
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = opt.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
       toast.success('PDF downloaded!');
     } catch (err) {
-      console.error(err);
-      toast.dismiss();
-      toast.error('PDF generation failed');
-      // Cleanup in case of failure
-      const orphanedClone = document.body.lastElementChild as HTMLElement;
-      if (orphanedClone && orphanedClone.style.zIndex === '-9999') {
-        document.body.removeChild(orphanedClone);
-      }
+      console.error('PDF generation error:', err);
+      toast.dismiss(toastId);
+      toast.error('PDF generation failed. Check console for details.');
     }
   };
 
@@ -228,7 +311,6 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
 
   return (
     <>
-      <Toaster position="top-right" richColors />
       <div className="flex items-center gap-2 flex-wrap no-print">
         {/* Save */}
         <Button

@@ -11,8 +11,11 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
   const borderStyle = themeOverrides?.borderStyle ?? 'lines';
   const logoSizePx = { small: 64, medium: 90, large: 120 }[themeOverrides?.logoSize ?? 'medium'];
   const lineHeightVal = { compact: '1.25', normal: '1.5', relaxed: '1.75' }[themeOverrides?.lineSpacing ?? 'normal'];
+  const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
+  const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
+  const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
-  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '2.5mm 3mm', fontSize: '10px' };
+  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '1.5mm 3mm', fontSize: '10px' };
   const thStyle: React.CSSProperties = { ...tdStyle, backgroundColor: accent, color: 'white', fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.3px' };
 
   return (
@@ -21,7 +24,6 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
       style={{
         fontFamily: `'${font}', sans-serif`,
         width: '210mm',
-        minHeight: '297mm',
         backgroundColor: '#ffffff',
         color: '#1a1a1a',
         boxSizing: 'border-box',
@@ -90,29 +92,34 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           <thead>
             <tr>
               <th style={{ ...thStyle, width: '8%' }}>{L.srNo}</th>
+              {hasSlNo && <th style={{ ...thStyle, width: '10%' }}>Sel. No.</th>}
               <th style={{ ...thStyle, textAlign: 'left' }}>{L.description}</th>
-              {items.some((i: { isbn?: string }) => i.isbn) && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>{L.isbn}</th>}
-              <th style={{ ...thStyle, width: '8%' }}>{L.quantity}</th>
+              {hasIsbn && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>{L.isbn}</th>}
               <th style={{ ...thStyle, width: '14%', textAlign: 'right' }}>{L.unitPrice}</th>
+              <th style={{ ...thStyle, width: '8%' }}>{L.quantity}</th>
               <th style={{ ...thStyle, width: '14%', textAlign: 'right' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : `${accent}08` }}>
+            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+              <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : `${accent}08`, pageBreakInside: 'avoid' }}>
                 <td style={{ ...tdStyle, textAlign: 'center', color: '#888' }}>{item.srNo}</td>
+                {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '9px', color: '#888', textAlign: 'center' }}>{item.slNo || '—'}</td>}
                 <td style={{ ...tdStyle }}>{item.productName || '—'}</td>
-                {items.some((i: { isbn?: string }) => i.isbn) && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '9px', color: '#555' }}>{item.isbn || '—'}</td>}
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{item.quantity}</td>
+                {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '9px', color: '#555' }}>{item.isbn || '—'}</td>}
                 <td style={{ ...tdStyle, textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ ...tdStyle, textAlign: 'center' }}>{item.quantity}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4mm' }}>
+        {/* Bottom sections (only on last page) */}
+        {isLastPage && (
+          <>
+            {/* Totals */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4mm' }}>
           <table style={{ fontSize: '10px', borderCollapse: 'collapse', minWidth: '65mm' }}>
             <tbody>
               <tr><td style={tdStyle}>{L.subtotal}</td><td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(calculations.subtotal)}</td></tr>
@@ -123,13 +130,14 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           </table>
         </div>
 
+        {/* Amount in Words — fixed nesting */}
         <div style={{ marginTop: '4mm', padding: '3mm', border: `1px solid ${accent}40`, borderRadius: '4px', backgroundColor: `${accent}05` }}>
-            <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
-          </div>
+          <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
+        </div>
 
         {/* Bank & Signature */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4mm', marginBottom: '4mm' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4mm', marginBottom: '4mm', marginTop: '4mm' }}>
           {business?.bankName && (
             <div style={{ fontSize: '11px', flex: 1 }}>
               <div style={{ fontWeight: 800, color: accent, fontSize: '10px', textTransform: 'uppercase', marginBottom: '2mm' }}>{L.bankDetails}</div>
@@ -153,6 +161,8 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
             <strong style={{ color: '#555' }}>{L.termsAndConditions}: </strong>
             <span style={{ whiteSpace: 'pre-line' }}>{business.terms}</span>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

@@ -176,20 +176,26 @@ body {
 /* Print styles - critical for invoice printing */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { background: white !important; overflow: visible !important; }
+  body { background: white !important; overflow: visible !important; height: auto !important; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   #app-sidebar, #app-header { display: none !important; }
+  @page { size: A4; margin: 0; }
+  /* Ensure table headers repeat on each page */
+  thead { display: table-header-group !important; }
+  tfoot { display: table-footer-group !important; }
+  /* Avoid breaking rows across pages */
+  tr { page-break-inside: avoid !important; }
+  img { page-break-inside: avoid !important; }
+  /* The invoice itself should print naturally without forced positioning */
   #invoice-print-area {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: auto;
-    z-index: 9999;
-    background: white;
+    width: 210mm !important;
+    min-height: unset !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
+
 
 /* Invoice preview container */
 .invoice-preview-scale {
@@ -210,7 +216,7 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Line item table */
 .line-item-row:hover .row-actions { opacity: 1; }
-.row-actions { opacity: 0; transition: opacity 0.15s ease; }
+.row-actions { opacity: 0.5; transition: opacity 0.15s ease; }
 
 /* Status badges */
 .status-draft {

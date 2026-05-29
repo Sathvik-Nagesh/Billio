@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { Toaster } from 'sonner';
 
 const pageTitles: Record<string, string> = {
   '/': 'Home',
@@ -23,14 +24,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const title = getTitle(location.pathname);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[var(--color-surface-secondary)]">
-      <Sidebar />
+    <>
+      <Toaster position="top-right" richColors />
+      <div className="flex h-screen w-screen overflow-hidden bg-[var(--color-surface-secondary)]">
+        <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <Header title={title} />
         <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

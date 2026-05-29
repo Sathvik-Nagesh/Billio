@@ -11,16 +11,20 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
   const borderStyle = themeOverrides?.borderStyle ?? 'lines';
   const logoSizePx = { small: 64, medium: 90, large: 120 }[themeOverrides?.logoSize ?? 'medium'];
   const lineHeightVal = { compact: '1.3', normal: '1.6', relaxed: '1.8' }[themeOverrides?.lineSpacing ?? 'normal'];
+  const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
+  const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
+  const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
   return (
     <div
       id="invoice-print-area"
       style={{
         fontFamily: `'${font}', 'Merriweather', serif`,
-        width: '210mm', minHeight: '297mm',
+        width: '210mm',
         backgroundColor: '#fdfcfb', color: '#1a1a1a',
         boxSizing: 'border-box',
-        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none', fontSize: '11px', lineHeight: lineHeightVal, position: 'relative', padding: '0',
+        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none',
+        fontSize: '11px', lineHeight: lineHeightVal, position: 'relative', padding: '0',
       }}
     >
       {themeOverrides?.showWatermark && (
@@ -39,7 +43,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
           {business?.logoPath && <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '160px', objectFit: 'contain', display: 'block', margin: '0 auto 3mm' }} />}
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#1a1a1a', letterSpacing: '1px', marginBottom: '1mm' }}>{business?.name ?? 'Your Business'}</div>
           {business?.address && <div style={{ fontSize: '10px', color: '#7a7a7a', fontFamily: 'Inter, sans-serif' }}>{business.address}</div>}
-          {business?.phone && <div style={{ fontSize: '10px', color: '#7a7a7a', fontFamily: 'Inter, sans-serif' }}>{business.phone} | {business.email}</div>}
+          {business?.phone && <div style={{ fontSize: '10px', color: '#7a7a7a', fontFamily: 'Inter, sans-serif' }}>{business.phone}{business.email ? ` | ${business.email}` : ''}</div>}
           {business?.gstin && <div style={{ fontSize: '9px', color: '#7a7a7a', fontFamily: 'Inter, sans-serif' }}>GSTIN: {business.gstin}</div>}
         </div>
 
@@ -72,27 +76,33 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
           <thead>
             <tr style={{ borderTop: `1px solid #d4c5a0`, borderBottom: `1px solid #d4c5a0` }}>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '7%' }}>{L.srNo}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px' }}>{L.description}</th>
-              {items.some((i: { isbn?: string }) => i.isbn) && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '16%' }}>{L.isbn}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '7%' }}>{L.srNo}</th>
+              {hasSlNo && (
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '12%' }}>Sel. No.</th>
               )}
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '8%' }}>{L.quantity}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.unitPrice}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.amount}</th>
+               <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px' }}>{L.description}</th>
+              {hasIsbn && (
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '16%' }}>{L.isbn}</th>
+              )}
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.unitPrice}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '8%' }}>{L.quantity}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #ede8df' }}>
-                <td style={{ padding: '2.5mm 3mm', color: '#aaa' }}>{item.srNo}</td>
-                <td style={{ padding: '2.5mm 3mm', fontFamily: `'${font}', serif` }}>{item.productName || '—'}</td>
-                {items.some((i: { isbn?: string }) => i.isbn) && (
-                  <td style={{ padding: '2.5mm 3mm', fontFamily: 'monospace', fontSize: '9px', color: '#777' }}>{item.isbn || '—'}</td>
+            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #ede8df', pageBreakInside: 'avoid' }}>
+                <td style={{ padding: '1.5mm 2mm', color: '#aaa' }}>{item.srNo}</td>
+                {hasSlNo && (
+                  <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: '#aaa' }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '2.5mm 3mm', textAlign: 'center' }}>{item.quantity}</td>
-                <td style={{ padding: '2.5mm 3mm', textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
+                <td style={{ padding: '1.5mm 2mm', fontFamily: `'${font}', serif` }}>{item.productName || '—'}</td>
+                {hasIsbn && (
+                  <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: '#777' }}>{item.isbn || '—'}</td>
+                )}
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{item.quantity}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
             {items.length === 0 && (
@@ -103,8 +113,11 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
           </tbody>
         </table>
 
-        {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm', fontFamily: 'Inter, sans-serif' }}>
+        {/* Bottom sections (only on last page) */}
+        {isLastPage && (
+          <>
+            {/* Totals */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm', fontFamily: 'Inter, sans-serif' }}>
           <div style={{ minWidth: '64mm' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 0', fontSize: '10px', borderBottom: '1px solid #ede8df' }}>
               <span style={{ color: '#7a7a7a' }}>{L.subtotal}</span>
@@ -126,10 +139,11 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
               <span>{L.grandTotal}</span>
               <span>{formatINR(calculations.grandTotal)}</span>
             </div>
+            {/* Fixed div nesting — amountInWords is now a sibling of grandTotal box, not nested inside it */}
             <div style={{ marginTop: '4mm', padding: '3mm', border: `1px solid ${accent}40`, borderRadius: '4px', backgroundColor: `${accent}05` }}>
-            <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
-            <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
-          </div>
+              <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#1a1a1a' }}>{calculations.amountInWords}</div>
+            </div>
           </div>
         </div>
 
@@ -168,9 +182,11 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             <div style={{ whiteSpace: 'pre-line' }}>{business.terms}</div>
           </div>
         )}
+          </>
+        )}
       </div>
 
-      {/* Ornamental bottom */}
+      {/* Elegant bottom edge */}
       <div style={{ height: '1px', background: `linear-gradient(90deg, transparent, #d4c5a0, transparent)`, margin: '2px 0' }} />
       <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
     </div>

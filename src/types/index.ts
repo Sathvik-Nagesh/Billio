@@ -42,6 +42,7 @@ export interface InvoiceItem {
   id: string;
   invoiceId: string;
   srNo: number;
+  slNo?: string;
   productName: string;
   isbn?: string;
   quantity: number;
@@ -112,11 +113,14 @@ export interface InvoiceFormState {
   templateId: string;
   themeOverrides: ThemeOverrides;
   status: 'draft' | 'final';
+  showIsbn: boolean;
+  showSlNo: boolean;
 }
 
 export interface InvoiceItemForm {
   id: string;
   srNo: number;
+  slNo: string;
   productName: string;
   isbn: string;
   quantity: number;

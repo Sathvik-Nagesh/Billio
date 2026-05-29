@@ -29,6 +29,8 @@ export function InvoiceHistoryPage() {
   const handleView = (inv: Invoice) => {
     const full = invoiceRepository.getById(inv.id);
     if (!full) return;
+    const hasIsbnData = (full.items ?? []).some(i => i.isbn && i.isbn.trim() !== '');
+    const hasSlNoData = (full.items ?? []).some(i => i.slNo && i.slNo.trim() !== '');
     loadInvoice({
       businessId: full.businessId,
       invoiceNumber: full.invoiceNumber,
@@ -40,16 +42,19 @@ export function InvoiceHistoryPage() {
       customerAddress: full.customerAddress ?? '',
       customerGstin: full.customerGstin ?? '',
       customerNotes: full.customerNotes ?? '',
-      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, productName: i.productName, isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
+      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
       discountType: full.discountType,
       discountValue: full.discountValue,
       invoiceLanguage: full.invoiceLanguage,
       templateId: full.templateId ?? 'minimal-modern',
       themeOverrides: full.themeOverrides ?? {},
       status: full.status,
+      showIsbn: hasIsbnData || full.templateId === 'publication-focus',
+      showSlNo: hasSlNoData,
     }, full.id);
     navigate('/invoice/new');
   };
+
 
   const handleDuplicate = (inv: Invoice) => {
     const biz = businesses.find(b => b.id === inv.businessId);

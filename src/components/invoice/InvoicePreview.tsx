@@ -1,14 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { TEMPLATE_REGISTRY } from '@/templates';
+import { chunkInvoiceItems } from '@/lib/utils/pagination';
 import type { InvoiceItem } from '@/types';
 
 export function InvoicePreview() {
   const { form, calculations } = useInvoiceStore();
   const { businesses } = useBusinessStore();
   const [scale, setScale] = useState(0.62);
+  const templateRef = useRef<HTMLDivElement>(null);
+  const [renderedHeight, setRenderedHeight] = useState(1123); // default A4 height px
 
   const business = useMemo(
     () => businesses.find(b => b.id === form.businessId) ?? null,
@@ -24,10 +27,28 @@ export function InvoicePreview() {
     sortOrder: item.srNo,
   })) as unknown as InvoiceItem[];
 
-  // Calculate scale to fit within preview container
-  // A4 = 210mm wide x 297mm high. At 96dpi, 210mm ≈ 794px, 297mm ≈ 1123px.
-  const a4Height = 1123;
-  const marginOffset = -(a4Height * (1 - scale));
+  // Dynamically measure the actual rendered height of the invoice
+  // so the preview container compensates correctly for the CSS scale
+  useEffect(() => {
+    if (!templateRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const h = entry.contentRect.height;
+        if (h > 0) setRenderedHeight(h);
+      }
+    });
+    observer.observe(templateRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Paginate items
+  const itemChunks = chunkInvoiceItems(items);
+
+  // Compensate for the CSS scale so the container doesn't leave empty space
+  // after the scaled element ends (or overlap content if taller than A4)
+  const totalUnscaledHeight = (renderedHeight * itemChunks.length) + (32 * Math.max(0, itemChunks.length - 1));
+  const scaledTotalHeight = totalUnscaledHeight * scale;
+  const marginOffset = scaledTotalHeight - totalUnscaledHeight; // negative when scale < 1
 
   const handleZoomIn = () => setScale(s => Math.min(s + 0.1, 1.5));
   const handleZoomOut = () => setScale(s => Math.max(s - 0.1, 0.3));
@@ -61,27 +82,46 @@ export function InvoicePreview() {
       {/* Scaled A4 preview */}
       <div className="flex-1 overflow-auto p-6 flex justify-center items-start">
         <div
-          className="invoice-preview-scale origin-top shadow-[var(--shadow-xl)] ring-1 ring-black/5"
+          className="origin-top flex flex-col gap-8 pb-12"
           style={{
-            width: '794px', // 210mm at 96dpi
             transform: `scale(${scale})`,
             transformOrigin: 'top center',
-            marginBottom: `${marginOffset}px`, // compensate for scale height reduction
+            // Dynamically compensate for scale so the container shrinks/grows correctly
+            marginBottom: `${marginOffset}px`,
           }}
         >
-          <TemplateComponent
-            invoice={{
-              ...form,
-              id: '',
-              createdAt: '',
-              updatedAt: '',
-            } as any}
-            business={business}
-            items={items}
-            calculations={calculations}
-            language={form.invoiceLanguage}
-            themeOverrides={form.themeOverrides}
-          />
+          <div id="invoice-print-area" className="flex flex-col gap-8">
+            {itemChunks.map((chunk, idx) => (
+              <div
+                key={idx}
+                className="invoice-preview-page bg-white relative"
+                style={{
+                  width: '794px', // 210mm at 96dpi
+                  minHeight: '1123px', // 297mm at 96dpi
+                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.05)'
+                }}
+              >
+                <div ref={idx === 0 ? templateRef : null}>
+                  <TemplateComponent
+                    invoice={{
+                      ...form,
+                      id: '',
+                      createdAt: '',
+                      updatedAt: '',
+                    } as any}
+                    business={business}
+                    items={chunk}
+                    calculations={calculations}
+                    language={form.invoiceLanguage}
+                    themeOverrides={form.themeOverrides}
+                    pageNumber={idx + 1}
+                    totalPages={itemChunks.length}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

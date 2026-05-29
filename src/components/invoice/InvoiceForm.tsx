@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Plus, ChevronDown, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Button, Input, Textarea, Label, Select, Card, CardHeader, CardTitle, CardContent, FormField, Separator } from '@/components/ui';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -32,10 +32,10 @@ const ACCENT_COLORS = [
 ];
 
 export function InvoiceForm() {
-  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem } = useInvoiceStore();
+  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem, toggleShowIsbn, toggleShowSlNo } = useInvoiceStore();
   const { businesses, activeBusiness, setActiveBusiness } = useBusinessStore();
 
-  // Sync active business
+  // Sync active business only when form has no business selected yet (new invoice)
   useEffect(() => {
     if (activeBusiness && !form.businessId) {
       updateField('businessId', activeBusiness.id);
@@ -51,8 +51,19 @@ export function InvoiceForm() {
     updateField('customerNotes', c.notes ?? '');
   };
 
-  const showIsbn = TEMPLATES.find(t => t.id === form.templateId)?.id === 'publication-focus' ||
-    form.items.some(i => i.isbn);
+  // Fix phone prefix: only add +91 if the value doesn't already start with +
+  const handlePhoneChange = (val: string, field: 'customerPhone') => {
+    if (val === '') {
+      updateField(field, '');
+      return;
+    }
+    // If user is typing from scratch (no + prefix), auto-add +91
+    if (!val.startsWith('+')) {
+      updateField(field, '+91 ' + val);
+    } else {
+      updateField(field, val);
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
@@ -148,12 +159,7 @@ export function InvoiceForm() {
               <Input
                 id="form-customer-phone"
                 value={form.customerPhone}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  if (val === '+91' || val === '+91 ') val = '';
-                  else if (val.length > 0 && !val.startsWith('+')) val = '+91 ' + val;
-                  updateField('customerPhone', val);
-                }}
+                onChange={(e) => handlePhoneChange(e.target.value, 'customerPhone')}
                 placeholder="+91 XXXXX XXXXX"
               />
             </FormField>
@@ -201,14 +207,31 @@ export function InvoiceForm() {
         <CardHeader className="pb-2 flex-row items-center justify-between">
           <CardTitle>Items</CardTitle>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer">
+            <label
+              htmlFor="form-show-isbn"
+              className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none"
+            >
               <input
+                id="form-show-isbn"
                 type="checkbox"
-                checked={showIsbn}
-                onChange={() => {}}
-                className="w-3.5 h-3.5 accent-[var(--color-primary)]"
+                checked={form.showIsbn}
+                onChange={toggleShowIsbn}
+                className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
               />
               Show ISBN
+            </label>
+            <label
+              htmlFor="form-show-slno"
+              className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none"
+            >
+              <input
+                id="form-show-slno"
+                type="checkbox"
+                checked={form.showSlNo}
+                onChange={toggleShowSlNo}
+                className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
+              />
+              Sel. No.
             </label>
           </div>
         </CardHeader>
@@ -217,13 +240,13 @@ export function InvoiceForm() {
             <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
-                  <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-10">#</th>
+                  <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-8">#</th>
+                  {form.showSlNo && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-16">Sel. No.</th>}
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)]">Book / Product</th>
-                  {showIsbn && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">ISBN</th>}
-                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">Qty</th>
-                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">Unit Price</th>
-                  <th className="py-2 px-2 text-right text-xs font-medium text-[var(--color-text-muted)] w-28">Total</th>
-                  <th className="w-10"></th>
+                  {form.showIsbn && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">ISBN</th>}
+                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">Unit Price</th>
+                  <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-14">Qty</th>
+                  <th className="w-8"></th>
                 </tr>
               </thead>
               <tbody>
@@ -233,7 +256,8 @@ export function InvoiceForm() {
                     item={item}
                     onUpdate={(k, v) => updateItem(item.id, k, v)}
                     onRemove={() => removeItem(item.id)}
-                    showIsbn={showIsbn}
+                    showIsbn={form.showIsbn}
+                    showSlNo={form.showSlNo}
                     isLast={idx === form.items.length - 1}
                     onEnterAtEnd={addItem}
                   />

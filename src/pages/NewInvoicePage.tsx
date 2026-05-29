@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InvoiceForm } from '@/components/invoice/InvoiceForm';
 import { InvoicePreview } from '@/components/invoice/InvoicePreview';
+import { InvoicePrintLayout } from '@/components/invoice/InvoicePrintLayout';
 import { InvoiceActions } from '@/components/invoice/InvoiceActions';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
@@ -62,7 +63,7 @@ export function NewInvoicePage() {
       {/* Side-by-side: Form (left) + Preview (right) */}
       <div className="flex-1 flex overflow-hidden">
         {/* Form panel */}
-        <div className="w-[420px] flex-shrink-0 border-r border-[var(--color-border)] overflow-hidden">
+        <div className="w-[500px] min-w-[400px] max-w-[60vw] flex-shrink-0 border-r border-[var(--color-border)] resize-x overflow-auto flex flex-col">
           <InvoiceForm />
         </div>
 
@@ -70,6 +71,11 @@ export function NewInvoicePage() {
         <div className="flex-1 overflow-hidden">
           <InvoicePreview />
         </div>
+      </div>
+
+      {/* Dedicated hidden print layout for flawless PDF capture */}
+      <div className="fixed top-0 left-[-9999px] z-[-9999] pointer-events-none">
+        <InvoicePrintLayout id="invoice-pdf-layout" />
       </div>
     </div>
   );
