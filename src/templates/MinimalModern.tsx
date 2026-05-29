@@ -33,7 +33,6 @@ export function MinimalModern({ invoice, business, items, calculations, language
       style={{
         fontFamily: `'${font}', sans-serif`,
         width: '210mm',
-        minHeight: '297mm',
         backgroundColor: '#ffffff',
         color: '#1e293b',
         position: 'relative',
