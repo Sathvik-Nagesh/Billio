@@ -1,7 +1,9 @@
 import React from 'react';
-import { Moon, Sun, Keyboard, Info } from 'lucide-react';
+import { Moon, Sun, Keyboard, Info, Calendar, Printer } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Switch, Separator } from '@/components/ui';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { DATE_FORMAT_OPTIONS } from '@/lib/utils/dateFormat';
 
 const SHORTCUTS = [
   { key: 'Ctrl + N', action: 'New Invoice' },
@@ -9,8 +11,11 @@ const SHORTCUTS = [
   { key: 'Ctrl + P', action: 'Print Invoice' },
 ];
 
+const SELECT_CLS = "h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all";
+
 export function SettingsPage() {
   const { mode, toggleMode } = useThemeStore();
+  const { dateFormat, setDateFormat } = useAppSettingsStore();
 
   return (
     <div className="h-full overflow-y-auto p-6 animate-fade-in">
@@ -40,6 +45,54 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Date & Regional Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Calendar size={14} />Date & Regional Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                Date Format
+              </label>
+              <select
+                id="settings-date-format"
+                value={dateFormat}
+                onChange={(e) => setDateFormat(e.target.value)}
+                className={SELECT_CLS}
+              >
+                {DATE_FORMAT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
+                Applies to invoice dates, due dates, history view, and PDF exports.
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+              <div className="text-xs text-[var(--color-text-muted)] mb-1">Preview</div>
+              <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+                {/* Show live preview of today in selected format */}
+                {(() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const [yyyy, mm, dd] = today.split('-');
+                  const yy = yyyy.slice(-2);
+                  switch (dateFormat) {
+                    case 'DD-MM-YYYY': return `${dd}-${mm}-${yyyy}`;
+                    case 'DD-MM-YY':   return `${dd}-${mm}-${yy}`;
+                    case 'DD/MM/YYYY': return `${dd}/${mm}/${yyyy}`;
+                    case 'DD/MM/YY':   return `${dd}/${mm}/${yy}`;
+                    case 'MM-DD-YYYY': return `${mm}-${dd}-${yyyy}`;
+                    case 'MM/DD/YYYY': return `${mm}/${dd}/${yyyy}`;
+                    case 'YYYY-MM-DD': return `${yyyy}-${mm}-${dd}`;
+                    default: return `${dd}-${mm}-${yyyy}`;
+                  }
+                })()}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Keyboard Shortcuts */}
         <Card>
           <CardHeader>
@@ -62,7 +115,7 @@ export function SettingsPage() {
           <CardHeader><CardTitle className="flex items-center gap-2"><Info size={14} />About Billio</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-              <div className="flex justify-between"><span>Version</span><span className="font-medium">1.0.0</span></div>
+              <div className="flex justify-between"><span>Version</span><span className="font-medium">1.1.0</span></div>
               <div className="flex justify-between"><span>Storage</span><span className="font-medium">Local (offline-first)</span></div>
               <div className="flex justify-between"><span>GST Mode</span><span className="font-medium">Display only (books exempt)</span></div>
               <div className="flex justify-between"><span>Languages</span><span className="font-medium">English + Kannada</span></div>

@@ -18,11 +18,41 @@ const TEMPLATES = [
 ];
 
 const FONTS = [
-  { value: 'Inter', label: 'Inter (Modern Sans)' },
-  { value: 'Outfit', label: 'Outfit (Display)' },
-  { value: 'Roboto', label: 'Roboto (Clean)' },
-  { value: 'Merriweather', label: 'Merriweather (Serif)' },
-  { value: 'Playfair Display', label: 'Playfair Display (Elegant)' },
+  // — Sans Serif —
+  { value: 'Inter',        label: '✦ Inter (Modern Sans)' },
+  { value: 'Roboto',       label: '✦ Roboto (Clean)' },
+  { value: 'Open Sans',    label: '✦ Open Sans (Friendly)' },
+  { value: 'Source Sans 3',label: '✦ Source Sans 3 (Professional)' },
+  { value: 'Noto Sans',    label: '✦ Noto Sans (Universal)' },
+  { value: 'Lato',         label: '✦ Lato (Elegant)' },
+  // — Business / Invoice Style —
+  { value: 'Poppins',      label: '✦ Poppins (Bold & Modern)' },
+  { value: 'Montserrat',   label: '✦ Montserrat (Premium)' },
+  { value: 'Nunito Sans',  label: '✦ Nunito Sans (Rounded)' },
+  { value: 'Work Sans',    label: '✦ Work Sans (Technical)' },
+  { value: 'Outfit',       label: '✦ Outfit (Display)' },
+  // — Serif —
+  { value: 'Merriweather',      label: '☞ Merriweather (Traditional)' },
+  { value: 'Libre Baskerville', label: '☞ Libre Baskerville (Classic)' },
+  { value: 'Playfair Display',  label: '☞ Playfair Display (Elegant)' },
+];
+
+const FONT_WEIGHTS = [
+  { value: 'light',     label: 'Light (300)' },
+  { value: 'regular',   label: 'Regular (400)' },
+  { value: 'medium',    label: 'Medium (500)' },
+  { value: 'semibold',  label: 'Semi Bold (600)' },
+  { value: 'bold',      label: 'Bold (700) — Print Recommended' },
+  { value: 'extrabold', label: 'Extra Bold (800)' },
+];
+
+const FONT_SIZES = [
+  { value: '80',  label: '80% — Compact' },
+  { value: '90',  label: '90% — Small' },
+  { value: '100', label: '100% — Normal' },
+  { value: '110', label: '110% — Large' },
+  { value: '120', label: '120% — Extra Large' },
+  { value: '130', label: '130% — Maximum' },
 ];
 
 const ACCENT_COLORS = [
@@ -415,6 +445,32 @@ export function InvoiceForm() {
                 </select>
               </FormField>
 
+              <FormField label="Font Weight">
+                <select
+                  id="form-font-weight"
+                  value={form.themeOverrides?.fontWeight ?? 'regular'}
+                  onChange={(e) => updateTheme({ fontWeight: e.target.value as any })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  {FONT_WEIGHTS.map(w => (
+                    <option key={w.value} value={w.value}>{w.label}</option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField label="Font Size">
+                <select
+                  id="form-font-size"
+                  value={form.themeOverrides?.fontSize ?? '100'}
+                  onChange={(e) => updateTheme({ fontSize: e.target.value as any })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  {FONT_SIZES.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </FormField>
+
               <FormField label="Logo Size">
                 <select
                   id="form-logo-size"
@@ -469,7 +525,34 @@ export function InvoiceForm() {
               </FormField>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">🖨 Print Optimization</div>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.themeOverrides?.printFriendly ?? false}
+                  onChange={(e) => updateTheme({ printFriendly: e.target.checked })}
+                  className="w-4 h-4 accent-[var(--color-primary)] rounded"
+                  id="form-print-friendly-toggle"
+                />
+                <div>
+                  <div className="font-medium">Print Friendly Mode</div>
+                  <div className="text-xs text-[var(--color-text-muted)]">Optimizes colors for B&W laser printers and photocopies</div>
+                </div>
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.themeOverrides?.highContrast ?? false}
+                  onChange={(e) => updateTheme({ highContrast: e.target.checked })}
+                  className="w-4 h-4 accent-[var(--color-primary)] rounded"
+                  id="form-high-contrast-toggle"
+                />
+                <div>
+                  <div className="font-medium">High Contrast Mode</div>
+                  <div className="text-xs text-[var(--color-text-muted)]">Bolder fonts and stronger borders — great for scanned invoices</div>
+                </div>
+              </label>
               <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] cursor-pointer">
                 <input
                   type="checkbox"
@@ -485,7 +568,7 @@ export function InvoiceForm() {
                   value={form.themeOverrides?.watermarkText ?? 'ORIGINAL'}
                   onChange={(e) => updateTheme({ watermarkText: e.target.value })}
                   placeholder="Watermark text"
-                  className="flex-1 h-8 text-xs"
+                  className="h-8 text-xs"
                 />
               )}
             </div>

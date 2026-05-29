@@ -8,11 +8,14 @@ import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import { formatINR } from '@/lib/utils/currency';
 import { useNavigate } from 'react-router-dom';
 import type { Invoice } from '@/types';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { formatDate } from '@/lib/utils/dateFormat';
 
 export function InvoiceHistoryPage() {
   const navigate = useNavigate();
   const { businesses } = useBusinessStore();
   const { loadInvoice } = useInvoiceStore();
+  const { dateFormat } = useAppSettingsStore();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [query, setQuery] = useState('');
   const [filterBusiness, setFilterBusiness] = useState('');
@@ -134,7 +137,7 @@ export function InvoiceHistoryPage() {
                     {biz && <Badge variant="default" className="text-xs">{biz.name}</Badge>}
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)] mt-0.5 flex items-center gap-2">
-                    <Calendar size={10} />{inv.invoiceDate}
+                    <Calendar size={10} />{formatDate(inv.invoiceDate, dateFormat)}
                   </div>
                 </div>
                 <div className="text-base font-bold text-[var(--color-text-primary)] shrink-0">{formatINR(inv.grandTotal)}</div>

@@ -15,9 +15,9 @@ export interface Business {
   signaturePath?: string;
   sealPath?: string;
   invoicePrefix?: string;
-  invoiceYearFormat: 'YYYY' | 'FY' | 'YY' | 'none'; // e.g. 2026, 2526, 26, none
-  invoiceSeparator: string; // '-', '/', ''
-  invoicePadding: number; // 1-4 digits
+  invoiceYearFormat: 'YYYY' | 'FY' | 'YY' | 'none';
+  invoiceSeparator: string;
+  invoicePadding: number;
   invoiceStartNumber: number;
   accentColor: string;
   templateId: string;
@@ -86,6 +86,10 @@ export interface Invoice {
 export interface ThemeOverrides {
   accentColor?: string;
   fontFamily?: string;
+  fontWeight?: 'light' | 'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold';
+  fontSize?: '80' | '90' | '100' | '110' | '120' | '130';
+  printFriendly?: boolean;
+  highContrast?: boolean;
   headerLayout?: 'centered' | 'left' | 'split';
   footerStyle?: 'full' | 'minimal' | 'none';
   logoSize?: 'small' | 'medium' | 'large';
@@ -148,6 +152,9 @@ export type AppPage =
 export interface AppSettings {
   theme: 'light' | 'dark';
   defaultTemplateId: string;
+  dateFormat: string;
+  printFriendly: boolean;
+  highContrast: boolean;
   defaultLanguage: 'en' | 'kn';
   defaultBusinessId?: string;
 }

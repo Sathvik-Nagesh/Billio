@@ -2,6 +2,8 @@ import React from 'react';
 import type { TemplateProps } from './types';
 import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { formatDate } from '@/lib/utils/dateFormat';
 
 export function TraditionalIndian({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -15,8 +17,17 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
   const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
-  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '1.5mm 3mm', fontSize: '10px' };
-  const thStyle: React.CSSProperties = { ...tdStyle, backgroundColor: accent, color: 'white', fontWeight: 700, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.3px' };
+  // Font weight / size / print helpers
+  const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
+  const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
+  const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const printFriendly = themeOverrides?.printFriendly ?? false;
+  const highContrast = themeOverrides?.highContrast ?? false;
+
+  const { dateFormat } = useAppSettingsStore();
+
+  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '1.5mm 3mm', fontSize: `${10 * scaleVal}px` };
+  const thStyle: React.CSSProperties = { ...tdStyle, backgroundColor: accent, color: 'white', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.3px' };
 
   return (
     <div
@@ -27,10 +38,11 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         backgroundColor: '#ffffff',
         color: '#1a1a1a',
         boxSizing: 'border-box',
-        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none',
-        fontSize: '11px',
+        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
+        fontSize: `${11 * scaleVal}px`,
         lineHeight: lineHeightVal,
         position: 'relative',
+        fontWeight: baseFW,
       }}
     >
       {themeOverrides?.showWatermark && (
@@ -46,11 +58,21 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         <div style={{ display: 'flex', alignItems: 'center', gap: '4mm' }}>
           {business?.logoPath && <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '120px', objectFit: 'contain' }} />}
           <div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: accent }}>{business?.name ?? 'Business Name'}</div>
-            {business?.address && <div style={{ fontSize: '9px', color: '#555', whiteSpace: 'pre-line' }}>{business.address}</div>}
-            {business?.phone && <div style={{ fontSize: '9px', color: '#555' }}>Ph: {business.phone}</div>}
-            {business?.email && <div style={{ fontSize: '9px', color: '#555' }}>{business.email}</div>}
-            {business?.gstin && <div style={{ fontSize: '9px', fontWeight: 600 }}>GSTIN: {business.gstin}</div>}
+            {!business?.logoPath ? (
+              <div style={{
+                fontSize: `${22 * scaleVal}px`,
+                fontWeight: highContrast ? 900 : 800,
+                color: printFriendly ? '#0f172a' : accent,
+                letterSpacing: '-0.5px',
+                marginBottom: '2mm',
+              }}>{business?.name ?? 'Business Name'}</div>
+            ) : (
+              <div style={{ fontSize: `${18 * scaleVal}px`, fontWeight: highContrast ? 800 : 700, color: '#0f172a' }}>{business?.name ?? 'Business Name'}</div>
+            )}
+            {business?.address && <div style={{ fontSize: `${11 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#374151'), fontWeight: highContrast ? 600 : (baseFW >= 600 ? baseFW : 400), whiteSpace: 'pre-line' }}>{business.address}</div>}
+            {business?.phone && <div style={{ fontSize: `${11 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#374151'), fontWeight: highContrast ? 600 : (baseFW >= 600 ? baseFW : 400) }}>Ph: {business.phone}</div>}
+            {business?.email && <div style={{ fontSize: `${11 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#374151'), fontWeight: highContrast ? 600 : (baseFW >= 600 ? baseFW : 400) }}>{business.email}</div>}
+            {business?.gstin && <div style={{ fontSize: `${11 * scaleVal}px`, fontWeight: highContrast ? 700 : 600 }}>GSTIN: {business.gstin}</div>}
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -62,22 +84,22 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
 
       {/* Invoice Meta Table */}
       <div style={{ borderBottom: `1px solid ${accent}55`, padding: '3mm 6mm' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: `${10 * scaleVal}px` }}>
           <tbody>
             <tr>
               <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '4mm' }}>
-                <div style={{ fontWeight: 700, color: accent, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1mm' }}>{L.billTo}</div>
+                <div style={{ fontWeight: 700, color: accent, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1mm' }}>{L.billTo}</div>
                 <div style={{ fontWeight: 700, fontSize: '12px' }}>{invoice.customerName ?? '—'}</div>
-                {invoice.customerAddress && <div style={{ color: '#555', whiteSpace: 'pre-line', fontSize: '9px' }}>{invoice.customerAddress}</div>}
-                {invoice.customerPhone && <div style={{ fontSize: '9px', color: '#555' }}>{L.phone}: {invoice.customerPhone}</div>}
-                {invoice.customerGstin && <div style={{ fontSize: '9px', fontWeight: 600 }}>{L.gstin}: {invoice.customerGstin}</div>}
+                {invoice.customerAddress && <div style={{ color: printFriendly ? '#1e293b' : '#555', whiteSpace: 'pre-line', fontSize: `${10 * scaleVal}px` }}>{invoice.customerAddress}</div>}
+                {invoice.customerPhone && <div style={{ fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : '#555' }}>{L.phone}: {invoice.customerPhone}</div>}
+                {invoice.customerGstin && <div style={{ fontSize: `${10 * scaleVal}px`, fontWeight: 600 }}>{L.gstin}: {invoice.customerGstin}</div>}
               </td>
               <td style={{ verticalAlign: 'top' }}>
-                <table style={{ width: '100%', fontSize: '10px', borderCollapse: 'collapse' }}>
+                <table style={{ width: '100%', fontSize: `${10 * scaleVal}px`, borderCollapse: 'collapse' }}>
                   <tbody>
                     <tr><td style={{ ...tdStyle, fontWeight: 600 }}>{L.invoiceNumber}</td><td style={tdStyle}>{invoice.invoiceNumber ?? '—'}</td></tr>
-                    <tr><td style={{ ...tdStyle, fontWeight: 600 }}>{L.invoiceDate}</td><td style={tdStyle}>{invoice.invoiceDate ?? '—'}</td></tr>
-                    {invoice.dueDate && <tr><td style={{ ...tdStyle, fontWeight: 600 }}>{L.dueDate}</td><td style={tdStyle}>{invoice.dueDate}</td></tr>}
+                    <tr><td style={{ ...tdStyle, fontWeight: 600 }}>{L.invoiceDate}</td><td style={tdStyle}>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</td></tr>
+                    {invoice.dueDate && <tr><td style={{ ...tdStyle, fontWeight: 600 }}>{L.dueDate}</td><td style={tdStyle}>{formatDate(invoice.dueDate, dateFormat) || ''}</td></tr>}
                   </tbody>
                 </table>
               </td>
@@ -102,13 +124,17 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : `${accent}08`, pageBreakInside: 'avoid' }}>
-                <td style={{ ...tdStyle, textAlign: 'center', color: '#888' }}>{item.srNo}</td>
-                {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '9px', color: '#888', textAlign: 'center' }}>{item.slNo || '—'}</td>}
-                <td style={{ ...tdStyle }}>{item.productName || '—'}</td>
-                {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '9px', color: '#555' }}>{item.isbn || '—'}</td>}
-                <td style={{ ...tdStyle, textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{item.quantity}</td>
+              <tr key={idx} style={{
+                backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : `${accent}08`),
+                borderBottom: printFriendly ? '1px solid #d1d5db' : undefined,
+                pageBreakInside: 'avoid',
+              }}>
+                <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
+                {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), textAlign: 'center', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
+                <td style={{ ...tdStyle, fontWeight: highContrast ? 700 : Math.max(baseFW, 500), color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
+                <td style={{ ...tdStyle, textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
@@ -120,7 +146,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           <>
             {/* Totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4mm' }}>
-          <table style={{ fontSize: '10px', borderCollapse: 'collapse', minWidth: '65mm' }}>
+          <table style={{ fontSize: `${10 * scaleVal}px`, borderCollapse: 'collapse', minWidth: '65mm' }}>
             <tbody>
               <tr><td style={tdStyle}>{L.subtotal}</td><td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(calculations.subtotal)}</td></tr>
               {calculations.discountAmount > 0 && <tr><td style={{ ...tdStyle, color: '#ef4444' }}>{L.discount}</td><td style={{ ...tdStyle, textAlign: 'right', color: '#ef4444', fontWeight: 600 }}>-₹{formatNumber(calculations.discountAmount)}</td></tr>}
@@ -141,7 +167,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           {business?.bankName && (
             <div style={{ fontSize: '11px', flex: 1 }}>
               <div style={{ fontWeight: 800, color: accent, fontSize: '10px', textTransform: 'uppercase', marginBottom: '2mm' }}>{L.bankDetails}</div>
-              <div style={{ border: `2px solid ${accent}`, padding: '3.5mm', backgroundColor: '#fafafa' }}>
+              <div style={{ border: printFriendly ? `2px solid #9ca3af` : `2px solid ${accent}`, padding: '3.5mm', backgroundColor: printFriendly ? '#f3f4f6' : '#fafafa' }}>
                 <div style={{ marginBottom: '2px' }}><span style={{ color: '#444', fontWeight: 600 }}>{L.bankName}: </span><strong style={{ color: '#000', fontSize: '12px' }}>{business.bankName}</strong></div>
                 {business.bankAccount && <div style={{ marginBottom: '2px' }}><span style={{ color: '#444', fontWeight: 600 }}>{L.accountNumber}: </span><strong style={{ color: '#000', fontSize: '12px', letterSpacing: '0.5px' }}>{business.bankAccount}</strong></div>}
                 {business.bankIfsc && <div style={{ marginBottom: '2px' }}><span style={{ color: '#444', fontWeight: 600 }}>{L.ifscCode}: </span><strong style={{ color: '#000', fontSize: '12px', letterSpacing: '0.5px' }}>{business.bankIfsc}</strong></div>}
@@ -157,7 +183,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         </div>
 
         {business?.terms && (
-          <div style={{ borderTop: `1px solid ${accent}55`, paddingTop: '3mm', fontSize: '9px', color: '#888' }}>
+          <div style={{ borderTop: printFriendly ? `1px solid #9ca3af` : `1px solid ${accent}55`, paddingTop: '3mm', fontSize: '9px', color: '#888' }}>
             <strong style={{ color: '#555' }}>{L.termsAndConditions}: </strong>
             <span style={{ whiteSpace: 'pre-line' }}>{business.terms}</span>
           </div>

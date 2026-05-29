@@ -2,6 +2,8 @@ import React from 'react';
 import type { TemplateProps } from './types';
 import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { formatDate } from '@/lib/utils/dateFormat';
 
 export function PublicationFocus({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -14,6 +16,15 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
   const isLastPage = (arguments[0] as any)?.pageNumber === undefined || (arguments[0] as any)?.totalPages === undefined || (arguments[0] as any)?.pageNumber === (arguments[0] as any)?.totalPages;
 
+  // Font weight / size / print helpers
+  const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
+  const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
+  const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const printFriendly = themeOverrides?.printFriendly ?? false;
+  const highContrast = themeOverrides?.highContrast ?? false;
+
+  const { dateFormat } = useAppSettingsStore();
+
   return (
     <div
       id="invoice-print-area"
@@ -22,8 +33,9 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         width: '210mm',
         backgroundColor: '#ffffff', color: '#1e293b',
         boxSizing: 'border-box',
-        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none',
-        fontSize: '11px', lineHeight: lineHeightVal, position: 'relative',
+        border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
+        fontSize: `${11 * scaleVal}px`, lineHeight: lineHeightVal, position: 'relative',
+        fontWeight: baseFW,
       }}
     >
       {themeOverrides?.showWatermark && (
@@ -44,15 +56,25 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         textAlign: headerLayout === 'centered' ? 'center' : 'left', alignItems: 'flex-start' }}>
           <div>
             {business?.logoPath ? <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '160px', objectFit: 'contain', marginBottom: '2mm', display: 'block' }} /> : null}
-            <div style={{ fontSize: '17px', fontWeight: 800, color: accent }}>{business?.name ?? 'Publisher Name'}</div>
-            {business?.address && <div style={{ fontSize: '9px', color: '#64748b', whiteSpace: 'pre-line' }}>{business.address}</div>}
-            {business?.gstin && <div style={{ fontSize: '9px', color: '#64748b' }}>GSTIN: {business.gstin}</div>}
+            {!business?.logoPath ? (
+              <div style={{
+                fontSize: `${22 * scaleVal}px`,
+                fontWeight: highContrast ? 900 : 800,
+                color: printFriendly ? '#0f172a' : accent,
+                letterSpacing: '-0.5px',
+                marginBottom: '2mm',
+              }}>{business?.name ?? 'Publisher Name'}</div>
+            ) : (
+              <div style={{ fontSize: `${18 * scaleVal}px`, fontWeight: highContrast ? 800 : 700, color: '#0f172a' }}>{business?.name ?? 'Publisher Name'}</div>
+            )}
+            {business?.address && <div style={{ fontSize: `${11 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#374151'), fontWeight: highContrast ? 600 : (baseFW >= 600 ? baseFW : 400), whiteSpace: 'pre-line' }}>{business.address}</div>}
+            {business?.gstin && <div style={{ fontSize: `${11 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#374151'), fontWeight: highContrast ? 600 : (baseFW >= 600 ? baseFW : 400) }}>GSTIN: {business.gstin}</div>}
           </div>
-          <div style={{ textAlign: 'right', fontSize: '10px' }}>
+          <div style={{ textAlign: 'right', fontSize: `${10 * scaleVal}px` }}>
             <div style={{ fontWeight: 700, color: accent }}>{L.invoiceNumber}</div>
             <div style={{ fontSize: '13px', fontWeight: 800, marginBottom: '2mm' }}>{invoice.invoiceNumber ?? '—'}</div>
-            <div style={{ color: '#64748b' }}>{L.invoiceDate}: <strong>{invoice.invoiceDate ?? '—'}</strong></div>
-            {invoice.dueDate && <div style={{ color: '#64748b' }}>{L.dueDate}: <strong>{invoice.dueDate}</strong></div>}
+            <div style={{ color: '#64748b' }}>{L.invoiceDate}: <strong>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</strong></div>
+            {invoice.dueDate && <div style={{ color: '#64748b' }}>{L.dueDate}: <strong>{formatDate(invoice.dueDate, dateFormat) || ''}</strong></div>}
           </div>
         </div>
       </div>
@@ -60,40 +82,44 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
       {/* Body */}
       <div style={{ padding: '5mm 6mm' }}>
         {/* Bill To */}
-        <div style={{ marginBottom: '5mm', padding: '3mm 4mm', backgroundColor: '#f8fafc', borderRadius: '6px' }}>
+        <div style={{ marginBottom: '5mm', padding: '3mm 4mm', backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc', borderRadius: '6px' }}>
           <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1mm' }}>{L.billTo}</div>
           <div style={{ fontWeight: 700, fontSize: '13px' }}>{invoice.customerName ?? '—'}</div>
-          {invoice.customerAddress && <div style={{ fontSize: '10px', color: '#64748b', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
-          {invoice.customerPhone && <div style={{ fontSize: '10px', color: '#64748b' }}>{L.phone}: {invoice.customerPhone}</div>}
-          {invoice.customerGstin && <div style={{ fontSize: '10px', color: '#64748b' }}>{L.gstin}: {invoice.customerGstin}</div>}
+          {invoice.customerAddress && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
+          {invoice.customerPhone && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b' }}>{L.phone}: {invoice.customerPhone}</div>}
+          {invoice.customerGstin && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b' }}>{L.gstin}: {invoice.customerGstin}</div>}
         </div>
 
         {/* Books Table — ISBN always prominent in this template */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr style={{ borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: accent, width: '6%' }}>#</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '6%' }}>#</th>
               {hasSlNo && (
-                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: accent, width: '12%', borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>Sel. No.</th>
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '12%', borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>Sel. No.</th>
               )}
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: accent }}>Book Title / Description</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '9px', color: accent, width: '18%', fontFamily: 'monospace' }}>ISBN</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: accent, width: '14%' }}>MRP</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: 700, fontSize: '9px', color: accent, width: '8%' }}>Qty</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '9px', color: accent, width: '14%' }}>Amount</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent }}>Book Title / Description</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '18%', fontFamily: 'monospace' }}>ISBN</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '14%' }}>MRP</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '8%' }}>Qty</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '14%' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0', pageBreakInside: 'avoid' }}>
-                <td style={{ padding: '1.5mm 2mm', color: '#94a3b8', fontSize: '9px' }}>{item.srNo}</td>
+              <tr key={idx} style={{
+                borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #e2e8f0',
+                backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
+                pageBreakInside: 'avoid',
+              }}>
+                <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
                 {hasSlNo && (
-                  <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: '#475569', letterSpacing: '0.5px' }}>{item.slNo || '—'}</td>
+                  <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '1.5mm 2mm', fontWeight: 500 }}>{item.productName || '—'}</td>
-                <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: '#475569', letterSpacing: '0.5px' }}>{item.isbn || '—'}</td>
-                <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{item.quantity}</td>
+                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, color: accent }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
@@ -106,18 +132,18 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
             {/* Totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm' }}>
           <div style={{ minWidth: '65mm', border: `1px solid ${accent}33`, borderRadius: '8px', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: `1px solid ${accent}20` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: `1px solid ${accent}20` }}>
               <span style={{ color: '#64748b' }}>{L.subtotal}</span>
               <span style={{ fontWeight: 600 }}>₹{formatNumber(calculations.subtotal)}</span>
             </div>
             {calculations.discountAmount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: `1px solid ${accent}20`, color: '#ef4444' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: `1px solid ${accent}20`, color: '#ef4444' }}>
                 <span>{L.discount}</span>
                 <span>-₹{formatNumber(calculations.discountAmount)}</span>
               </div>
             )}
             {calculations.roundOff !== 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: `1px solid ${accent}20`, color: '#94a3b8' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: `1px solid ${accent}20`, color: '#94a3b8' }}>
                 <span>{L.roundOff}</span>
                 <span>₹{formatNumber(Math.abs(calculations.roundOff))}</span>
               </div>
@@ -140,7 +166,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
           {business?.bankName && (
             <div style={{ fontSize: '11px', flex: 1 }}>
               <div style={{ fontWeight: 800, color: accent, fontSize: '10px', textTransform: 'uppercase', marginBottom: '2mm' }}>{L.bankDetails}</div>
-              <div style={{ backgroundColor: '#f8fafc', padding: '4mm', borderRadius: '8px', border: `2px solid ${accent}40` }}>
+              <div style={{ backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc', padding: '4mm', borderRadius: '8px', border: printFriendly ? `2px solid #9ca3af` : `2px solid ${accent}40` }}>
                 <div style={{ marginBottom: '2px' }}><span style={{ color: '#475569', fontWeight: 600 }}>{L.bankName}:</span> <strong style={{ color: '#0f172a', fontSize: '12px' }}>{business.bankName}</strong></div>
                 {business.bankAccount && <div style={{ marginBottom: '2px' }}><span style={{ color: '#475569', fontWeight: 600 }}>{L.accountNumber}:</span> <strong style={{ color: '#0f172a', fontSize: '12px', letterSpacing: '0.5px' }}>{business.bankAccount}</strong></div>}
                 {business.bankIfsc && <div style={{ marginBottom: '2px' }}><span style={{ color: '#475569', fontWeight: 600 }}>{L.ifscCode}:</span> <strong style={{ color: '#0f172a', fontSize: '12px', letterSpacing: '0.5px' }}>{business.bankIfsc}</strong></div>}
@@ -156,7 +182,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         </div>
 
         {business?.terms && (
-          <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '4mm', paddingTop: '3mm', fontSize: '9px', color: '#94a3b8' }}>
+          <div style={{ borderTop: printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0', marginTop: '4mm', paddingTop: '3mm', fontSize: '9px', color: '#94a3b8' }}>
             <strong style={{ color: '#64748b' }}>{L.termsAndConditions}: </strong>
             <span>{business.terms}</span>
           </div>

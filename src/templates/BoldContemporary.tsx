@@ -2,6 +2,8 @@ import React from 'react';
 import type { TemplateProps } from './types';
 import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { formatDate } from '@/lib/utils/dateFormat';
 
 export function BoldContemporary({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -15,6 +17,17 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
   const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
+  // Font weight / size / print helpers
+  const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
+  const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
+  const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  // Note: BoldContemporary is a dark theme; printFriendly and highContrast have limited effect
+  // on backgrounds but still improve text legibility settings
+  const printFriendly = themeOverrides?.printFriendly ?? false;
+  const highContrast = themeOverrides?.highContrast ?? false;
+
+  const { dateFormat } = useAppSettingsStore();
+
   return (
     <div
       id="invoice-print-area"
@@ -24,7 +37,8 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
         backgroundColor: '#0f0e1a', color: '#f8fafc',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? '1px solid #e2e8f0' : 'none',
-        fontSize: '11px', lineHeight: lineHeightVal, position: 'relative',
+        fontSize: `${11 * scaleVal}px`, lineHeight: lineHeightVal, position: 'relative',
+        fontWeight: baseFW,
       }}
     >
       {themeOverrides?.showWatermark && (
@@ -42,15 +56,20 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
         textAlign: headerLayout === 'centered' ? 'center' : 'left', alignItems: 'center' }}>
         <div>
           {business?.logoPath ? <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '180px', objectFit: 'contain', marginBottom: '2mm', background: 'rgba(255,255,255,0.9)', padding: '4px 8px', borderRadius: '8px', display: 'block' }} /> : null}
-          <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>{business?.name ?? 'Your Business'}</div>
-          {business?.address && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)', marginTop: '1mm', whiteSpace: 'pre-line' }}>{business.address}</div>}
-          {business?.gstin && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>GSTIN: {business.gstin}</div>}
+          {!business?.logoPath ? (
+            <div style={{ fontSize: `${22 * scaleVal}px`, fontWeight: highContrast ? 900 : 800, color: '#fff', letterSpacing: '-0.5px', marginBottom: '2mm' }}>{business?.name ?? 'Your Business'}</div>
+          ) : (
+            <div style={{ fontSize: `${18 * scaleVal}px`, fontWeight: highContrast ? 800 : 700, color: '#fff' }}>{business?.name ?? 'Your Business'}</div>
+          )}
+          {business?.address && <div style={{ fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.6)', marginTop: '1mm', whiteSpace: 'pre-line', fontWeight: highContrast ? 500 : baseFW }}>{business.address}</div>}
+          {business?.gstin && <div style={{ fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', fontWeight: highContrast ? 500 : baseFW }}>GSTIN: {business.gstin}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '40px', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, textTransform: 'uppercase' }}>{L.invoice}</div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', marginTop: '3mm' }}>
+          <div style={{ fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.6)', marginTop: '3mm' }}>
             <div><strong style={{ color: '#fff' }}>#{invoice.invoiceNumber ?? '—'}</strong></div>
-            <div>{invoice.invoiceDate ?? '—'}</div>
+            <div>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</div>
+            {invoice.dueDate && <div style={{ color: 'rgba(255,255,255,0.5)' }}>{L.dueDate}: {formatDate(invoice.dueDate, dateFormat) || ''}</div>}
           </div>
         </div>
       </div>
@@ -60,35 +79,35 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
         <div style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4mm', borderLeft: `3px solid ${accent}` }}>
           <div style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: accent, marginBottom: '2mm' }}>{L.billTo}</div>
           <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{invoice.customerName ?? '—'}</div>
-          {invoice.customerAddress && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
-          {invoice.customerPhone && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)' }}>{invoice.customerPhone}</div>}
-          {invoice.customerGstin && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>GSTIN: {invoice.customerGstin}</div>}
+          {invoice.customerAddress && <div style={{ fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.6)', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
+          {invoice.customerPhone && <div style={{ fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.6)' }}>{invoice.customerPhone}</div>}
+          {invoice.customerGstin && <div style={{ fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.5)' }}>GSTIN: {invoice.customerGstin}</div>}
         </div>
       </div>
 
       {/* Items Table */}
       <div style={{ padding: '5mm 10mm' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr style={{ borderBottom: `2px solid ${accent}` }}>
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.srNo}</th>
-              {hasSlNo && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '12%' }}>Sel. No.</th>}
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{L.description}</th>
-              {hasIsbn && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>ISBN</th>}
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.unitPrice}</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.quantity}</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: 700, fontSize: '8px', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.amount}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.srNo}</th>
+              {hasSlNo && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '12%' }}>Sel. No.</th>}
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{L.description}</th>
+              {hasIsbn && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>ISBN</th>}
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.unitPrice}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.quantity}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)', pageBreakInside: 'avoid' }}>
-                <td style={{ padding: '1.5mm 2mm', color: 'rgba(255,255,255,0.3)' }}>{item.srNo}</td>
-                {hasSlNo && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>{item.slNo || '—'}</td>}
-                <td style={{ padding: '1.5mm 2mm', fontWeight: 500, color: '#f0f0f0' }}>{item.productName || '—'}</td>
-                {hasIsbn && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: '9px', color: 'rgba(255,255,255,0.4)' }}>{item.isbn || '—'}</td>}
-                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: 'rgba(255,255,255,0.7)' }}>{item.quantity}</td>
+                <td style={{ padding: '1.5mm 2mm', color: 'rgba(255,255,255,0.4)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
+                {hasSlNo && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
+                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: '#f0f0f0' }}>{item.productName || '—'}</td>
+                {hasIsbn && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 800, color: accent, fontSize: '11px' }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
@@ -101,16 +120,16 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
             {/* Total box */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm' }}>
           <div style={{ minWidth: '65mm', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
               <span>{L.subtotal}</span><span>₹{formatNumber(calculations.subtotal)}</span>
             </div>
             {calculations.discountAmount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#fc8181' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: '1px solid rgba(255,255,255,0.08)', color: '#fc8181' }}>
                 <span>{L.discount}</span><span>-₹{formatNumber(calculations.discountAmount)}</span>
               </div>
             )}
             {calculations.roundOff !== 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
                 <span>{L.roundOff}</span><span>₹{formatNumber(Math.abs(calculations.roundOff))}</span>
               </div>
             )}
