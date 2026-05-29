@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  Home, FilePlus, FileText, Building2, Settings,
+  Home, FilePlus, FileText, Building2, Settings, BookOpen,
   ChevronLeft, ChevronRight, Zap
 } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/invoice/new', icon: FilePlus, label: 'New Invoice', id: 'nav-new-invoice' },
   { to: '/history', icon: FileText, label: 'Invoice History', id: 'nav-history' },
   { to: '/businesses', icon: Building2, label: 'Businesses', id: 'nav-businesses' },
+  { to: '/books', icon: BookOpen, label: 'Book Catalog', id: 'nav-books' },
   { to: '/settings', icon: Settings, label: 'Settings', id: 'nav-settings' },
 ];
 

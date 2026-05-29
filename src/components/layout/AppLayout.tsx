@@ -10,6 +10,7 @@ const pageTitles: Record<string, string> = {
   '/history': 'Invoice History',
   '/businesses': 'Business Profiles',
   '/businesses/new': 'New Business',
+  '/books': 'Book Catalog',
   '/settings': 'Settings',
 };
 

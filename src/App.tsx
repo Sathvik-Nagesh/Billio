@@ -7,6 +7,7 @@ import { InvoiceHistoryPage } from '@/pages/InvoiceHistoryPage';
 import { BusinessProfilesPage } from '@/pages/BusinessProfilesPage';
 import { BusinessFormPage } from '@/pages/BusinessFormPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { BookCatalogPage } from '@/pages/BookCatalogPage';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/businesses" element={<BusinessProfilesPage />} />
           <Route path="/businesses/new" element={<BusinessFormPage />} />
           <Route path="/businesses/edit/:id" element={<BusinessFormPage />} />
+          <Route path="/books" element={<BookCatalogPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -38,6 +38,14 @@ export interface Customer {
   updatedAt: string;
 }
 
+export interface Book {
+  id: string;
+  name: string;
+  unitPrice: number;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface InvoiceItem {
   id: string;
   invoiceId: string;

@@ -6,6 +6,7 @@ import { useBusinessStore } from '@/stores/useBusinessStore';
 import { TEMPLATE_REGISTRY } from '@/templates';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { customerRepository } from '@/lib/db/repositories/customerRepository';
+import { bookRepository } from '@/lib/db/repositories/bookRepository';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import type { InvoiceItem } from '@/types';
 import { toast } from 'sonner';
@@ -102,7 +103,14 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
         });
       }
 
-      let savedId: string;
+      // Auto-save books
+      for (const item of items) {
+        if (item.productName && item.productName.trim() !== '') {
+          bookRepository.upsert(item.productName.trim(), item.unitPrice);
+        }
+      }
+
+      let savedId = '';
       if (editingInvoiceId) {
         invoiceRepository.update(editingInvoiceId, invoiceData, items as Omit<InvoiceItem, 'id' | 'invoiceId'>[]);
         savedId = editingInvoiceId;

@@ -10,6 +10,7 @@ interface DBStore {
   invoice_items: Record<string, unknown>[];
   settings: Record<string, string>;
   invoice_sequences: Record<string, unknown>[];
+  books: Record<string, unknown>[];
 }
 
 const defaultStore: DBStore = {
@@ -19,6 +20,7 @@ const defaultStore: DBStore = {
   invoice_items: [],
   settings: {},
   invoice_sequences: [],
+  books: [],
 };
 
 function getStore(): DBStore {

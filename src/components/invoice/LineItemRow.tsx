@@ -2,7 +2,8 @@ import React, { useRef } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { formatNumber } from '@/lib/utils/currency';
-import type { InvoiceItemForm } from '@/types';
+import type { InvoiceItemForm, Book } from '@/types';
+import { BookAutocomplete } from './BookAutocomplete';
 
 interface Props {
   item: InvoiceItemForm;
@@ -45,11 +46,14 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
       )}
 
       {/* Product Name */}
-      <td className="py-0.5 px-1">
-        <Input
+      <td className="py-0.5 px-1 relative">
+        <BookAutocomplete
           value={item.productName}
-          onChange={(e) => onUpdate('productName', e.target.value)}
-          placeholder="Book / Product name"
+          onChange={(val) => onUpdate('productName', val)}
+          onSelectBook={(book: Book) => {
+            onUpdate('productName', book.name);
+            onUpdate('unitPrice', book.unitPrice);
+          }}
           className="h-7 text-sm"
         />
       </td>
