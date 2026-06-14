@@ -121,14 +121,14 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
           <thead>
             <tr>
-              <th style={{ ...thStyle, width: '8%' }}>{L.srNo}</th>
-              {hasSlNo && <th style={{ ...thStyle, width: '10%' }}>Sel. No.</th>}
-              <th style={{ ...thStyle, textAlign: 'left' }}>{L.description}</th>
-              {hasAuthor && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>Author</th>}
-              {hasIsbn && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>{L.isbn}</th>}
-              <th style={{ ...thStyle, width: '11%', textAlign: 'right' }}>{L.unitPrice}</th>
-              <th style={{ ...thStyle, width: '8%' }}>{L.quantity}</th>
-              <th style={{ ...thStyle, width: '14%', textAlign: 'right' }}>{L.amount}</th>
+              <th style={{ ...thStyle, width: '5%' }}>{L.srNo}</th>
+              {hasSlNo && <th style={{ ...thStyle, width: '6%' }}>Sel. No.</th>}
+              <th style={{ ...thStyle, textAlign: 'left', width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
+              {hasAuthor && <th style={{ ...thStyle, width: '20%', textAlign: 'left' }}>Author</th>}
+              {hasIsbn && <th style={{ ...thStyle, width: '12%', textAlign: 'left' }}>{L.isbn}</th>}
+              <th style={{ ...thStyle, width: '10%', textAlign: 'right' }}>{L.unitPrice}</th>
+              <th style={{ ...thStyle, width: '6%' }}>{L.quantity}</th>
+              <th style={{ ...thStyle, width: '12%', textAlign: 'right' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>

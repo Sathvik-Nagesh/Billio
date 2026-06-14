@@ -114,20 +114,20 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '8%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '5%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
               {hasSlNo && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>Sel. No.</th>
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>Sel. No.</th>
               )}
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.description}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
               {hasAuthor && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: '12%' }}>Author</th>
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: '20%' }}>Author</th>
               )}
               {hasIsbn && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '15%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
               )}
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '11%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '8%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '15%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '10%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
+              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>

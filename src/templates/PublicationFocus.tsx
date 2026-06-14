@@ -101,20 +101,18 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr style={{ borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '6%' }}>#</th>
-              {hasSlNo && (
-                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '12%', borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>Sel. No.</th>
-              )}
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent }}>Book Title / Description</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '5%' }}>Sr.<br/>No.</th>
+              {hasSlNo && <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '6%' }}>Sel.<br/>No.</th>}
+              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: hasSlNo ? '35%' : '40%' }}>{L.description} / Book Title</th>
               {hasAuthor && (
-                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '12%' }}>Author</th>
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '20%' }}>Author</th>
               )}
               {hasIsbn && (
-                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '18%', fontFamily: 'monospace' }}>ISBN</th>
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '12%' }}>{L.isbn}</th>
               )}
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '11%' }}>MRP</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '8%' }}>Qty</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '14%' }}>Amount</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '10%' }}>Unit<br/>Price</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '6%' }}>Qty</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '12%' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>

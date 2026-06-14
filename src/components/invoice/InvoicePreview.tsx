@@ -41,8 +41,8 @@ export function InvoicePreview() {
     return () => observer.disconnect();
   }, []);
 
-  // Paginate items
-  const itemChunks = chunkInvoiceItems(items);
+  // Paginate items using millimeter estimation engine
+  const itemChunks = chunkInvoiceItems(items, form, business);
 
   // Compensate for the CSS scale so the container doesn't leave empty space
   // after the scaled element ends (or overlap content if taller than A4)

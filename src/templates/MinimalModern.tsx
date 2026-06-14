@@ -150,14 +150,14 @@ export function MinimalModern({ invoice, business, items, calculations, language
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6mm', fontSize: `${10 * scaleVal}px` }}>
         <thead>
           <tr style={{ backgroundColor: accent, color: 'white' }}>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>{L.srNo}</th>
-            {hasSlNo && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '10%' }}>Sel. No.</th>}
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px` }}>{L.description}</th>
-            {hasAuthor && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>Author</th>}
-            {hasIsbn && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '16%' }}>ISBN</th>}
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '11%' }}>{L.unitPrice}</th>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '8%' }}>{L.quantity}</th>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '14%' }}>{L.amount}</th>
+            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '5%' }}>{L.srNo}</th>
+            {hasSlNo && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>Sel. No.</th>}
+            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
+            {hasAuthor && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '20%' }}>Author</th>}
+            {hasIsbn && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>ISBN</th>}
+            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '10%' }}>{L.unitPrice}</th>
+            <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>{L.quantity}</th>
+            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>{L.amount}</th>
           </tr>
         </thead>
         <tbody>

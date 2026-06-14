@@ -22,7 +22,7 @@ export function InvoicePrintLayout({ id, className = '' }: { id?: string; classN
     sortOrder: item.srNo,
   })) as unknown as InvoiceItem[];
 
-  const itemChunks = chunkInvoiceItems(items);
+  const itemChunks = chunkInvoiceItems(items, form, business);
 
   return (
     <div id={id} className={`flex flex-col bg-white ${className}`}>
