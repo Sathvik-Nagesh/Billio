@@ -279,7 +279,7 @@ export function InvoiceForm() {
           </div>
         </CardHeader>
         <CardContent className="px-2">
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">

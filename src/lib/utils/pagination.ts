@@ -11,8 +11,8 @@ import type { InvoiceItemForm } from '@/types';
  */
 export function chunkInvoiceItems<T>(
   items: T[],
-  firstPageLimit = 25,
-  subsequentPageLimit = 35
+  firstPageLimit = 18,
+  subsequentPageLimit = 25
 ): T[][] {
   const chunks: T[][] = [];
   const remaining = [...items];
