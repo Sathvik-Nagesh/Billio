@@ -11,11 +11,12 @@ interface Props {
   onRemove: () => void;
   showIsbn?: boolean;
   showSlNo?: boolean;
+  showAuthor?: boolean;
   isLast?: boolean;
   onEnterAtEnd?: () => void;
 }
 
-export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSlNo = false, isLast, onEnterAtEnd }: Props) {
+export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSlNo = false, showAuthor = false, isLast, onEnterAtEnd }: Props) {
   const lastInputRef = useRef<HTMLInputElement>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -57,6 +58,18 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
           className="h-7 text-sm"
         />
       </td>
+
+      {/* Author/Translator */}
+      {showAuthor && (
+        <td className="py-0.5 px-1 w-28">
+          <Input
+            value={item.author}
+            onChange={(e) => onUpdate('author', e.target.value)}
+            placeholder="Author / Translator"
+            className="h-7 text-sm"
+          />
+        </td>
+      )}
 
       {/* ISBN */}
       {showIsbn && (

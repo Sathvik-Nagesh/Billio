@@ -45,7 +45,7 @@ export function InvoiceHistoryPage() {
       customerAddress: full.customerAddress ?? '',
       customerGstin: full.customerGstin ?? '',
       customerNotes: full.customerNotes ?? '',
-      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
+      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, author: i.author ?? '', isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
       discountType: full.discountType,
       discountValue: full.discountValue,
       invoiceLanguage: full.invoiceLanguage,
@@ -54,6 +54,7 @@ export function InvoiceHistoryPage() {
       status: full.status,
       showIsbn: hasIsbnData || full.templateId === 'publication-focus',
       showSlNo: hasSlNoData,
+      showAuthor: (full.items ?? []).some(i => i.author && i.author.trim() !== ''),
     }, full.id);
     navigate('/invoice/new');
   };

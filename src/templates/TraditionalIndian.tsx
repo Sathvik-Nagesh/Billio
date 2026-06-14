@@ -14,6 +14,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
   const logoSizePx = { small: 64, medium: 90, large: 120 }[themeOverrides?.logoSize ?? 'medium'];
   const lineHeightVal = { compact: '1.25', normal: '1.5', relaxed: '1.75' }[themeOverrides?.lineSpacing ?? 'normal'];
   const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
+  const hasAuthor = items.some((i: any) => i.author && i.author.trim() !== '');
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
   const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
@@ -116,22 +117,24 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
               <th style={{ ...thStyle, width: '8%' }}>{L.srNo}</th>
               {hasSlNo && <th style={{ ...thStyle, width: '10%' }}>Sel. No.</th>}
               <th style={{ ...thStyle, textAlign: 'left' }}>{L.description}</th>
+              {hasAuthor && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>Author</th>}
               {hasIsbn && <th style={{ ...thStyle, width: '14%', textAlign: 'left' }}>{L.isbn}</th>}
-              <th style={{ ...thStyle, width: '14%', textAlign: 'right' }}>{L.unitPrice}</th>
+              <th style={{ ...thStyle, width: '11%', textAlign: 'right' }}>{L.unitPrice}</th>
               <th style={{ ...thStyle, width: '8%' }}>{L.quantity}</th>
               <th style={{ ...thStyle, width: '14%', textAlign: 'right' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+            {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{
-                backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : `${accent}08`),
+                backgroundColor: 'transparent',
                 borderBottom: printFriendly ? '1px solid #d1d5db' : undefined,
                 pageBreakInside: 'avoid',
               }}>
                 <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
                 {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), textAlign: 'center', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
                 <td style={{ ...tdStyle, fontWeight: highContrast ? 700 : Math.max(baseFW, 500), color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                {hasAuthor && <td style={{ ...tdStyle, color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>}
                 {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
                 <td style={{ ...tdStyle, textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
                 <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>

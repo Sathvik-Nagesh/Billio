@@ -57,7 +57,7 @@ export function HomePage() {
           customerAddress: fullDup.customerAddress ?? '',
           customerGstin: fullDup.customerGstin ?? '',
           customerNotes: fullDup.customerNotes ?? '',
-          items: (fullDup.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
+          items: (fullDup.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, author: i.author ?? '', isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
           discountType: fullDup.discountType,
           discountValue: fullDup.discountValue,
           invoiceLanguage: fullDup.invoiceLanguage,
@@ -66,6 +66,7 @@ export function HomePage() {
           status: 'draft' as const,
           showIsbn: hasIsbnData || fullDup.templateId === 'publication-focus',
           showSlNo: hasSlNoData,
+          showAuthor: (fullDup.items ?? []).some(i => i.author && i.author.trim() !== ''),
         };
         loadInvoice(formState, fullDup.id);
         navigate('/invoice/new');
@@ -89,7 +90,7 @@ export function HomePage() {
       customerAddress: full.customerAddress ?? '',
       customerGstin: full.customerGstin ?? '',
       customerNotes: full.customerNotes ?? '',
-      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
+      items: (full.items ?? []).map(i => ({ id: i.id, srNo: i.srNo, slNo: i.slNo ?? '', productName: i.productName, author: i.author ?? '', isbn: i.isbn ?? '', quantity: i.quantity, unitPrice: i.unitPrice, lineTotal: i.lineTotal })),
       discountType: full.discountType,
       discountValue: full.discountValue,
       invoiceLanguage: full.invoiceLanguage,
@@ -98,6 +99,7 @@ export function HomePage() {
       status: full.status,
       showIsbn: hasIsbnData || full.templateId === 'publication-focus',
       showSlNo: hasSlNoData,
+      showAuthor: (full.items ?? []).some(i => i.author && i.author.trim() !== ''),
     };
     loadInvoice(formState, full.id);
     navigate('/invoice/new');

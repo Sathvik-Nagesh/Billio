@@ -41,6 +41,7 @@ export interface Customer {
 export interface Book {
   id: string;
   name: string;
+  author?: string;
   unitPrice: number;
   usageCount: number;
   createdAt: string;
@@ -52,6 +53,7 @@ export interface InvoiceItem {
   srNo: number;
   slNo?: string;
   productName: string;
+  author?: string;
   isbn?: string;
   quantity: number;
   unitPrice: number;
@@ -127,6 +129,7 @@ export interface InvoiceFormState {
   status: 'draft' | 'final';
   showIsbn: boolean;
   showSlNo: boolean;
+  showAuthor: boolean;
 }
 
 export interface InvoiceItemForm {
@@ -134,6 +137,7 @@ export interface InvoiceItemForm {
   srNo: number;
   slNo: string;
   productName: string;
+  author: string;
   isbn: string;
   quantity: number;
   unitPrice: number;

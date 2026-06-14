@@ -8,6 +8,7 @@ const defaultItem = (): InvoiceItemForm => ({
   srNo: 1,
   slNo: '',
   productName: '',
+  author: '',
   isbn: '',
   quantity: 1,
   unitPrice: 0,
@@ -34,6 +35,7 @@ const defaultState = (): InvoiceFormState => ({
   status: 'draft',
   showIsbn: false,
   showSlNo: false,
+  showAuthor: false,
 });
 
 interface InvoiceStore {
@@ -50,6 +52,7 @@ interface InvoiceStore {
   reorderItems: (from: number, to: number) => void;
   toggleShowIsbn: () => void;
   toggleShowSlNo: () => void;
+  toggleShowAuthor: () => void;
 }
 
 function recalculate(state: InvoiceStore) {
@@ -82,7 +85,11 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
     const hasSlNoData = (form.items ?? []).some(i => i.slNo && i.slNo.trim() !== '');
     const showSlNo = form.showSlNo ?? hasSlNoData;
 
-    const enrichedForm = { ...form, showIsbn, showSlNo };
+    // Determine showAuthor
+    const hasAuthorData = (form.items ?? []).some(i => (i as any).author && (i as any).author.trim() !== '');
+    const showAuthor = form.showAuthor ?? hasAuthorData;
+
+    const enrichedForm = { ...form, showIsbn, showSlNo, showAuthor };
     const calculations = calculateInvoice(enrichedForm.items, enrichedForm.discountType, enrichedForm.discountValue);
     set({ form: enrichedForm, calculations, editingInvoiceId: id });
   },
@@ -179,6 +186,18 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
         : state.form.items.map(item => ({ ...item, slNo: '' }));
       return {
         form: { ...state.form, showSlNo: newShowSlNo, items },
+      };
+    });
+  },
+
+  toggleShowAuthor: () => {
+    set(state => {
+      const newShowAuthor = !state.form.showAuthor;
+      const items = newShowAuthor
+        ? state.form.items
+        : state.form.items.map(item => ({ ...item, author: '' }));
+      return {
+        form: { ...state.form, showAuthor: newShowAuthor, items },
       };
     });
   },

@@ -14,6 +14,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
   const logoSizePx = { small: 64, medium: 90, large: 120 }[themeOverrides?.logoSize ?? 'medium'];
   const lineHeightVal = { compact: '1.25', normal: '1.5', relaxed: '1.75' }[themeOverrides?.lineSpacing ?? 'normal'];
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
+  const hasAuthor = items.some((i: any) => i.author && i.author.trim() !== '');
   const isLastPage = (arguments[0] as any)?.pageNumber === undefined || (arguments[0] as any)?.totalPages === undefined || (arguments[0] as any)?.pageNumber === (arguments[0] as any)?.totalPages;
 
   // Font weight / size / print helpers
@@ -99,14 +100,17 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
                 <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '12%', borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>Sel. No.</th>
               )}
               <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent }}>Book Title / Description</th>
+              {hasAuthor && (
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '12%' }}>Author</th>
+              )}
               <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '18%', fontFamily: 'monospace' }}>ISBN</th>
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '14%' }}>MRP</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '11%' }}>MRP</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '8%' }}>Qty</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, width: '14%' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+            {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #e2e8f0',
                 backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
@@ -117,6 +121,9 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
                   <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
                 <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                {hasAuthor && (
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>
+                )}
                 <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>

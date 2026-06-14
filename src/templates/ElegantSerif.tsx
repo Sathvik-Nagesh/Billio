@@ -14,6 +14,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
   const logoSizePx = { small: 64, medium: 90, large: 120 }[themeOverrides?.logoSize ?? 'medium'];
   const lineHeightVal = { compact: '1.3', normal: '1.6', relaxed: '1.8' }[themeOverrides?.lineSpacing ?? 'normal'];
   const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
+  const hasAuthor = items.some((i: any) => i.author && i.author.trim() !== '');
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
   const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
@@ -103,16 +104,19 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
                 <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '12%' }}>Sel. No.</th>
               )}
                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px' }}>{L.description}</th>
+              {hasAuthor && (
+                <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '12%' }}>Author</th>
+              )}
               {hasIsbn && (
                 <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '16%' }}>{L.isbn}</th>
               )}
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.unitPrice}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '11%' }}>{L.unitPrice}</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '8%' }}>{L.quantity}</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '14%' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+            {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #ede8df',
                 backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
@@ -123,6 +127,9 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
                   <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
                 <td style={{ padding: '1.5mm 2mm', fontFamily: `'${font}', serif`, fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1a1a1a' }}>{item.productName || '—'}</td>
+                {hasAuthor && (
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>
+                )}
                 {hasIsbn && (
                   <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
                 )}

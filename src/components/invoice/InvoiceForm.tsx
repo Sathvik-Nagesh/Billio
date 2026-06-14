@@ -62,7 +62,7 @@ const ACCENT_COLORS = [
 ];
 
 export function InvoiceForm() {
-  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem, toggleShowIsbn, toggleShowSlNo } = useInvoiceStore();
+  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem, toggleShowIsbn, toggleShowSlNo, toggleShowAuthor } = useInvoiceStore();
   const { businesses, activeBusiness, setActiveBusiness } = useBusinessStore();
 
   // Sync active business only when form has no business selected yet (new invoice)
@@ -263,6 +263,19 @@ export function InvoiceForm() {
               />
               Sel. No.
             </label>
+            <label
+              htmlFor="form-show-author"
+              className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none"
+            >
+              <input
+                id="form-show-author"
+                type="checkbox"
+                checked={form.showAuthor}
+                onChange={toggleShowAuthor}
+                className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
+              />
+              Show Author
+            </label>
           </div>
         </CardHeader>
         <CardContent className="px-2">
@@ -273,6 +286,7 @@ export function InvoiceForm() {
                   <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-8">#</th>
                   {form.showSlNo && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-16">Sel. No.</th>}
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)]">Book / Product</th>
+                  {form.showAuthor && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">Author/Translator</th>}
                   {form.showIsbn && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">ISBN</th>}
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">Unit Price</th>
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-14">Qty</th>
@@ -288,6 +302,7 @@ export function InvoiceForm() {
                     onRemove={() => removeItem(item.id)}
                     showIsbn={form.showIsbn}
                     showSlNo={form.showSlNo}
+                    showAuthor={form.showAuthor}
                     isLast={idx === form.items.length - 1}
                     onEnterAtEnd={addItem}
                   />

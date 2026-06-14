@@ -15,6 +15,7 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
   const lineHeightVal = { compact: '1.25', normal: '1.5', relaxed: '1.75' }[themeOverrides?.lineSpacing ?? 'normal'];
   const hasIsbn = items.some((i: { isbn?: string; slNo?: string }) => i.isbn);
   const hasSlNo = items.some((i: any) => i.slNo && i.slNo.trim() !== '');
+  const hasAuthor = items.some((i: any) => i.author && i.author.trim() !== '');
   const isLastPage = arguments[0].pageNumber === undefined || arguments[0].totalPages === undefined || arguments[0].pageNumber === arguments[0].totalPages;
 
   // Font weight / size / print helpers
@@ -93,18 +94,20 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
               <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.srNo}</th>
               {hasSlNo && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '12%' }}>Sel. No.</th>}
               <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>{L.description}</th>
+              {hasAuthor && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '12%' }}>Author</th>}
               {hasIsbn && <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>ISBN</th>}
-              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.unitPrice}</th>
+              <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '11%' }}>{L.unitPrice}</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '8%' }}>{L.quantity}</th>
               <th style={{ padding: '2mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase', width: '15%' }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: { srNo: number; slNo?: string; productName: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
+            {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)', pageBreakInside: 'avoid' }}>
                 <td style={{ padding: '1.5mm 2mm', color: 'rgba(255,255,255,0.4)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
                 {hasSlNo && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
                 <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: '#f0f0f0' }}>{item.productName || '—'}</td>
+                {hasAuthor && <td style={{ padding: '1.5mm 2mm', color: '#a0a0a0', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>}
                 {hasIsbn && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
