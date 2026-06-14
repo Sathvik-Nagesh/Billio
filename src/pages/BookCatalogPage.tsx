@@ -14,6 +14,7 @@ export function BookCatalogPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [editName, setEditName] = useState('');
+  const [editAuthor, setEditAuthor] = useState('');
   const [editPrice, setEditPrice] = useState('');
 
   const loadBooks = () => {
@@ -25,6 +26,7 @@ export function BookCatalogPage() {
   const handleEdit = (book: Book) => {
     setEditingBook(book);
     setEditName(book.name);
+    setEditAuthor(book.author || '');
     setEditPrice(book.unitPrice.toString());
     setIsEditOpen(true);
   };
@@ -35,6 +37,7 @@ export function BookCatalogPage() {
     
     bookRepository.update(editingBook.id, {
       name: editName.trim(),
+      author: editAuthor.trim() || undefined,
       unitPrice: parseFloat(editPrice) || 0
     });
     
@@ -63,8 +66,8 @@ export function BookCatalogPage() {
     if (all.length === 0) { toast.error('Catalog is empty'); return; }
     
     const csvContent = 'data:text/csv;charset=utf-8,' + 
-      'Name,UnitPrice\n' + 
-      all.map(b => `"${b.name.replace(/"/g, '""')}",${b.unitPrice}`).join('\n');
+      'Name,Author,UnitPrice\n' + 
+      all.map(b => `"${b.name.replace(/"/g, '""')}","${(b.author || '').replace(/"/g, '""')}",${b.unitPrice}`).join('\n');
       
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
@@ -92,14 +95,16 @@ export function BookCatalogPage() {
         
         // Basic CSV parsing (handles quotes simply)
         const parts = line.split(',');
-        let name = parts[0];
-        let priceStr = parts[1];
+        let name = parts[0] || '';
+        let author = parts[1] || '';
+        let priceStr = parts[2] || '0';
         
         if (name.startsWith('"') && name.endsWith('"')) name = name.slice(1, -1);
+        if (author.startsWith('"') && author.endsWith('"')) author = author.slice(1, -1);
         
         const price = parseFloat(priceStr) || 0;
         if (name) {
-          bookRepository.upsert(name, price);
+          bookRepository.upsert(name, price, author || undefined);
           count++;
         }
       }
@@ -157,6 +162,7 @@ export function BookCatalogPage() {
             <thead className="sticky top-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] shadow-[0_1px_0_var(--color-border)]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Book Name</th>
+                <th className="px-4 py-3 font-semibold">Author</th>
                 <th className="px-4 py-3 font-semibold w-32">Unit Price</th>
                 <th className="px-4 py-3 font-semibold w-24 text-center">Times Used</th>
                 <th className="px-4 py-3 font-semibold w-32 text-right">Actions</th>
@@ -172,8 +178,11 @@ export function BookCatalogPage() {
               ) : (
                 books.map(book => (
                   <tr key={book.id} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-surface-tertiary)] group">
-                    <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] truncate max-w-[300px]">
+                    <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] truncate max-w-[200px]">
                       {book.name}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--color-text-secondary)] truncate max-w-[150px]">
+                      {book.author || '-'}
                     </td>
                     <td className="px-4 py-3 font-mono text-[var(--color-text-secondary)]">
                       {formatINR(book.unitPrice)}
@@ -212,6 +221,15 @@ export function BookCatalogPage() {
                 id="book-name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="book-author">Author / Translator</Label>
+              <Input
+                id="book-author"
+                value={editAuthor}
+                onChange={(e) => setEditAuthor(e.target.value)}
+                placeholder="Optional"
               />
             </div>
             <div className="grid gap-2">

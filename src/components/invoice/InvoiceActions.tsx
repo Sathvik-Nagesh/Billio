@@ -105,8 +105,8 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
 
       // Auto-save books
       for (const item of items) {
-        if (item.productName && item.productName.trim() !== '') {
-          bookRepository.upsert(item.productName.trim(), item.unitPrice);
+        if (item.productName && item.productName.trim()) {
+          bookRepository.upsert(item.productName.trim(), item.unitPrice, item.author?.trim() || undefined);
         }
       }
 

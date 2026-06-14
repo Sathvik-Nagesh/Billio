@@ -54,6 +54,9 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
           onSelectBook={(book: Book) => {
             onUpdate('productName', book.name);
             onUpdate('unitPrice', book.unitPrice);
+            if (book.author) {
+              onUpdate('author', book.author);
+            }
           }}
           className="h-7 text-sm"
         />

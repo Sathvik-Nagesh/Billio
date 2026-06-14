@@ -16,7 +16,7 @@ export const bookRepository = {
     return books.filter(b => b.name.toLowerCase().includes(lowerQuery));
   },
 
-  upsert(name: string, unitPrice: number): Book {
+  upsert(name: string, unitPrice: number, author?: string): Book {
     const books = db.getCollection<Book>(COLLECTION);
     const existingIndex = books.findIndex(b => b.name.toLowerCase() === name.toLowerCase());
     
@@ -24,6 +24,7 @@ export const bookRepository = {
       // Exist: we keep the existing price (as per design choice), just increment usage
       const existing = books[existingIndex];
       existing.usageCount += 1;
+      if (author !== undefined) existing.author = author;
       // We don't update unitPrice silently to avoid surprising the user
       existing.updatedAt = new Date().toISOString();
       books[existingIndex] = existing;
@@ -36,6 +37,7 @@ export const bookRepository = {
     const newBook: Book = {
       id: generateId(),
       name,
+      author,
       unitPrice,
       usageCount: 1,
       createdAt: now,
