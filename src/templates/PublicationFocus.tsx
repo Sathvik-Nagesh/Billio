@@ -39,6 +39,9 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         width: '210mm',
         backgroundColor: '#ffffff', color: '#1e293b',
         boxSizing: 'border-box',
+        minHeight: '296mm',
+        display: 'flex',
+        flexDirection: 'column',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
         fontSize: `${11 * scaleVal}px`, lineHeight: lineHeightVal, position: 'relative',
         fontWeight: baseFW,
@@ -50,9 +53,10 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         </div>
       )}
 
+      <div data-measure="header">
       {/* Dual-color header */}
       <div style={{ display: 'flex' }}>
-        <div style={{ backgroundColor: accent, width: '28mm', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '2mm', padding: '4mm 2mm' }}>
+        <div style={{ backgroundColor: accent, width: '28mm', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '2mm', padding: '4mm 2mm', minHeight: '30mm' }}>
           <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', color: 'white', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>
             {invoiceLabel}
           </div>
@@ -85,12 +89,13 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
           </div>
         </div>
       </div>
+      </div>
 
       {/* Body */}
-      <div style={{ padding: '2mm 5mm' }}>
+      <div style={{ padding: '2mm 5mm 0', display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Bill To */}
         <div style={{ marginBottom: '2mm', padding: '1.5mm 3mm', backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc', borderRadius: '6px' }}>
-          <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1mm' }}>{L.billTo}</div>
+          <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5mm' }}>{L.billTo}</div>
           <div style={{ fontWeight: 700, fontSize: '13px' }}>{invoice.customerName ?? '—'}</div>
           {invoice.customerAddress && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
           {invoice.customerPhone && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b' }}>{L.phone}: {invoice.customerPhone}</div>}
@@ -98,6 +103,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         </div>
 
         {/* Books Table — ISBN always prominent in this template */}
+        <div style={{ padding: '0 5mm', flex: 1 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr style={{ borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>
@@ -117,7 +123,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{
+              <tr key={idx} data-measure="row" style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #e2e8f0',
                 backgroundColor: 'transparent',
                 pageBreakInside: 'avoid',
@@ -140,6 +146,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Continuation Notice */}
         {!isLastPage && (
@@ -150,7 +157,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
 
         {/* Bottom sections (only on last page) */}
         {isLastPage && (
-          <>
+          <div data-measure="footer" style={{ marginTop: 'auto', padding: '0 5mm 8mm' }}>
             {/* Totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2mm' }}>
           <div style={{ minWidth: '65mm', border: `1px solid ${accent}33`, borderRadius: '8px', overflow: 'hidden' }}>
@@ -225,7 +232,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
             <span>{business.terms}</span>
           </div>
         )}
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -41,6 +41,9 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         backgroundColor: '#ffffff',
         color: '#1e293b',
         position: 'relative',
+        minHeight: '296mm',
+        display: 'flex',
+        flexDirection: 'column',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
         fontSize: `${11 * scaleVal}px`,
@@ -60,10 +63,11 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         </div>
       )}
 
+      <div data-measure="header">
       {/* Header Block */}
       <div style={{
         background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
-        padding: '6mm 8mm',
+        padding: '4mm 6mm',
         color: 'white',
         position: 'relative',
         overflow: 'hidden',
@@ -88,7 +92,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 800, fontSize: '11px', marginBottom: '2mm', letterSpacing: '0.5px', color: 'white' }}>CASH / CREDIT</div>
-            <div style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '2px', opacity: 0.9, textTransform: 'uppercase' }}>{invoiceLabel}</div>
+            <div style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '2px', opacity: 0.9, textTransform: 'uppercase' }}>{invoiceLabel}</div>
             <div style={{ fontSize: `${11 * scaleVal}px`, opacity: 0.8, marginTop: '2mm' }}>
               <div><span style={{ opacity: 0.7 }}>{L.invoiceNumber}: </span><strong>{invoice.invoiceNumber ?? '—'}</strong></div>
               <div><span style={{ opacity: 0.7 }}>{L.invoiceDate}: </span><strong>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</strong></div>
@@ -98,10 +102,12 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         </div>
       </div>
 
+      </div>
+
       {/* Body */}
-      <div style={{ padding: '4mm 8mm' }}>
+      <div style={{ padding: '4mm 8mm 0', display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Bill To */}
-        <div style={{ marginBottom: '3mm' }}>
+        <div style={{ marginBottom: '1.5mm', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
           <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: accent, marginBottom: '2mm' }}>{L.billTo}</div>
           <div style={{ fontSize: '13px', fontWeight: 700 }}>{invoice.customerName ?? 'Customer Name'}</div>
           {invoice.customerAddress && <div style={{ color: '#64748b', fontSize: `${10 * scaleVal}px`, marginTop: '1mm', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
@@ -111,46 +117,45 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         </div>
 
         {/* Items Table */}
+        <div style={{ flex: 1 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '5%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
-              {hasSlNo && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>Sel. No.</th>
-              )}
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '5%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
+                <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>Sel. No.</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
               {hasAuthor && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: '20%' }}>Author</th>
+                <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, textTransform: 'uppercase', letterSpacing: '0.5px', color: accent, width: '20%' }}>Author</th>
               )}
               {hasIsbn && (
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
+                <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.isbn}</th>
               )}
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '10%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
-              <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '10%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.unitPrice}</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '6%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.quantity}</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '12%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.amount}</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{
+              <tr key={idx} data-measure="row" style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #f1f5f9',
                 backgroundColor: 'transparent',
                 pageBreakInside: 'avoid',
               }}>
-                <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
+                <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
                 {hasSlNo && (
-                  <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
                 {hasAuthor && (
-                  <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>
                 )}
                 {hasIsbn && (
-                  <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
                 )}
-                <td style={{ padding: '1.5mm 3mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
-                <td style={{ padding: '1.5mm 3mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
-                <td style={{ padding: '1.5mm 3mm', textAlign: 'right', fontWeight: 600, color: accent }}>₹{formatNumber(item.lineTotal)}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
+                <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: accent }}>₹{formatNumber(item.lineTotal)}</td>
               </tr>
             ))}
             {items.length === 0 && (
@@ -158,6 +163,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Continuation Notice */}
         {!isLastPage && (
@@ -168,9 +174,9 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
 
         {/* Bottom sections (only on last page) */}
         {isLastPage && (
-          <>
+          <div data-measure="footer" style={{ marginTop: 'auto', paddingBottom: '7mm' }}>
             {/* Totals */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6mm' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '3mm' }}>
           <div style={{ minWidth: '68mm' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 3mm', fontSize: `${10 * scaleVal}px` }}>
               <span style={{ color: '#64748b' }}>{L.subtotal}</span>
@@ -205,7 +211,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         </div>
 
         {/* Bottom Section */}
-        <div style={{ display: 'flex', gap: '6mm', marginBottom: '6mm' }}>
+        <div style={{ display: 'flex', gap: '4mm', marginBottom: '3mm' }}>
           {/* Bank Details */}
           {business?.bankName && (
             <div style={{ flex: 1, fontSize: '11px' }}>
@@ -252,7 +258,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             <div style={{ whiteSpace: 'pre-line' }}>{business.terms}</div>
           </div>
         )}
-          </>
+          </div>
         )}
       </div>
 

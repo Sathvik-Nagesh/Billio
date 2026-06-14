@@ -14,73 +14,73 @@ import type { InvoiceFormState, Business } from '@/types';
  *           If not, keep spilling items off the last page to a new final
  *           page until the footer fits (or only 1 item remains).
  */
+export interface PaginationMeasurements {
+  firstPageHeaderPx: number;
+  subsequentHeaderPx: number;
+  footerPx: number;
+  rowHeightsPx: number[];
+}
+
+/**
+ * Splits an array of invoice items into pages using exact pixel measurements
+ * from the DOM. A4 height is 1123px at 96dpi.
+ */
 export function chunkInvoiceItems(
   items: any[],
-  _form?: InvoiceFormState,
-  business?: Business | null
+  measurements?: PaginationMeasurements | null
 ): any[][] {
   if (items.length === 0) return [[]];
 
-  // ── HEIGHT CONSTANTS (mm) ────────────────────────────────────────────────
-  const PAGE_MM = 265; // A4 297mm minus ~32mm total margins
-
-  // First page has logo, biz name, address, bill-to section, table header
-  const FIRST_PAGE_HEADER_MM = 55;  // Logo + biz info + bill-to + table header (tightened templates)
-  const SUBSEQUENT_HEADER_MM = 15;  // Just the table header row on continuation pages
-
-  // Footer height — only needs to fit on the LAST page
-  let footerMm = 30; // Totals section (subtotal, grand total, amount in words)
-  if (business?.bankName || business?.bankAccount) footerMm += 20;
-  if (business?.signaturePath)                     footerMm += 18;
-  if (business?.terms) {
-    const lineCount = Math.min(business.terms.split('\n').length, 10); // cap at 10 lines
-    footerMm += 6 + lineCount * 3;
+  // If measurements are not yet available, return a single un-paginated chunk
+  // so the hidden DOM pass can render everything on one page to measure it.
+  if (!measurements) {
+    return [items];
   }
 
-  // Per-row height — base 7mm, growing for long book/product names that wrap
-  const rowMm = (item: any): number => {
-    const len = (item.productName ?? '').length;
-    if (len > 70) return 17;
-    if (len > 35) return 12;
-    return 7;
-  };
+  const PAGE_PX = 1123; // A4 height
+  const SAFETY_MARGIN_PX = 40; // ~10mm safety margin at bottom
+  const MAX_PAGE_H = PAGE_PX - SAFETY_MARGIN_PX;
 
-  // ── PASS 1: Greedy packing (no footer reservation) ──────────────────────
   const chunks: any[][] = [];
   let currentChunk: any[] = [];
-  let usedMm = FIRST_PAGE_HEADER_MM;
+  let usedPx = measurements.firstPageHeaderPx;
 
-  for (const item of items) {
-    const rh = rowMm(item);
-    if (usedMm + rh > PAGE_MM && currentChunk.length > 0) {
+  for (let i = 0; i < items.length; i++) {
+    const rh = measurements.rowHeightsPx[i] ?? 30; // fallback to 30px if missing
+
+    if (usedPx + rh > MAX_PAGE_H && currentChunk.length > 0) {
       chunks.push(currentChunk);
       currentChunk = [];
-      usedMm = SUBSEQUENT_HEADER_MM;
+      usedPx = measurements.subsequentHeaderPx;
     }
-    currentChunk.push(item);
-    usedMm += rh;
+    currentChunk.push(items[i]);
+    usedPx += rh;
   }
   if (currentChunk.length > 0) chunks.push(currentChunk);
 
-  // ── PASS 2: Ensure footer fits on the LAST page ──────────────────────────
-  const calcLastChunkMm = (): number => {
-    // The last chunk's header size depends on whether it's the very first page
-    const headerMm = chunks.length === 1 ? FIRST_PAGE_HEADER_MM : SUBSEQUENT_HEADER_MM;
-    let mm = headerMm;
-    for (const item of chunks[chunks.length - 1]) mm += rowMm(item);
-    return mm;
+  // PASS 2: Ensure the footer fits on the LAST page
+  const calcLastChunkPx = (): number => {
+    const headerPx = chunks.length === 1 ? measurements.firstPageHeaderPx : measurements.subsequentHeaderPx;
+    let px = headerPx;
+    
+    // Find the original indices of the items in the last chunk
+    const lastChunk = chunks[chunks.length - 1];
+    for (const item of lastChunk) {
+      const globalIdx = items.indexOf(item);
+      px += measurements.rowHeightsPx[globalIdx] ?? 30;
+    }
+    return px;
   };
 
   // Spill items off the last page until the footer fits
   while (
     chunks[chunks.length - 1].length > 1 &&
-    calcLastChunkMm() + footerMm > PAGE_MM
+    calcLastChunkPx() + measurements.footerPx > MAX_PAGE_H
   ) {
     const spillItem = chunks[chunks.length - 1].pop()!;
     chunks.push([spillItem]);
-    // After spilling to a new final page, the new last page header cost is
-    // SUBSEQUENT_HEADER_MM, already accounted for in calcLastChunkMm on next iteration.
   }
 
   return chunks.length > 0 ? chunks : [[]];
 }
+

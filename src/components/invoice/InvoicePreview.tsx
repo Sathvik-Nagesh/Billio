@@ -1,16 +1,17 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { TEMPLATE_REGISTRY } from '@/templates';
-import { chunkInvoiceItems } from '@/lib/utils/pagination';
+import { chunkInvoiceItems, type PaginationMeasurements } from '@/lib/utils/pagination';
 import type { InvoiceItem } from '@/types';
 
 export function InvoicePreview() {
-  const { form, calculations } = useInvoiceStore();
+  const { form, calculations, paginationMeasurements: measurements, setPaginationMeasurements: setMeasurements } = useInvoiceStore();
   const { businesses } = useBusinessStore();
   const [scale, setScale] = useState(0.62);
   const templateRef = useRef<HTMLDivElement>(null);
+  const measureContainerRef = useRef<HTMLDivElement>(null);
   const [renderedHeight, setRenderedHeight] = useState(1123); // default A4 height px
 
   const business = useMemo(
@@ -41,8 +42,60 @@ export function InvoicePreview() {
     return () => observer.disconnect();
   }, []);
 
-  // Paginate items using millimeter estimation engine
-  const itemChunks = chunkInvoiceItems(items, form, business);
+  // Reset measurements when items or template configuration changes
+  useEffect(() => {
+    setMeasurements(null);
+  }, [form.items, form.templateId, form.themeOverrides, form.invoiceLanguage, business, calculations]);
+
+  // Perform DOM measurement pass
+  useLayoutEffect(() => {
+    if (measurements !== null || !measureContainerRef.current) return;
+
+    const container = measureContainerRef.current;
+    
+    // Fallbacks if elements are missing
+    let firstPageHeaderPx = 150;
+    let subsequentHeaderPx = 40;
+    let footerPx = 100;
+    const rowHeightsPx: number[] = [];
+
+    // Measure header
+    const headerEl = container.querySelector('[data-measure="header"]');
+    if (headerEl) {
+      firstPageHeaderPx = headerEl.getBoundingClientRect().height;
+      // We estimate subsequent header as a fraction if we don't have a specific element, 
+      // but usually the table header alone is about 40px.
+      const thead = container.querySelector('thead');
+      if (thead) subsequentHeaderPx = thead.getBoundingClientRect().height;
+    }
+
+    // Measure footer
+    const footerEl = container.querySelector('[data-measure="footer"]');
+    if (footerEl) {
+      footerPx = footerEl.getBoundingClientRect().height;
+    }
+
+    // Measure rows
+    const rowEls = container.querySelectorAll('[data-measure="row"]');
+    rowEls.forEach(el => {
+      rowHeightsPx.push(el.getBoundingClientRect().height);
+    });
+
+    // Handle empty state gracefully
+    if (rowHeightsPx.length === 0 && items.length > 0) {
+      items.forEach(() => rowHeightsPx.push(30));
+    }
+
+    setMeasurements({
+      firstPageHeaderPx,
+      subsequentHeaderPx,
+      footerPx,
+      rowHeightsPx
+    });
+  }, [measurements, items]);
+
+  // Paginate items using exact DOM measurements
+  const itemChunks = chunkInvoiceItems(items, measurements);
 
   // Compensate for the CSS scale so the container doesn't leave empty space
   // after the scaled element ends (or overlap content if taller than A4)
@@ -78,6 +131,29 @@ export function InvoicePreview() {
           <span className="text-xs text-[var(--color-text-muted)]">Auto-updating</span>
         </div>
       </div>
+
+      {/* Hidden container for DOM measurement pass */}
+      {!measurements && (
+        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', visibility: 'hidden', width: '794px' }}>
+          <div ref={measureContainerRef}>
+            <TemplateComponent
+              invoice={{
+                ...form,
+                id: '',
+                createdAt: '',
+                updatedAt: '',
+              } as any}
+              business={business}
+              items={items}
+              calculations={calculations}
+              language={form.invoiceLanguage}
+              themeOverrides={form.themeOverrides}
+              pageNumber={1}
+              totalPages={1}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Scaled A4 preview */}
       <div className="flex-1 overflow-auto p-6 flex justify-center items-start">

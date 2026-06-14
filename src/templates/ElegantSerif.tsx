@@ -37,6 +37,9 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
       style={{
         fontFamily: `'${font}', 'Merriweather', serif`,
         width: '210mm',
+        minHeight: '296mm',
+        display: 'flex',
+        flexDirection: 'column',
         backgroundColor: '#fdfcfb', color: '#1a1a1a',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
@@ -54,8 +57,9 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
       <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
       <div style={{ height: '1px', background: `linear-gradient(90deg, transparent, #d4c5a0, transparent)`, margin: '2px 0' }} />
 
-      <div style={{ padding: '4mm 8mm' }}>
-        {/* Header */}
+      <div style={{ padding: '4mm 8mm 7mm', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div data-measure="header">
+          {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '3mm', borderBottom: '1px solid #d4c5a0', paddingBottom: '3mm' }}>
           {business?.logoPath && <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '160px', objectFit: 'contain', display: 'block', margin: '0 auto 3mm' }} />}
           {!business?.logoPath ? (
@@ -87,7 +91,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         textAlign: headerLayout === 'centered' ? 'center' : 'left', marginBottom: '2mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
           <div>
             <div style={{ textAlign: 'left', fontSize: `${10 * scaleVal}px` }}>
-              <div style={{ fontWeight: 700, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '1px', color: '#7a7a7a', marginBottom: '1mm' }}>{L.billTo}</div>
+              <div style={{ fontWeight: 700, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '1px', color: '#7a7a7a', marginBottom: '0.5mm' }}>{L.billTo}</div>
               <div style={{ fontWeight: 700, fontSize: '13px', color: '#1a1a1a', fontFamily: `'${font}', serif` }}>{invoice.customerName ?? '—'}</div>
               {invoice.customerAddress && <div style={{ color: '#555', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
               {invoice.customerPhone && <div style={{ color: '#555' }}>{invoice.customerPhone}</div>}
@@ -101,12 +105,14 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             {invoice.dueDate && <div><span style={{ color: '#7a7a7a' }}>{L.dueDate}: </span><strong>{formatDate(invoice.dueDate, dateFormat) || ''}</strong></div>}
           </div>
         </div>
+        </div>
 
         {/* Items */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ flex: 1 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
           <thead>
             <tr style={{ borderTop: `1px solid #d4c5a0`, borderBottom: `1px solid #d4c5a0` }}>
-              <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '5%' }}>{L.srNo}</th>
+              <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '5%' }}>{L.srNo}</th>
               {hasSlNo && (
                 <th style={{ padding: '2mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: '#7a7a7a', letterSpacing: '0.5px', width: '6%' }}>Sel. No.</th>
               )}
@@ -124,7 +130,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{
+              <tr key={idx} data-measure="row" style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #ede8df',
                 backgroundColor: 'transparent',
                 pageBreakInside: 'avoid',
@@ -152,6 +158,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Continuation Notice */}
         {!isLastPage && (
@@ -162,7 +169,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
 
         {/* Bottom sections (only on last page) */}
         {isLastPage && (
-          <>
+          <div data-measure="footer" style={{ marginTop: 'auto' }}>
             {/* Totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm', fontFamily: 'Inter, sans-serif' }}>
           <div style={{ minWidth: '64mm' }}>
@@ -237,7 +244,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             <div style={{ whiteSpace: 'pre-line' }}>{business.terms}</div>
           </div>
         )}
-          </>
+          </div>
         )}
       </div>
 

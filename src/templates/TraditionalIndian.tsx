@@ -31,7 +31,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
   const { dateFormat, documentLabel } = useAppSettingsStore();
   const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
-  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '1.5mm 3mm', fontSize: `${10 * scaleVal}px` };
+  const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '2mm 3mm', fontSize: `${10 * scaleVal}px` };
   const thStyle: React.CSSProperties = { ...tdStyle, backgroundColor: accent, color: 'white', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.3px' };
 
   return (
@@ -42,6 +42,9 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         width: '210mm',
         backgroundColor: '#ffffff',
         color: '#1a1a1a',
+        minHeight: '296mm',
+        display: 'flex',
+        flexDirection: 'column',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
         fontSize: `${11 * scaleVal}px`,
@@ -56,6 +59,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         </div>
       )}
 
+      <div data-measure="header">
       {/* Header */}
       <div style={{ borderBottom: `2px solid ${accent}`, padding: '3mm 5mm', display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
@@ -83,7 +87,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
         <div style={{ textAlign: 'center' }}>
           <div style={{
           textAlign: 'center', fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px',
-          color: accent, borderTop: `1px solid ${accent}`, borderBottom: `1px solid ${accent}`, padding: '1mm 0',
+          color: accent, borderTop: `2px solid ${accent}`, borderBottom: `2px solid ${accent}`, padding: '2.5mm 5mm',
         }}>
           {invoiceLabel} <span style={{ fontSize: '12px', fontWeight: 700, verticalAlign: 'middle', marginLeft: '4mm' }}>CASH / CREDIT</span>
         </div>
@@ -96,7 +100,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           <tbody>
             <tr>
               <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '4mm' }}>
-                <div style={{ fontWeight: 700, color: accent, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1mm' }}>{L.billTo}</div>
+                <div style={{ fontWeight: 700, color: accent, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5mm' }}>{L.billTo}</div>
                 <div style={{ fontWeight: 700, fontSize: '12px' }}>{invoice.customerName ?? '—'}</div>
                 {invoice.customerAddress && <div style={{ color: printFriendly ? '#1e293b' : '#555', whiteSpace: 'pre-line', fontSize: `${10 * scaleVal}px` }}>{invoice.customerAddress}</div>}
                 {invoice.customerPhone && <div style={{ fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : '#555' }}>{L.phone}: {invoice.customerPhone}</div>}
@@ -115,9 +119,11 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           </tbody>
         </table>
       </div>
+      </div>
 
       {/* Items Table */}
-      <div style={{ padding: '2mm 5mm' }}>
+      <div style={{ padding: '2mm 5mm 5mm', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div style={{ flex: 1 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm' }}>
           <thead>
             <tr>
@@ -133,7 +139,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           </thead>
           <tbody>
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-              <tr key={idx} style={{
+              <tr key={idx} data-measure="row" style={{
                 backgroundColor: 'transparent',
                 borderBottom: printFriendly ? '1px solid #d1d5db' : undefined,
                 pageBreakInside: 'avoid',
@@ -150,6 +156,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Continuation Notice */}
         {!isLastPage && (
@@ -160,7 +167,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
 
         {/* Bottom sections (only on last page) */}
         {isLastPage && (
-          <>
+          <div data-measure="footer" style={{ marginTop: 'auto' }}>
             {/* Totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4mm' }}>
           <table style={{ fontSize: `${10 * scaleVal}px`, borderCollapse: 'collapse', minWidth: '65mm' }}>
@@ -221,7 +228,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
             <span style={{ whiteSpace: 'pre-line' }}>{business.terms}</span>
           </div>
         )}
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { chunkInvoiceItems } from '@/lib/utils/pagination';
 import type { InvoiceItem } from '@/types';
 
 export function InvoicePrintLayout({ id, className = '' }: { id?: string; className?: string }) {
-  const { form, calculations } = useInvoiceStore();
+  const { form, calculations, paginationMeasurements } = useInvoiceStore();
   const { businesses } = useBusinessStore();
 
   const business = useMemo(
@@ -22,7 +22,7 @@ export function InvoicePrintLayout({ id, className = '' }: { id?: string; classN
     sortOrder: item.srNo,
   })) as unknown as InvoiceItem[];
 
-  const itemChunks = chunkInvoiceItems(items, form, business);
+  const itemChunks = chunkInvoiceItems(items, paginationMeasurements);
 
   return (
     <div id={id} className={`flex flex-col bg-white ${className}`}>

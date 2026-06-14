@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { InvoiceFormState, InvoiceItemForm, ThemeOverrides } from '../types';
+import type { PaginationMeasurements } from '../lib/utils/pagination';
 import { calculateInvoice, calculateLineTotal } from '../lib/utils/calculations';
 import { generateId } from '../lib/db';
 
@@ -42,6 +43,8 @@ interface InvoiceStore {
   form: InvoiceFormState;
   calculations: ReturnType<typeof calculateInvoice>;
   editingInvoiceId: string | null;
+  paginationMeasurements: PaginationMeasurements | null;
+  setPaginationMeasurements: (measurements: PaginationMeasurements | null) => void;
   resetForm: () => void;
   loadInvoice: (form: InvoiceFormState, id: string) => void;
   updateField: <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => void;
@@ -69,6 +72,9 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
   form: defaultState(),
   calculations: calculateInvoice([], 'percentage', 0),
   editingInvoiceId: null,
+  paginationMeasurements: null,
+
+  setPaginationMeasurements: (measurements) => set({ paginationMeasurements: measurements }),
 
   resetForm: () => {
     const form = defaultState();

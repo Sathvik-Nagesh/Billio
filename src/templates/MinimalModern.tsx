@@ -38,10 +38,13 @@ export function MinimalModern({ invoice, business, items, calculations, language
       style={{
         fontFamily: `'${font}', sans-serif`,
         width: '210mm',
+        minHeight: '296mm',
+        display: 'flex',
+        flexDirection: 'column',
         backgroundColor: '#ffffff',
         color: '#1e293b',
         position: 'relative',
-        padding: '7mm 10mm',
+        padding: '5mm 8mm',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
         fontSize: `${11 * scaleVal}px`,
@@ -61,9 +64,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
         </div>
       )}
 
-      {/* Accent top bar */}
-      <div style={{ height: '4px', backgroundColor: accent, marginBottom: '4mm', borderRadius: '2px' }} />
-
+      <div data-measure="header">
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -71,7 +72,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
         justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
         gap: '6mm',
-        marginBottom: '4mm',
+        marginBottom: '2mm',
       }}>
         {/* Business Info */}
         <div style={{ flex: headerLayout === 'split' ? 1 : 'none', textAlign: headerLayout === 'centered' ? 'center' : 'left' }}>
@@ -133,8 +134,8 @@ export function MinimalModern({ invoice, business, items, calculations, language
         backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc',
         borderLeft: `3px solid ${accent}`,
         borderRadius: '0 6px 6px 0',
-        padding: '4mm 5mm',
-        marginBottom: '6mm',
+        padding: '2mm 4mm',
+        marginBottom: '3mm',
       }}>
         <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1px', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '2mm' }}>
           {L.billTo}
@@ -146,37 +147,40 @@ export function MinimalModern({ invoice, business, items, calculations, language
         {invoice.customerGstin && <div style={{ color: '#64748b', fontSize: `${10 * scaleVal}px` }}>{L.gstin}: {invoice.customerGstin}</div>}
       </div>
 
+      </div>
+
       {/* Items Table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6mm', fontSize: `${10 * scaleVal}px` }}>
+      <div style={{ flex: 1 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: `${10 * scaleVal}px` }}>
         <thead>
           <tr style={{ backgroundColor: accent, color: 'white' }}>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '5%' }}>{L.srNo}</th>
-            {hasSlNo && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>Sel. No.</th>}
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
-            {hasAuthor && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '20%' }}>Author</th>}
-            {hasIsbn && <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>ISBN</th>}
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '10%' }}>{L.unitPrice}</th>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>{L.quantity}</th>
-            <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>{L.amount}</th>
+            <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '5%' }}>{L.srNo}</th>
+            {hasSlNo && <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>Sel. No.</th>}
+            <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: hasSlNo ? '35%' : '40%' }}>{L.description}</th>
+            {hasAuthor && <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '20%' }}>Author</th>}
+            {hasIsbn && <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>ISBN</th>}
+            <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '10%' }}>{L.unitPrice}</th>
+            <th style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '6%' }}>{L.quantity}</th>
+            <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, width: '12%' }}>{L.amount}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
-            <tr key={idx} style={{
+            <tr key={idx} data-measure="row" style={{
               backgroundColor: 'transparent',
               borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #e2e8f0',
               pageBreakInside: 'avoid',
             }}>
-              <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
-              {hasSlNo && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
-              <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
-              {hasAuthor && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>}
+              <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
+              {hasSlNo && <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
+              <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+              {hasAuthor && <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>}
               {hasIsbn && (
-                <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
+                <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
               )}
-              <td style={{ padding: '1.5mm 3mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
-              <td style={{ padding: '1.5mm 3mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
-              <td style={{ padding: '1.5mm 3mm', textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
+              <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
+              <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
+              <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>
             </tr>
           ))}
           {items.length === 0 && (
@@ -186,6 +190,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
           )}
         </tbody>
       </table>
+      </div>
 
       {/* Continuation Notice */}
       {!isLastPage && (
@@ -196,9 +201,9 @@ export function MinimalModern({ invoice, business, items, calculations, language
 
       {/* Bottom sections (only on last page) */}
       {isLastPage && (
-        <>
+        <div data-measure="footer" style={{ marginTop: 'auto' }}>
           {/* Totals */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6mm' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2mm' }}>
         <div style={{ minWidth: '64mm' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 0', fontSize: `${10 * scaleVal}px`, color: '#64748b' }}>
             <span>{L.subtotal}</span>
@@ -229,7 +234,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
 
       {/* Bank Details & QR */}
       {(business?.bankName || business?.upiQrPath || business?.upiId) && (
-        <div style={{ display: 'flex', gap: '6mm', marginBottom: '6mm' }}>
+        <div style={{ display: 'flex', gap: '4mm', marginBottom: '2mm' }}>
           {business?.bankName && (
             <div style={{ flex: 1, fontSize: '11px' }}>
               <div style={{ fontWeight: 800, color: accent, marginBottom: '2mm', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.bankDetails}</div>
@@ -260,14 +265,14 @@ export function MinimalModern({ invoice, business, items, calculations, language
 
       {/* Terms */}
       {business?.terms && (
-        <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '6mm', borderTop: printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0', paddingTop: '3mm' }}>
+        <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '2mm', borderTop: printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0', paddingTop: '1mm' }}>
           <div style={{ fontWeight: 700, color: '#64748b', marginBottom: '1mm', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{L.termsAndConditions}</div>
           <div style={{ whiteSpace: 'pre-line' }}>{business.terms}</div>
         </div>
       )}
 
       {/* Signature */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6mm' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2mm' }}>
         <div style={{ textAlign: 'center', minWidth: '45mm' }}>
           {business?.signaturePath && (
             <img src={business.signaturePath} alt="Signature" style={{ height: '14mm', maxWidth: '44mm', objectFit: 'contain', display: 'block', margin: '0 auto 2mm' }} />
@@ -280,11 +285,9 @@ export function MinimalModern({ invoice, business, items, calculations, language
           </div>
         </div>
       </div>
-        </>
+        </div>
       )}
 
-      {/* Bottom bar */}
-      <div style={{ height: '3px', backgroundColor: accent, marginTop: '8mm', borderRadius: '2px', opacity: 0.4 }} />
     </div>
   );
 }

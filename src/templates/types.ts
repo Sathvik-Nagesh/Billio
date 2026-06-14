@@ -18,5 +18,5 @@ export type TemplateId =
   | 'traditional-indian'
   | 'publication-focus'
   | 'elegant-serif'
-  | 'bold-contemporary';
+  | 'basic-clean';
 

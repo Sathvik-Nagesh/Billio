@@ -14,7 +14,7 @@ const TEMPLATES = [
   { id: 'traditional-indian', name: 'Traditional Indian' },
   { id: 'publication-focus', name: 'Publication Focus' },
   { id: 'elegant-serif', name: 'Elegant Serif' },
-  { id: 'bold-contemporary', name: 'Bold Contemporary' },
+  { id: 'basic-clean', name: 'Basic Clean' },
 ];
 
 const FONTS = [
