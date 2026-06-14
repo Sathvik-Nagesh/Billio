@@ -56,7 +56,7 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
       <div style={{ height: '6px', background: `linear-gradient(90deg, ${accent}, ${accent}88)` }} />
 
       {/* Header */}
-      <div style={{ padding: '7mm 10mm', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
+      <div style={{ padding: '4mm 8mm', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
         textAlign: headerLayout === 'centered' ? 'center' : 'left', alignItems: 'center' }}>
         <div>

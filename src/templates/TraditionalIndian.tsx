@@ -57,7 +57,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
       )}
 
       {/* Header */}
-      <div style={{ borderBottom: `2px solid ${accent}`, padding: '5mm 6mm', display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
+      <div style={{ borderBottom: `2px solid ${accent}`, padding: '3mm 5mm', display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
         textAlign: headerLayout === 'centered' ? 'center' : 'left', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4mm' }}>
@@ -91,7 +91,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
       </div>
 
       {/* Invoice Meta Table */}
-      <div style={{ borderBottom: `1px solid ${accent}55`, padding: '3mm 6mm' }}>
+      <div style={{ borderBottom: `1px solid ${accent}55`, padding: '2mm 5mm' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: `${10 * scaleVal}px` }}>
           <tbody>
             <tr>
@@ -117,8 +117,8 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
       </div>
 
       {/* Items Table */}
-      <div style={{ padding: '3mm 6mm' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
+      <div style={{ padding: '2mm 5mm' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm' }}>
           <thead>
             <tr>
               <th style={{ ...thStyle, width: '5%' }}>{L.srNo}</th>

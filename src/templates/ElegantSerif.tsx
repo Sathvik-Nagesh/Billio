@@ -54,9 +54,9 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
       <div style={{ height: '3px', background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
       <div style={{ height: '1px', background: `linear-gradient(90deg, transparent, #d4c5a0, transparent)`, margin: '2px 0' }} />
 
-      <div style={{ padding: '8mm 12mm' }}>
+      <div style={{ padding: '4mm 8mm' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '6mm', borderBottom: '1px solid #d4c5a0', paddingBottom: '5mm' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3mm', borderBottom: '1px solid #d4c5a0', paddingBottom: '3mm' }}>
           {business?.logoPath && <img src={business.logoPath} alt="logo" style={{ height: `${logoSizePx}px`, maxWidth: '160px', objectFit: 'contain', display: 'block', margin: '0 auto 3mm' }} />}
           {!business?.logoPath ? (
             <div style={{
@@ -75,7 +75,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         </div>
 
         {/* Invoice title centered */}
-        <div style={{ textAlign: 'center', marginBottom: '5mm' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2mm' }}>
           <div style={{ display: 'inline-block', fontSize: '16px', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase', color: accent, borderTop: `1px solid ${accent}55`, borderBottom: `1px solid ${accent}55`, padding: '2mm 6mm' }}>
             {invoiceLabel}
           </div>
@@ -84,7 +84,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         {/* Invoice meta & bill to side by side */}
         <div style={{ display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
-        textAlign: headerLayout === 'centered' ? 'center' : 'left', marginBottom: '5mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
+        textAlign: headerLayout === 'centered' ? 'center' : 'left', marginBottom: '2mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
           <div>
             <div style={{ textAlign: 'left', fontSize: `${10 * scaleVal}px` }}>
               <div style={{ fontWeight: 700, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '1px', color: '#7a7a7a', marginBottom: '1mm' }}>{L.billTo}</div>

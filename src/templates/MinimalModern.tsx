@@ -41,7 +41,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
         backgroundColor: '#ffffff',
         color: '#1e293b',
         position: 'relative',
-        padding: '12mm 14mm',
+        padding: '7mm 10mm',
         boxSizing: 'border-box',
         border: borderStyle === 'boxed' ? `2px solid ${accent}` : borderStyle === 'lines' ? (printFriendly ? '1px solid #9ca3af' : '1px solid #e2e8f0') : 'none',
         fontSize: `${11 * scaleVal}px`,
@@ -62,7 +62,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
       )}
 
       {/* Accent top bar */}
-      <div style={{ height: '4px', backgroundColor: accent, marginBottom: '8mm', borderRadius: '2px' }} />
+      <div style={{ height: '4px', backgroundColor: accent, marginBottom: '4mm', borderRadius: '2px' }} />
 
       {/* Header */}
       <div style={{
@@ -71,7 +71,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
         justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
         gap: '6mm',
-        marginBottom: '8mm',
+        marginBottom: '4mm',
       }}>
         {/* Business Info */}
         <div style={{ flex: headerLayout === 'split' ? 1 : 'none', textAlign: headerLayout === 'centered' ? 'center' : 'left' }}>
@@ -100,7 +100,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
           backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc',
           border: printFriendly ? `1px solid #9ca3af` : `1px solid ${accent}30`,
           borderRadius: '8px',
-          padding: '5mm',
+          padding: '3mm',
           minWidth: '55mm',
         }}>
           <div style={{ fontWeight: 800, fontSize: '11px', marginBottom: '2mm', letterSpacing: '0.5px' }}>CASH / CREDIT</div>

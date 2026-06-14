@@ -51,7 +51,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
       )}
 
       {/* Dual-color header */}
-      <div style={{ display: 'flex', minHeight: '32mm' }}>
+      <div style={{ display: 'flex' }}>
         <div style={{ backgroundColor: accent, width: '28mm', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '2mm', padding: '4mm 2mm' }}>
           <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', color: 'white', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>
             {invoiceLabel}
@@ -87,9 +87,9 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
       </div>
 
       {/* Body */}
-      <div style={{ padding: '5mm 6mm' }}>
+      <div style={{ padding: '2mm 5mm' }}>
         {/* Bill To */}
-        <div style={{ marginBottom: '5mm', padding: '3mm 4mm', backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc', borderRadius: '6px' }}>
+        <div style={{ marginBottom: '2mm', padding: '1.5mm 3mm', backgroundColor: printFriendly ? '#f3f4f6' : '#f8fafc', borderRadius: '6px' }}>
           <div style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1mm' }}>{L.billTo}</div>
           <div style={{ fontWeight: 700, fontSize: '13px' }}>{invoice.customerName ?? '—'}</div>
           {invoice.customerAddress && <div style={{ fontSize: `${10 * scaleVal}px`, color: '#64748b', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
@@ -98,7 +98,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         </div>
 
         {/* Books Table — ISBN always prominent in this template */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: `${10 * scaleVal}px` }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr style={{ borderBottom: `3px solid ${accent}`, borderTop: `3px solid ${accent}` }}>
               <th style={{ padding: '2mm 2mm', textAlign: 'center', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, color: accent, textTransform: 'uppercase', letterSpacing: '0.5px', width: '5%' }}>Sr.<br/>No.</th>
@@ -152,7 +152,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         {isLastPage && (
           <>
             {/* Totals */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '5mm' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2mm' }}>
           <div style={{ minWidth: '65mm', border: `1px solid ${accent}33`, borderRadius: '8px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2mm 4mm', fontSize: `${10 * scaleVal}px`, borderBottom: `1px solid ${accent}20` }}>
               <span style={{ color: '#64748b' }}>{L.subtotal}</span>
@@ -178,13 +178,13 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
         </div>
 
         {/* Amount in Words — fixed nesting */}
-        <div style={{ marginBottom: '5mm', padding: '3mm', border: `1px solid ${accent}40`, borderRadius: '4px', backgroundColor: `${accent}05` }}>
+        <div style={{ marginBottom: '2mm', padding: '2mm', border: `1px solid ${accent}40`, borderRadius: '4px', backgroundColor: `${accent}05` }}>
           <div style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '1mm', fontWeight: 600 }}>{L.amountInWords}</div>
           <div style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>{calculations.amountInWords}</div>
         </div>
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5mm' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '3mm' }}>
           {business?.bankName && (
             <div style={{ fontSize: '11px', flex: 1 }}>
               <div style={{ fontWeight: 800, color: accent, fontSize: '10px', textTransform: 'uppercase', marginBottom: '2mm' }}>{L.bankDetails}</div>

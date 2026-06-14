@@ -25,17 +25,16 @@ export function chunkInvoiceItems(
   const PAGE_MM = 265; // A4 297mm minus ~32mm total margins
 
   // First page has logo, biz name, address, bill-to section, table header
-  const FIRST_PAGE_HEADER_MM = 80;
-  // Continuation pages just have the table header
-  const SUBSEQUENT_HEADER_MM = 20;
+  const FIRST_PAGE_HEADER_MM = 55;  // Logo + biz info + bill-to + table header (tightened templates)
+  const SUBSEQUENT_HEADER_MM = 15;  // Just the table header row on continuation pages
 
   // Footer height — only needs to fit on the LAST page
-  let footerMm = 38; // Sub-total + Grand Total + Amount in words
-  if (business?.bankName || business?.bankAccount) footerMm += 28;
-  if (business?.signaturePath)                     footerMm += 22;
+  let footerMm = 30; // Totals section (subtotal, grand total, amount in words)
+  if (business?.bankName || business?.bankAccount) footerMm += 20;
+  if (business?.signaturePath)                     footerMm += 18;
   if (business?.terms) {
-    const lineCount = Math.min(business.terms.split('\n').length, 10);
-    footerMm += 8 + lineCount * 4;
+    const lineCount = Math.min(business.terms.split('\n').length, 10); // cap at 10 lines
+    footerMm += 6 + lineCount * 3;
   }
 
   // Per-row height — base 7mm, growing for long book/product names that wrap

@@ -63,7 +63,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
       {/* Header Block */}
       <div style={{
         background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
-        padding: '10mm 12mm',
+        padding: '6mm 8mm',
         color: 'white',
         position: 'relative',
         overflow: 'hidden',
@@ -99,9 +99,9 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
       </div>
 
       {/* Body */}
-      <div style={{ padding: '8mm 12mm' }}>
+      <div style={{ padding: '4mm 8mm' }}>
         {/* Bill To */}
-        <div style={{ marginBottom: '6mm' }}>
+        <div style={{ marginBottom: '3mm' }}>
           <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: accent, marginBottom: '2mm' }}>{L.billTo}</div>
           <div style={{ fontSize: '13px', fontWeight: 700 }}>{invoice.customerName ?? 'Customer Name'}</div>
           {invoice.customerAddress && <div style={{ color: '#64748b', fontSize: `${10 * scaleVal}px`, marginTop: '1mm', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
@@ -111,7 +111,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
         </div>
 
         {/* Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6mm', fontSize: `${10 * scaleVal}px` }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm', fontSize: `${10 * scaleVal}px` }}>
           <thead>
             <tr>
               <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, borderBottom: `2px solid ${accent}`, width: '5%', textTransform: 'uppercase', letterSpacing: '0.5px', color: accent }}>{L.srNo}</th>
