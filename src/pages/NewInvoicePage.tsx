@@ -63,7 +63,7 @@ export function NewInvoicePage() {
       {/* Side-by-side: Form (left) + Preview (right) */}
       <div className="flex-1 flex overflow-hidden">
         {/* Form panel */}
-        <div className="w-[500px] min-w-[400px] max-w-[60vw] flex-shrink-0 border-r border-[var(--color-border)] resize-x overflow-auto flex flex-col">
+        <div className="w-[600px] min-w-[450px] max-w-[60vw] flex-shrink-0 border-r border-[var(--color-border)] resize-x overflow-auto flex flex-col">
           <InvoiceForm />
         </div>
 

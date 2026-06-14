@@ -24,10 +24,13 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
   const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
   const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
   const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const titleScale = parseInt(themeOverrides?.tableTitleFontSize ?? '100') / 100;
+  const authorScale = parseInt(themeOverrides?.tableAuthorFontSize ?? '100') / 100;
   const printFriendly = themeOverrides?.printFriendly ?? false;
   const highContrast = themeOverrides?.highContrast ?? false;
 
-  const { dateFormat } = useAppSettingsStore();
+  const { dateFormat, documentLabel } = useAppSettingsStore();
+  const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
   return (
     <div
@@ -84,7 +87,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             {business?.gstin && <div style={{ opacity: 0.7, fontSize: `${11 * scaleVal}px`, marginTop: '1mm' }}>GSTIN: {business.gstin}</div>}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '2px', opacity: 0.9, textTransform: 'uppercase' }}>{L.invoice}</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '2px', opacity: 0.9, textTransform: 'uppercase' }}>{invoiceLabel}</div>
             <div style={{ fontSize: `${11 * scaleVal}px`, opacity: 0.8, marginTop: '2mm' }}>
               <div><span style={{ opacity: 0.7 }}>{L.invoiceNumber}: </span><strong>{invoice.invoiceNumber ?? '—'}</strong></div>
               <div><span style={{ opacity: 0.7 }}>{L.invoiceDate}: </span><strong>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</strong></div>
@@ -137,9 +140,9 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
                 {hasSlNo && (
                   <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
                 {hasAuthor && (
-                  <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>
+                  <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>
                 )}
                 {hasIsbn && (
                   <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>

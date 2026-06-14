@@ -23,10 +23,13 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
   const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
   const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
   const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const titleScale = parseInt(themeOverrides?.tableTitleFontSize ?? '100') / 100;
+  const authorScale = parseInt(themeOverrides?.tableAuthorFontSize ?? '100') / 100;
   const printFriendly = themeOverrides?.printFriendly ?? false;
   const highContrast = themeOverrides?.highContrast ?? false;
 
-  const { dateFormat } = useAppSettingsStore();
+  const { dateFormat, documentLabel } = useAppSettingsStore();
+  const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
   const tdStyle: React.CSSProperties = { border: `1px solid ${accent}55`, padding: '1.5mm 3mm', fontSize: `${10 * scaleVal}px` };
   const thStyle: React.CSSProperties = { ...tdStyle, backgroundColor: accent, color: 'white', fontWeight: highContrast ? 800 : Math.max(700, baseFW), fontSize: `${11 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '0.3px' };
@@ -78,9 +81,12 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '22px', fontWeight: 900, color: accent, letterSpacing: '2px', textTransform: 'uppercase', border: `3px double ${accent}`, padding: '2mm 5mm', borderRadius: '4px' }}>
-            {L.invoice}
-          </div>
+          <div style={{
+          textAlign: 'center', fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px',
+          color: accent, borderTop: `1px solid ${accent}`, borderBottom: `1px solid ${accent}`, padding: '1mm 0',
+        }}>
+          {invoiceLabel}
+        </div>
         </div>
       </div>
 
@@ -133,10 +139,10 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
                 pageBreakInside: 'avoid',
               }}>
                 <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
-                {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), textAlign: 'center', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
-                <td style={{ ...tdStyle, fontWeight: highContrast ? 700 : Math.max(baseFW, 500), color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
-                {hasAuthor && <td style={{ ...tdStyle, color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>}
-                {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
+              {hasSlNo && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), textAlign: 'center', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
+              <td style={{ ...tdStyle, fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+              {hasAuthor && <td style={{ ...tdStyle, color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>}
+              {hasIsbn && <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
                 <td style={{ ...tdStyle, textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
                 <td style={{ ...tdStyle, textAlign: 'center', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>₹{formatNumber(item.lineTotal)}</td>

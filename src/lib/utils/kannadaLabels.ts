@@ -1,6 +1,7 @@
 export const kannadaLabels = {
   // Invoice header
   invoice: 'ಇನ್ವಾಯ್ಸ್',
+  bill: 'ಬಿಲ್',
   taxInvoice: 'ತೆರಿಗೆ ಇನ್ವಾಯ್ಸ್',
   invoiceNumber: 'ಇನ್ವಾಯ್ಸ್ ಸಂಖ್ಯೆ',
   invoiceDate: 'ಇನ್ವಾಯ್ಸ್ ದಿನಾಂಕ',
@@ -51,6 +52,7 @@ export const kannadaLabels = {
 
 export const englishLabels = {
   invoice: 'INVOICE',
+  bill: 'BILL',
   taxInvoice: 'TAX INVOICE',
   invoiceNumber: 'Invoice No.',
   invoiceDate: 'Invoice Date',

@@ -22,10 +22,13 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
   const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
   const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
   const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const titleScale = parseInt(themeOverrides?.tableTitleFontSize ?? '100') / 100;
+  const authorScale = parseInt(themeOverrides?.tableAuthorFontSize ?? '100') / 100;
   const printFriendly = themeOverrides?.printFriendly ?? false;
   const highContrast = themeOverrides?.highContrast ?? false;
 
-  const { dateFormat } = useAppSettingsStore();
+  const { dateFormat, documentLabel } = useAppSettingsStore();
+  const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
   return (
     <div
@@ -50,7 +53,7 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
       <div style={{ display: 'flex', minHeight: '32mm' }}>
         <div style={{ backgroundColor: accent, width: '28mm', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '2mm', padding: '4mm 2mm' }}>
           <div style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', color: 'white', fontWeight: 900, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>
-            {L.invoice}
+            {invoiceLabel}
           </div>
         </div>
         <div style={{ flex: 1, padding: '5mm 6mm', backgroundColor: `${accent}10`, display: 'flex', justifyContent: headerLayout === 'split' ? 'space-between' : headerLayout === 'centered' ? 'center' : 'flex-start',
@@ -121,9 +124,9 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
                 {hasSlNo && (
                   <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>
                 )}
-                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
                 {hasAuthor && (
-                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>
+                  <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>
                 )}
                 <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), letterSpacing: '0.5px', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>

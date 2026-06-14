@@ -24,10 +24,13 @@ export function MinimalModern({ invoice, business, items, calculations, language
   const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
   const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
   const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const titleScale = parseInt(themeOverrides?.tableTitleFontSize ?? '100') / 100;
+  const authorScale = parseInt(themeOverrides?.tableAuthorFontSize ?? '100') / 100;
   const printFriendly = themeOverrides?.printFriendly ?? false;
   const highContrast = themeOverrides?.highContrast ?? false;
 
-  const { dateFormat } = useAppSettingsStore();
+  const { dateFormat, documentLabel } = useAppSettingsStore();
+  const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
   return (
     <div
@@ -101,7 +104,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
           minWidth: '55mm',
         }}>
           <div style={{ fontSize: '18px', fontWeight: 800, color: accent, letterSpacing: '-0.5px', marginBottom: '3mm' }}>
-            {L.invoice}
+            {invoiceLabel}
           </div>
           <table style={{ width: '100%', fontSize: `${10 * scaleVal}px` }}>
             <tbody>
@@ -164,8 +167,8 @@ export function MinimalModern({ invoice, business, items, calculations, language
             }}>
               <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
               {hasSlNo && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
-              <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
-              {hasAuthor && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>}
+              <td style={{ padding: '1.5mm 3mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: printFriendly ? '#0f172a' : '#1e293b' }}>{item.productName || '—'}</td>
+              {hasAuthor && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#475569' : '#64748b', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>}
               {hasIsbn && (
                 <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>
               )}

@@ -284,9 +284,9 @@ export function InvoiceForm() {
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
                   <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-8">#</th>
-                  {form.showSlNo && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-16">Sel. No.</th>}
+                  {form.showSlNo && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-24">Sel. No.</th>}
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)]">Book / Product</th>
-                  {form.showAuthor && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-28">Author/Translator</th>}
+                  {form.showAuthor && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-36">Author/Translator</th>}
                   {form.showIsbn && <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">ISBN</th>}
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-20">Unit Price</th>
                   <th className="py-2 px-1 text-left text-xs font-medium text-[var(--color-text-muted)] w-14">Qty</th>
@@ -478,6 +478,32 @@ export function InvoiceForm() {
                   id="form-font-size"
                   value={form.themeOverrides?.fontSize ?? '100'}
                   onChange={(e) => updateTheme({ fontSize: e.target.value as any })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  {FONT_SIZES.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField label="Table Title Size">
+                <select
+                  id="form-table-title-size"
+                  value={form.themeOverrides?.tableTitleFontSize ?? '100'}
+                  onChange={(e) => updateTheme({ tableTitleFontSize: e.target.value as any })}
+                  className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                >
+                  {FONT_SIZES.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField label="Table Author Size">
+                <select
+                  id="form-table-author-size"
+                  value={form.themeOverrides?.tableAuthorFontSize ?? '100'}
+                  onChange={(e) => updateTheme({ tableAuthorFontSize: e.target.value as any })}
                   className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 >
                   {FONT_SIZES.map(s => (

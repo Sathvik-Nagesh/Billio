@@ -1,37 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus } from 'lucide-react';
-import { bookRepository } from '@/lib/db/repositories/bookRepository';
-import type { Book } from '@/types';
-import { formatINR } from '@/lib/utils/currency';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useInvoiceStore } from '@/stores/useInvoiceStore';
 
-interface BookAutocompleteProps {
+interface AuthorAutocompleteProps {
   id?: string;
   value: string;
   onChange: (val: string) => void;
-  onSelectBook?: (book: Book) => void;
   placeholder?: string;
   className?: string;
 }
 
-export function BookAutocomplete({
+export function AuthorAutocomplete({
   id,
   value,
   onChange,
-  onSelectBook,
-  placeholder = "Book / Product Name",
+  placeholder = "Author / Translator",
   className = ""
-}: BookAutocompleteProps) {
+}: AuthorAutocompleteProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<Book[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const { form } = useInvoiceStore();
+
+  const allAuthors = useMemo(() => {
+    const authors = form.items.map(i => i.author).filter(a => a && a.trim().length > 0) as string[];
+    return Array.from(new Set(authors));
+  }, [form.items]);
+
+  const suggestions = useMemo(() => {
+    if (!value) return allAuthors;
+    const lowerVal = value.toLowerCase();
+    return allAuthors.filter(a => a.toLowerCase().includes(lowerVal) && a.toLowerCase() !== lowerVal);
+  }, [value, allAuthors]);
 
   useEffect(() => {
-    if (isOpen) {
-      const results = bookRepository.search(value);
-      setSuggestions(results);
-      setActiveIndex(-1);
-    }
+    setActiveIndex(-1);
   }, [value, isOpen]);
 
   useEffect(() => {
@@ -70,9 +72,8 @@ export function BookAutocomplete({
     }
   };
 
-  const handleSelect = (book: Book) => {
-    onChange(book.name);
-    if (onSelectBook) onSelectBook(book);
+  const handleSelect = (author: string) => {
+    onChange(author);
     setIsOpen(false);
   };
 
@@ -90,25 +91,23 @@ export function BookAutocomplete({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={`w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent transition-all placeholder:text-[var(--color-text-muted)] ${className}`}
+        autoComplete="off"
       />
       
       {isOpen && suggestions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md shadow-lg max-h-60 overflow-y-auto">
             <ul>
-              {suggestions.map((book, index) => (
+              {suggestions.map((author, index) => (
                 <li
-                  key={book.id}
-                  onClick={() => handleSelect(book)}
+                  key={author}
+                  onClick={() => handleSelect(author)}
                   className={`px-3 py-2 cursor-pointer text-sm flex items-center justify-between ${
                     index === activeIndex
                       ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] dark:bg-[var(--color-primary-900)] dark:text-[var(--color-primary-100)]'
                       : 'hover:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)]'
                   }`}
                 >
-                  <span className="truncate pr-4">{book.name}</span>
-                  <span className="text-xs font-mono text-[var(--color-text-muted)] shrink-0">
-                    {formatINR(book.unitPrice)}
-                  </span>
+                  <span className="truncate">{author}</span>
                 </li>
               ))}
             </ul>

@@ -108,6 +108,8 @@ export interface ThemeOverrides {
   watermarkText?: string;
   borderStyle?: 'lines' | 'boxed' | 'minimal' | 'none';
   lineSpacing?: 'compact' | 'normal' | 'relaxed';
+  tableTitleFontSize?: '80' | '90' | '100' | '110' | '120' | '130';
+  tableAuthorFontSize?: '80' | '90' | '100' | '110' | '120' | '130';
 }
 
 export interface InvoiceFormState {
@@ -170,4 +172,5 @@ export interface AppSettings {
   highContrast: boolean;
   defaultLanguage: 'en' | 'kn';
   defaultBusinessId?: string;
+  documentLabel: 'invoice' | 'bill';
 }

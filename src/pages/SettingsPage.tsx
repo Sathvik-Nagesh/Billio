@@ -20,7 +20,7 @@ const SELECT_CLS = "h-9 w-full rounded-lg border border-[var(--color-border)] bg
 
 export function SettingsPage() {
   const { mode, toggleMode } = useThemeStore();
-  const { dateFormat, setDateFormat } = useAppSettingsStore();
+  const { dateFormat, setDateFormat, documentLabel, setDocumentLabel } = useAppSettingsStore();
   
   // Backup state
   const [isRestoreOpen, setIsRestoreOpen] = React.useState(false);
@@ -145,6 +145,23 @@ export function SettingsPage() {
               </select>
               <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
                 Applies to invoice dates, due dates, history view, and PDF exports.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                Document Label
+              </label>
+              <select
+                id="settings-document-label"
+                value={documentLabel}
+                onChange={(e) => setDocumentLabel(e.target.value as 'invoice' | 'bill')}
+                className={SELECT_CLS}
+              >
+                <option value="invoice">Invoice</option>
+                <option value="bill">Bill</option>
+              </select>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
+                Choose whether your generated PDFs are titled "Invoice" or "Bill".
               </p>
             </div>
             <div className="p-3 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">

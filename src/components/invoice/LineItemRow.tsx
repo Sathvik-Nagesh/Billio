@@ -4,6 +4,7 @@ import { Input } from '@/components/ui';
 import { formatNumber } from '@/lib/utils/currency';
 import type { InvoiceItemForm, Book } from '@/types';
 import { BookAutocomplete } from './BookAutocomplete';
+import { AuthorAutocomplete } from './AuthorAutocomplete';
 
 interface Props {
   item: InvoiceItemForm;
@@ -35,7 +36,7 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
 
       {/* Selection Number — optional, for government library orders */}
       {showSlNo && (
-        <td className="py-0.5 px-1 w-16">
+        <td className="py-0.5 px-1 w-24">
           <Input
             value={item.slNo}
             onChange={(e) => onUpdate('slNo', e.target.value)}
@@ -64,11 +65,10 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
 
       {/* Author/Translator */}
       {showAuthor && (
-        <td className="py-0.5 px-1 w-28">
-          <Input
-            value={item.author}
-            onChange={(e) => onUpdate('author', e.target.value)}
-            placeholder="Author / Translator"
+        <td className="py-0.5 px-1 w-36">
+          <AuthorAutocomplete
+            value={item.author || ''}
+            onChange={(val) => onUpdate('author', val)}
             className="h-7 text-sm"
           />
         </td>

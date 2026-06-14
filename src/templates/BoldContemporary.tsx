@@ -23,12 +23,15 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
   const fwMap: Record<string, number> = { light: 300, regular: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800 };
   const baseFW = fwMap[themeOverrides?.fontWeight ?? 'regular'];
   const scaleVal = parseInt(themeOverrides?.fontSize ?? '100') / 100;
+  const titleScale = parseInt(themeOverrides?.tableTitleFontSize ?? '100') / 100;
+  const authorScale = parseInt(themeOverrides?.tableAuthorFontSize ?? '100') / 100;
   // Note: BoldContemporary is a dark theme; printFriendly and highContrast have limited effect
   // on backgrounds but still improve text legibility settings
   const printFriendly = themeOverrides?.printFriendly ?? false;
   const highContrast = themeOverrides?.highContrast ?? false;
 
-  const { dateFormat } = useAppSettingsStore();
+  const { dateFormat, documentLabel } = useAppSettingsStore();
+  const invoiceLabel = documentLabel === 'bill' ? L.bill : L.invoice;
 
   return (
     <div
@@ -67,7 +70,7 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
           {business?.gstin && <div style={{ fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.5)', fontWeight: highContrast ? 500 : baseFW }}>GSTIN: {business.gstin}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '40px', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, textTransform: 'uppercase' }}>{L.invoice}</div>
+          <div style={{ fontSize: '40px', fontWeight: 900, color: accent, letterSpacing: '-2px', lineHeight: 1, textTransform: 'uppercase' }}>{invoiceLabel}</div>
           <div style={{ fontSize: `${11 * scaleVal}px`, color: 'rgba(255,255,255,0.6)', marginTop: '3mm' }}>
             <div><strong style={{ color: '#fff' }}>#{invoice.invoiceNumber ?? '—'}</strong></div>
             <div>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</div>
@@ -107,8 +110,8 @@ export function BoldContemporary({ invoice, business, items, calculations, langu
               <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)', pageBreakInside: 'avoid' }}>
                 <td style={{ padding: '1.5mm 2mm', color: 'rgba(255,255,255,0.4)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
                 {hasSlNo && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}
-                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal}px`, color: '#f0f0f0' }}>{item.productName || '—'}</td>
-                {hasAuthor && <td style={{ padding: '1.5mm 2mm', color: '#a0a0a0', fontSize: `${9.5 * scaleVal}px` }}>{item.author || '—'}</td>}
+                <td style={{ padding: '1.5mm 2mm', fontWeight: highContrast ? 700 : Math.max(baseFW, 500), fontSize: `${10 * scaleVal * titleScale}px`, color: '#f0f0f0' }}>{item.productName || '—'}</td>
+                {hasAuthor && <td style={{ padding: '1.5mm 2mm', color: '#a0a0a0', fontSize: `${9.5 * scaleVal * authorScale}px` }}>{item.author || '—'}</td>}
                 {hasIsbn && <td style={{ padding: '1.5mm 2mm', fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, color: 'rgba(255,255,255,0.4)', fontWeight: highContrast ? 600 : baseFW }}>{item.isbn || '—'}</td>}
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>₹{formatNumber(item.unitPrice)}</td>
                 <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.quantity}</td>
