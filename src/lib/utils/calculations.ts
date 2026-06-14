@@ -6,18 +6,19 @@ export function calculateInvoice(
   discountType: 'percentage' | 'flat',
   discountValue: number
 ): InvoiceCalculations {
-  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const rawSubtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
+  const subtotal = Number(rawSubtotal.toFixed(2));
 
   let discountAmount = 0;
   if (discountType === 'percentage') {
-    discountAmount = (subtotal * Math.min(discountValue, 100)) / 100;
+    discountAmount = Number(((subtotal * Math.min(discountValue, 100)) / 100).toFixed(2));
   } else {
-    discountAmount = Math.min(discountValue, subtotal);
+    discountAmount = Number(Math.min(discountValue, subtotal).toFixed(2));
   }
 
-  const afterDiscount = subtotal - discountAmount;
-  const roundOff = Math.round(afterDiscount) - afterDiscount;
-  const grandTotal = afterDiscount + roundOff;
+  const afterDiscount = Number((subtotal - discountAmount).toFixed(2));
+  const grandTotal = Math.round(afterDiscount);
+  const roundOff = Number((grandTotal - afterDiscount).toFixed(2));
 
   return {
     subtotal,
@@ -29,5 +30,5 @@ export function calculateInvoice(
 }
 
 export function calculateLineTotal(quantity: number, unitPrice: number): number {
-  return Math.max(0, quantity) * Math.max(0, unitPrice);
+  return Number((Math.max(0, quantity) * Math.max(0, unitPrice)).toFixed(2));
 }

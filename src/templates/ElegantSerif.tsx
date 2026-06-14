@@ -153,6 +153,13 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
           </tbody>
         </table>
 
+        {/* Continuation Notice */}
+        {!isLastPage && (
+          <div style={{ textAlign: 'center', margin: '4mm 0', fontSize: '11px', color: '#64748b', fontStyle: 'italic', fontWeight: 600 }}>
+            Continued on next page...
+          </div>
+        )}
+
         {/* Bottom sections (only on last page) */}
         {isLastPage && (
           <>
