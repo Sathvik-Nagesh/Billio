@@ -86,13 +86,16 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
         flexDirection: headerLayout === 'centered' ? 'column' : 'row',
         textAlign: headerLayout === 'centered' ? 'center' : 'left', marginBottom: '5mm', fontSize: `${10 * scaleVal}px`, fontFamily: 'Inter, sans-serif' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '1px', color: '#7a7a7a', marginBottom: '1mm' }}>{L.billTo}</div>
-            <div style={{ fontWeight: 700, fontSize: '13px', color: '#1a1a1a', fontFamily: `'${font}', serif` }}>{invoice.customerName ?? '—'}</div>
-            {invoice.customerAddress && <div style={{ color: '#555', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
-            {invoice.customerPhone && <div style={{ color: '#555' }}>{invoice.customerPhone}</div>}
-            {invoice.customerGstin && <div style={{ color: '#555' }}>GSTIN: {invoice.customerGstin}</div>}
+            <div style={{ textAlign: 'left', fontSize: `${10 * scaleVal}px` }}>
+              <div style={{ fontWeight: 700, fontSize: `${9 * scaleVal}px`, textTransform: 'uppercase', letterSpacing: '1px', color: '#7a7a7a', marginBottom: '1mm' }}>{L.billTo}</div>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: '#1a1a1a', fontFamily: `'${font}', serif` }}>{invoice.customerName ?? '—'}</div>
+              {invoice.customerAddress && <div style={{ color: '#555', whiteSpace: 'pre-line' }}>{invoice.customerAddress}</div>}
+              {invoice.customerPhone && <div style={{ color: '#555' }}>{invoice.customerPhone}</div>}
+              {invoice.customerGstin && <div style={{ color: '#555' }}>GSTIN: {invoice.customerGstin}</div>}
+            </div>
           </div>
           <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 800, fontSize: '11px', marginBottom: '2mm', letterSpacing: '0.5px' }}>CASH / CREDIT</div>
             <div><span style={{ color: '#7a7a7a' }}>{L.invoiceNumber}: </span><strong>{invoice.invoiceNumber ?? '—'}</strong></div>
             <div><span style={{ color: '#7a7a7a' }}>{L.invoiceDate}: </span><strong>{formatDate(invoice.invoiceDate, dateFormat) || '—'}</strong></div>
             {invoice.dueDate && <div><span style={{ color: '#7a7a7a' }}>{L.dueDate}: </span><strong>{formatDate(invoice.dueDate, dateFormat) || ''}</strong></div>}
@@ -123,7 +126,7 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #ede8df',
-                backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
+                backgroundColor: 'transparent',
                 pageBreakInside: 'avoid',
               }}>
                 <td style={{ padding: '1.5mm 2mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>

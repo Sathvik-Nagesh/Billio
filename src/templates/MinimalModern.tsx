@@ -103,6 +103,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
           padding: '5mm',
           minWidth: '55mm',
         }}>
+          <div style={{ fontWeight: 800, fontSize: '11px', marginBottom: '2mm', letterSpacing: '0.5px' }}>CASH / CREDIT</div>
           <div style={{ fontSize: '18px', fontWeight: 800, color: accent, letterSpacing: '-0.5px', marginBottom: '3mm' }}>
             {invoiceLabel}
           </div>
@@ -162,8 +163,9 @@ export function MinimalModern({ invoice, business, items, calculations, language
         <tbody>
           {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
             <tr key={idx} style={{
-              backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
-              borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #f1f5f9',
+              backgroundColor: 'transparent',
+              borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #e2e8f0',
+              pageBreakInside: 'avoid',
             }}>
               <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>
               {hasSlNo && <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontFamily: 'monospace', fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.slNo || '—'}</td>}

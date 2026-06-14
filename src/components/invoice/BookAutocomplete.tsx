@@ -87,6 +87,7 @@ export function BookAutocomplete({
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={`w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent transition-all placeholder:text-[var(--color-text-muted)] ${className}`}

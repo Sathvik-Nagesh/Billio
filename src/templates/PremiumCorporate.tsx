@@ -87,6 +87,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             {business?.gstin && <div style={{ opacity: 0.7, fontSize: `${11 * scaleVal}px`, marginTop: '1mm' }}>GSTIN: {business.gstin}</div>}
           </div>
           <div style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 800, fontSize: '11px', marginBottom: '2mm', letterSpacing: '0.5px', color: 'white' }}>CASH / CREDIT</div>
             <div style={{ fontSize: '28px', fontWeight: 900, letterSpacing: '2px', opacity: 0.9, textTransform: 'uppercase' }}>{invoiceLabel}</div>
             <div style={{ fontSize: `${11 * scaleVal}px`, opacity: 0.8, marginTop: '2mm' }}>
               <div><span style={{ opacity: 0.7 }}>{L.invoiceNumber}: </span><strong>{invoice.invoiceNumber ?? '—'}</strong></div>
@@ -133,7 +134,7 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
             {items.map((item: { srNo: number; slNo?: string; productName: string; author?: string; isbn?: string; quantity: number; unitPrice: number; lineTotal: number }, idx: number) => (
               <tr key={idx} style={{
                 borderBottom: printFriendly ? '1px solid #d1d5db' : '1px solid #f1f5f9',
-                backgroundColor: idx % 2 === 0 ? 'transparent' : (printFriendly ? '#f3f4f6' : '#f8fafc'),
+                backgroundColor: 'transparent',
                 pageBreakInside: 'avoid',
               }}>
                 <td style={{ padding: '1.5mm 3mm', color: printFriendly ? '#1e293b' : (highContrast ? '#0f172a' : '#475569'), fontSize: `${10 * scaleVal}px`, fontWeight: highContrast ? 600 : baseFW }}>{item.srNo}</td>

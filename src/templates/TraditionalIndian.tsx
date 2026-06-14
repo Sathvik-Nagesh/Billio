@@ -85,7 +85,7 @@ export function TraditionalIndian({ invoice, business, items, calculations, lang
           textAlign: 'center', fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px',
           color: accent, borderTop: `1px solid ${accent}`, borderBottom: `1px solid ${accent}`, padding: '1mm 0',
         }}>
-          {invoiceLabel}
+          {invoiceLabel} <span style={{ fontSize: '12px', fontWeight: 700, verticalAlign: 'middle', marginLeft: '4mm' }}>CASH / CREDIT</span>
         </div>
         </div>
       </div>

@@ -22,14 +22,21 @@ export function AuthorAutocomplete({
   const { form } = useInvoiceStore();
 
   const allAuthors = useMemo(() => {
-    const authors = form.items.map(i => i.author).filter(a => a && a.trim().length > 0) as string[];
-    return Array.from(new Set(authors));
+    const rawAuthors = form.items.map(i => i.author).filter(a => a && a.trim().length > 0) as string[];
+    const unique = new Map<string, string>();
+    rawAuthors.forEach(a => {
+      const lower = a.trim().toLowerCase();
+      if (!unique.has(lower)) {
+        unique.set(lower, a.trim());
+      }
+    });
+    return Array.from(unique.values());
   }, [form.items]);
 
   const suggestions = useMemo(() => {
     if (!value) return allAuthors;
-    const lowerVal = value.toLowerCase();
-    return allAuthors.filter(a => a.toLowerCase().includes(lowerVal) && a.toLowerCase() !== lowerVal);
+    const lowerVal = value.trim().toLowerCase();
+    return allAuthors.filter(a => a.toLowerCase().includes(lowerVal));
   }, [value, allAuthors]);
 
   useEffect(() => {
@@ -88,6 +95,7 @@ export function AuthorAutocomplete({
           setIsOpen(true);
         }}
         onFocus={() => setIsOpen(true)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={`w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-transparent transition-all placeholder:text-[var(--color-text-muted)] ${className}`}
