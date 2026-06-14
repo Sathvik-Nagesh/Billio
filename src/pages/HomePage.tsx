@@ -9,17 +9,44 @@ import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import { formatINR } from '@/lib/utils/currency';
 import type { Invoice, Business } from '@/types';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { businesses, activeBusiness } = useBusinessStore();
   const { resetForm, loadInvoice } = useInvoiceStore();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [chartData, setChartData] = useState<{name: string, total: number}[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const all = invoiceRepository.getAll().slice(0, 20);
-    setInvoices(all);
+    const all = invoiceRepository.getAll();
+    setInvoices(all.slice(0, 15)); // Last 15 for recent list
+    
+    // Calculate total revenue all-time or for current year? The user said "Total Revenue"
+    const totalRev = all.reduce((sum, inv) => sum + inv.grandTotal, 0);
+    setTotalRevenue(totalRev);
+
+    // Calculate revenue trends for last 6 months
+    const last6Months = Array.from({ length: 6 }).map((_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      return { 
+        year: d.getFullYear(), 
+        month: d.getMonth(), 
+        name: d.toLocaleString('default', { month: 'short' }),
+        total: 0 
+      };
+    });
+
+    all.forEach(inv => {
+      const d = new Date(inv.invoiceDate);
+      const m = last6Months.find(x => x.year === d.getFullYear() && x.month === d.getMonth());
+      if (m) m.total += inv.grandTotal;
+    });
+
+    setChartData(last6Months);
     setLoading(false);
   }, []);
 
@@ -143,19 +170,43 @@ export function HomePage() {
         </button>
       </div>
 
-      {/* Stats strip */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {[
-          { label: 'Total Invoices', value: invoices.length.toString(), sub: 'all time' },
-          { label: 'This Month', value: invoices.filter(i => i.invoiceDate.startsWith(new Date().toISOString().slice(0, 7))).length.toString(), sub: 'invoices created' },
-          { label: 'Revenue (Month)', value: formatINR(invoices.filter(i => i.invoiceDate.startsWith(new Date().toISOString().slice(0, 7))).reduce((s, i) => s + i.grandTotal, 0)), sub: 'grand total billed' },
-        ].map(stat => (
-          <Card key={stat.label} className="p-4">
-            <div className="text-xs text-[var(--color-text-muted)] mb-1">{stat.label}</div>
-            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stat.value}</div>
-            <div className="text-xs text-[var(--color-text-muted)]">{stat.sub}</div>
-          </Card>
-        ))}
+      {/* Stats & Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <Card className="p-6 flex flex-col justify-center bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-transparent border-indigo-100 dark:border-indigo-900/50">
+          <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-2">Total Revenue (All Time)</div>
+          <div className="text-4xl font-black text-indigo-950 dark:text-indigo-100 tracking-tight">
+            {formatINR(totalRevenue)}
+          </div>
+          <div className="text-xs text-indigo-500/70 dark:text-indigo-400/50 mt-2 font-medium">
+            Across {invoiceRepository.getAll().length} total invoices
+          </div>
+        </Card>
+        
+        <Card className="p-4 lg:col-span-2 h-[200px]">
+          <div className="text-xs font-semibold text-[var(--color-text-muted)] mb-4 ml-2 uppercase tracking-wider">Revenue Trend (Last 6 Months)</div>
+          <div className="h-[140px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }} tickFormatter={(value) => `₹${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                  itemStyle={{ color: 'var(--color-text-primary)', fontWeight: 600 }}
+                  formatter={(value: any) => [formatINR(value as number), 'Revenue']}
+                  labelStyle={{ color: 'var(--color-text-muted)', marginBottom: '4px' }}
+                />
+                <Area type="monotone" dataKey="total" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
 
       {/* Recent Invoices */}

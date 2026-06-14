@@ -37,6 +37,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
       id: item.id,
       srNo: idx + 1,
       slNo: item.slNo || undefined,
+      author: item.author,
       productName: item.productName,
       isbn: item.isbn,
       quantity: item.quantity,

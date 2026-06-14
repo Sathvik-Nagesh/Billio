@@ -4,6 +4,7 @@ import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { formatDate } from '@/lib/utils/dateFormat';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function PublicationFocus({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -181,6 +182,22 @@ export function PublicationFocus({ invoice, business, items, calculations, langu
               </div>
             </div>
           )}
+          
+          {(business?.upiQrPath || business?.upiId) && (
+            <div style={{ flex: '0 0 auto', textAlign: 'center', alignSelf: 'center', padding: '0 4mm' }}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: accent, marginBottom: '2mm', textTransform: 'uppercase' }}>Scan to Pay</div>
+              {business.upiId ? (
+                <QRCodeSVG 
+                  value={`upi://pay?pa=${business.upiId}&pn=${encodeURIComponent(business.name)}&am=${calculations.grandTotal}&cu=INR`}
+                  size={60}
+                  level="M"
+                />
+              ) : (
+                <img src={business.upiQrPath} alt="UPI QR" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+              )}
+            </div>
+          )}
+
           <div style={{ textAlign: 'center', minWidth: '45mm' }}>
             {business?.signaturePath && <img src={business.signaturePath} alt="sig" style={{ height: '14mm', maxWidth: '44mm', objectFit: 'contain', display: 'block', margin: '0 auto 2mm' }} />}
             <div style={{ borderTop: `2px solid ${accent}`, paddingTop: '2mm', fontSize: '9px', color: '#64748b' }}>{L.authorizedSignatory}</div>

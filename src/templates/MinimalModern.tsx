@@ -4,6 +4,7 @@ import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { formatDate } from '@/lib/utils/dateFormat';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function MinimalModern({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -215,7 +216,7 @@ export function MinimalModern({ invoice, business, items, calculations, language
       </div>
 
       {/* Bank Details & QR */}
-      {(business?.bankName || business?.upiQrPath) && (
+      {(business?.bankName || business?.upiQrPath || business?.upiId) && (
         <div style={{ display: 'flex', gap: '6mm', marginBottom: '6mm' }}>
           {business?.bankName && (
             <div style={{ flex: 1, fontSize: '11px' }}>
@@ -228,10 +229,18 @@ export function MinimalModern({ invoice, business, items, calculations, language
               </div>
             </div>
           )}
-          {business?.upiQrPath && (
-            <div style={{ textAlign: 'center', fontSize: '9px', color: '#64748b' }}>
-              <img src={business.upiQrPath} alt="UPI QR" style={{ width: '20mm', height: '20mm', objectFit: 'contain' }} />
-              <div style={{ marginTop: '1mm' }}>Scan to Pay</div>
+          {(business?.upiQrPath || business?.upiId) && (
+            <div style={{ textAlign: 'center', fontSize: '9px', color: '#64748b', alignSelf: 'center' }}>
+              {business.upiId ? (
+                <QRCodeSVG 
+                  value={`upi://pay?pa=${business.upiId}&pn=${encodeURIComponent(business.name)}&am=${calculations.grandTotal}&cu=INR`}
+                  size={75}
+                  level="M"
+                />
+              ) : (
+                <img src={business.upiQrPath} alt="UPI QR" style={{ width: '20mm', height: '20mm', objectFit: 'contain' }} />
+              )}
+              <div style={{ marginTop: '2mm', fontWeight: 600 }}>Scan to Pay</div>
             </div>
           )}
         </div>

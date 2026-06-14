@@ -59,6 +59,8 @@ Once uploaded, the app will automatically download the new update in the backgro
 3. This will automatically compile the new version and upload it to your GitHub Repository as a **Release**.
 4. The next time your father opens the Billio app on his computer, the `electron-updater` package will detect the new release on GitHub, download it quietly in the background, and ask him to restart to apply the update!
 
+node release.mjs "Your brief description of the update here"
+
 ---
 
 ## 🛠️ Tech Stack

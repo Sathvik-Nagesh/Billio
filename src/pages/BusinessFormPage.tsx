@@ -19,6 +19,7 @@ const defaultForm: FormData = {
   bankAccount: '',
   bankIfsc: '',
   bankBranch: '',
+  upiId: '',
   upiQrPath: '',
   terms: '',
   signaturePath: '',
@@ -183,8 +184,11 @@ export function BusinessFormPage() {
               <FormField label="IFSC Code">
                 <Input id="biz-bank-ifsc" value={form.bankIfsc ?? ''} onChange={e => set('bankIfsc', e.target.value.toUpperCase())} placeholder="SBIN0000000" />
               </FormField>
-              <FormField label="Branch" className="col-span-2">
+              <FormField label="Branch">
                 <Input id="biz-bank-branch" value={form.bankBranch ?? ''} onChange={e => set('bankBranch', e.target.value)} placeholder="Branch name" />
+              </FormField>
+              <FormField label="UPI ID (Dynamic QR Generator)">
+                <Input id="biz-upi-id" value={form.upiId ?? ''} onChange={e => set('upiId', e.target.value)} placeholder="e.g. yourname@upi" />
               </FormField>
             </div>
           </CardContent>
@@ -238,7 +242,7 @@ export function BusinessFormPage() {
           <CardHeader><CardTitle>Images & Documents</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <ImageUploadField label="UPI QR Code" value={form.upiQrPath ?? ''} onChange={v => set('upiQrPath', v)} id="biz-upi-upload" />
+              <ImageUploadField label="UPI QR Image (Fallback)" value={form.upiQrPath ?? ''} onChange={v => set('upiQrPath', v)} id="biz-upi-upload" />
               <ImageUploadField label="Signature" value={form.signaturePath ?? ''} onChange={v => set('signaturePath', v)} id="biz-sig-upload" />
               <ImageUploadField label="Company Seal (optional)" value={form.sealPath ?? ''} onChange={v => set('sealPath', v)} id="biz-seal-upload" />
             </div>

@@ -4,6 +4,7 @@ import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { formatDate } from '@/lib/utils/dateFormat';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function ElegantSerif({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -194,10 +195,18 @@ export function ElegantSerif({ invoice, business, items, calculations, language,
             </div>
           )}
           <div style={{ textAlign: 'center', minWidth: '45mm' }}>
-            {business?.upiQrPath && (
+            {(business?.upiQrPath || business?.upiId) && (
               <div style={{ marginBottom: '3mm' }}>
-                <img src={business.upiQrPath} alt="UPI QR" style={{ width: '20mm', height: '20mm', objectFit: 'contain' }} />
-                <div style={{ fontSize: '8px', color: '#aaa' }}>Scan to Pay</div>
+                {business.upiId ? (
+                  <QRCodeSVG 
+                    value={`upi://pay?pa=${business.upiId}&pn=${encodeURIComponent(business.name)}&am=${calculations.grandTotal}&cu=INR`}
+                    size={60}
+                    level="M"
+                  />
+                ) : (
+                  <img src={business.upiQrPath} alt="UPI QR" style={{ width: '20mm', height: '20mm', objectFit: 'contain' }} />
+                )}
+                <div style={{ fontSize: '8px', color: '#aaa', marginTop: '1mm' }}>Scan to Pay</div>
               </div>
             )}
             {business?.signaturePath && <img src={business.signaturePath} alt="Signature" style={{ height: '14mm', maxWidth: '44mm', objectFit: 'contain', display: 'block', margin: '0 auto 2mm' }} />}

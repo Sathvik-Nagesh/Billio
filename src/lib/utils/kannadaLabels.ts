@@ -27,6 +27,11 @@ export const kannadaLabels = {
   grandTotal: 'ಒಟ್ಟು ಮೊತ್ತ',
   amountInWords: 'ಮೊತ್ತ ಅಕ್ಷರಗಳಲ್ಲಿ',
 
+  // New
+  author: 'ಲೇಖಕರು / ಅನುವಾದಕರು',
+  isbnLabel: 'ಐಎಸ್ಬಿಎನ್',
+  selectionNo: 'ಆಯ್ಕೆ ಸಂಖ್ಯೆ',
+
   // Bank details
   bankDetails: 'ಬ್ಯಾಂಕ್ ವಿವರಗಳು',
   bankName: 'ಬ್ಯಾಂಕ್ ಹೆಸರು',
@@ -56,6 +61,9 @@ export const englishLabels = {
   email: 'Email',
   srNo: 'Sr. No.',
   description: 'Description / Book Title',
+  author: 'Author / Translator',
+  isbnLabel: 'ISBN',
+  selectionNo: 'Selection No.',
   isbn: 'ISBN',
   quantity: 'Qty',
   unitPrice: 'Unit Price',

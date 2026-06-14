@@ -10,6 +10,7 @@ export interface Business {
   bankAccount?: string;
   bankIfsc?: string;
   bankBranch?: string;
+  upiId?: string;
   upiQrPath?: string;
   terms?: string;
   signaturePath?: string;

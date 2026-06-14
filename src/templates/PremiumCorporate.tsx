@@ -4,6 +4,7 @@ import { getLabels } from '@/lib/utils/kannadaLabels';
 import { formatNumber, formatINR } from '@/lib/utils/currency';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { formatDate } from '@/lib/utils/dateFormat';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function PremiumCorporate({ invoice, business, items, calculations, language, themeOverrides }: TemplateProps) {
   const L = getLabels(language);
@@ -209,10 +210,18 @@ export function PremiumCorporate({ invoice, business, items, calculations, langu
 
           {/* QR + Signature */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
-            {business?.upiQrPath && (
+            {(business?.upiQrPath || business?.upiId) && (
               <div style={{ textAlign: 'center' }}>
-                <img src={business.upiQrPath} alt="UPI QR" style={{ width: '22mm', height: '22mm', objectFit: 'contain' }} />
-                <div style={{ fontSize: '8px', color: '#94a3b8' }}>Scan to Pay</div>
+                {business.upiId ? (
+                  <QRCodeSVG 
+                    value={`upi://pay?pa=${business.upiId}&pn=${encodeURIComponent(business.name)}&am=${calculations.grandTotal}&cu=INR`}
+                    size={60}
+                    level="M"
+                  />
+                ) : (
+                  <img src={business.upiQrPath} alt="UPI QR" style={{ width: '22mm', height: '22mm', objectFit: 'contain' }} />
+                )}
+                <div style={{ fontSize: '8px', color: '#94a3b8', marginTop: '1mm' }}>Scan to Pay</div>
               </div>
             )}
             <div style={{ textAlign: 'center', minWidth: '45mm' }}>
