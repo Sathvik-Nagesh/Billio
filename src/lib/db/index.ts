@@ -23,17 +23,21 @@ const defaultStore: DBStore = {
   books: [],
 };
 
+let memoryCache: DBStore | null = null;
+
 function getStore(): DBStore {
+  if (memoryCache) return memoryCache;
   try {
     const raw = localStorage.getItem(DB_KEY);
-    if (!raw) return { ...defaultStore };
-    return { ...defaultStore, ...JSON.parse(raw) };
+    if (!raw) return (memoryCache = { ...defaultStore });
+    return (memoryCache = { ...defaultStore, ...JSON.parse(raw) });
   } catch {
-    return { ...defaultStore };
+    return (memoryCache = { ...defaultStore });
   }
 }
 
 function saveStore(store: DBStore): void {
+  memoryCache = store;
   localStorage.setItem(DB_KEY, JSON.stringify(store));
 }
 

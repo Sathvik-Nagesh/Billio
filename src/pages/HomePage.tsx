@@ -26,10 +26,12 @@ export function HomePage() {
     const all = invoiceRepository.getAll();
     setInvoices(all.slice(0, 15)); // Last 15 for recent list
     
-    // Calculate total revenue all-time or for current year? The user said "Total Revenue"
-    const totalRev = all.reduce((sum, inv) => sum + inv.grandTotal, 0);
-    const paid = all.filter(inv => inv.isPaid).reduce((sum, inv) => sum + inv.grandTotal, 0);
-    const unpaid = all.filter(inv => !inv.isPaid).reduce((sum, inv) => sum + inv.grandTotal, 0);
+    const { totalRev, paid, unpaid } = all.reduce((acc, inv) => {
+      acc.totalRev += inv.grandTotal;
+      if (inv.isPaid) acc.paid += inv.grandTotal;
+      else acc.unpaid += inv.grandTotal;
+      return acc;
+    }, { totalRev: 0, paid: 0, unpaid: 0 });
     
     setTotalRevenue(totalRev);
     setTotalPaid(paid);
