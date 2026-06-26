@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button, Input, Textarea, Label, Select, Card, CardHeader, CardTitle, CardContent, FormField, Separator } from '@/components/ui';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
@@ -62,8 +62,9 @@ const ACCENT_COLORS = [
 ];
 
 export function InvoiceForm() {
-  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem, toggleShowIsbn, toggleShowSlNo, toggleShowAuthor } = useInvoiceStore();
+  const { form, calculations, updateField, updateTheme, addItem, removeItem, updateItem, toggleShowIsbn, toggleShowSlNo, toggleShowAuthor, setBulkQuantity } = useInvoiceStore();
   const { businesses, activeBusiness, setActiveBusiness } = useBusinessStore();
+  const [bulkQty, setBulkQty] = useState('');
 
   // Sync active business only when form has no business selected yet (new invoice)
   useEffect(() => {
@@ -234,9 +235,28 @@ export function InvoiceForm() {
 
       {/* Section: Items */}
       <Card>
-        <CardHeader className="pb-2 flex-row items-center justify-between">
+        <CardHeader className="pb-2 flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle>Items</CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-[var(--color-surface-secondary)] p-1 rounded-md border border-[var(--color-border)]">
+              <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] px-1">Bulk Qty:</span>
+              <input 
+                type="number" 
+                value={bulkQty} 
+                onChange={(e) => setBulkQty(e.target.value)} 
+                className="w-12 h-6 text-xs text-center border border-[var(--color-border)] rounded focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
+                placeholder="0"
+                min="1"
+              />
+              <button 
+                type="button" 
+                onClick={() => { const q = parseInt(bulkQty); if (!isNaN(q) && q > 0) setBulkQuantity(q); }} 
+                className="h-6 px-2 text-xs font-medium bg-[var(--color-primary)] text-white rounded hover:opacity-90"
+              >
+                Set All
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
             <label
               htmlFor="form-show-isbn"
               className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] cursor-pointer select-none"
@@ -276,6 +296,7 @@ export function InvoiceForm() {
               />
               Show Author
             </label>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="px-2">

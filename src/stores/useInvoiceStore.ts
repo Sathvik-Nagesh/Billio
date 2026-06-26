@@ -56,6 +56,7 @@ interface InvoiceStore {
   toggleShowIsbn: () => void;
   toggleShowSlNo: () => void;
   toggleShowAuthor: () => void;
+  setBulkQuantity: (quantity: number) => void;
 }
 
 function recalculate(state: InvoiceStore) {
@@ -205,6 +206,19 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
       return {
         form: { ...state.form, showAuthor: newShowAuthor, items },
       };
+    });
+  },
+
+  setBulkQuantity: (quantity: number) => {
+    set(state => {
+      const items = state.form.items.map(item => ({
+        ...item,
+        quantity,
+        lineTotal: calculateLineTotal(quantity, item.unitPrice)
+      }));
+      const form = { ...state.form, items };
+      const calculations = calculateInvoice(items, form.discountType, form.discountValue);
+      return { form, calculations };
     });
   },
 }));

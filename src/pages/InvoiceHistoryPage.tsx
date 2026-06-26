@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Eye, Trash2, Copy, FileText, Calendar, ChevronDown, Filter } from 'lucide-react';
+import { Search, Eye, Trash2, Copy, FileText, Calendar, ChevronDown, Filter, CheckCircle2 } from 'lucide-react';
 import { Input, Button, Badge, Card } from '@/components/ui';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -75,6 +75,11 @@ export function InvoiceHistoryPage() {
     load();
   };
 
+  const handleTogglePaid = (inv: Invoice) => {
+    invoiceRepository.togglePaidStatus(inv.id, !inv.isPaid);
+    load();
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden animate-fade-in">
       {/* Filters */}
@@ -136,6 +141,11 @@ export function InvoiceHistoryPage() {
                     <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{inv.customerName}</span>
                     <Badge>{inv.invoiceNumber}</Badge>
                     {biz && <Badge variant="default" className="text-xs">{biz.name}</Badge>}
+                    {inv.isPaid ? (
+                      <Badge variant="success">Paid</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[var(--color-text-muted)]">Unpaid</Badge>
+                    )}
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)] mt-0.5 flex items-center gap-2">
                     <Calendar size={10} />{formatDate(inv.invoiceDate, dateFormat)}
@@ -143,6 +153,7 @@ export function InvoiceHistoryPage() {
                 </div>
                 <div className="text-base font-bold text-[var(--color-text-primary)] shrink-0">{formatINR(inv.grandTotal)}</div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => handleTogglePaid(inv)} className={`h-8 w-8 rounded-lg flex items-center justify-center transition-all ${inv.isPaid ? 'bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 shadow-sm' : 'text-[var(--color-text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'}`} title={inv.isPaid ? 'Mark as Unpaid' : 'Mark as Paid'}><CheckCircle2 size={14} /></button>
                   <button onClick={() => handleView(inv)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] transition-all" title="View/Edit"><Eye size={14} /></button>
                   <button onClick={() => handleDuplicate(inv)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all" title="Duplicate"><Copy size={14} /></button>
                   <button onClick={() => handleDelete(inv.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all" title="Delete"><Trash2 size={14} /></button>

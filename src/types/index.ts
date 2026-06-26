@@ -87,6 +87,7 @@ export interface Invoice {
   invoiceLanguage: 'en' | 'kn';
   pdfPath?: string;
   status: 'draft' | 'final';
+  isPaid?: boolean;
   createdAt: string;
   updatedAt: string;
   // Joined fields

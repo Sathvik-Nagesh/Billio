@@ -1,5 +1,6 @@
 import { db, generateId } from '../index';
 import type { Invoice, InvoiceItem } from '../../../types';
+import { businessRepository } from './businessRepository';
 
 const INV_COLLECTION = 'invoices' as const;
 const ITEM_COLLECTION = 'invoice_items' as const;
@@ -95,7 +96,10 @@ export const invoiceRepository = {
     const sequences = db.getCollection<Sequence>(SEQ_COLLECTION);
     const yearKey = this.getYearKey();
     const existing = sequences.find(s => s.businessId === businessId && s.yearKey === yearKey);
-    return existing ? existing.lastNumber + 1 : 1;
+    const business = businessRepository.getById(businessId);
+    const startNumber = business?.invoiceStartNumber ?? 1;
+    const nextSeq = existing ? existing.lastNumber + 1 : 1;
+    return Math.max(nextSeq, startNumber);
   },
 
   incrementSequence(businessId: string): void {
@@ -113,5 +117,14 @@ export const invoiceRepository = {
   getYearKey(): string {
     const now = new Date();
     return now.getFullYear().toString();
+  },
+
+  togglePaidStatus(id: string, isPaid: boolean): Invoice | null {
+    const invoices = db.getCollection<Invoice>(INV_COLLECTION);
+    const idx = invoices.findIndex(i => i.id === id);
+    if (idx === -1) return null;
+    invoices[idx] = { ...invoices[idx], isPaid, updatedAt: new Date().toISOString() };
+    db.setCollection(INV_COLLECTION, invoices);
+    return invoices[idx];
   },
 };

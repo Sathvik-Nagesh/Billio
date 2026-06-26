@@ -18,6 +18,8 @@ export function HomePage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [chartData, setChartData] = useState<{name: string, total: number}[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [totalUnpaid, setTotalUnpaid] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +28,12 @@ export function HomePage() {
     
     // Calculate total revenue all-time or for current year? The user said "Total Revenue"
     const totalRev = all.reduce((sum, inv) => sum + inv.grandTotal, 0);
+    const paid = all.filter(inv => inv.isPaid).reduce((sum, inv) => sum + inv.grandTotal, 0);
+    const unpaid = all.filter(inv => !inv.isPaid).reduce((sum, inv) => sum + inv.grandTotal, 0);
+    
     setTotalRevenue(totalRev);
+    setTotalPaid(paid);
+    setTotalUnpaid(unpaid);
 
     // Calculate revenue trends for last 6 months
     const last6Months = Array.from({ length: 6 }).map((_, i) => {
@@ -172,17 +179,30 @@ export function HomePage() {
 
       {/* Stats & Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="p-6 flex flex-col justify-center bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-transparent border-indigo-100 dark:border-indigo-900/50">
-          <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-2">Total Revenue (All Time)</div>
-          <div className="text-4xl font-black text-indigo-950 dark:text-indigo-100 tracking-tight">
-            {formatINR(totalRevenue)}
+        <div className="flex flex-col gap-4">
+          <Card className="p-6 flex flex-col justify-center bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-transparent border-indigo-100 dark:border-indigo-900/50 flex-1">
+            <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-2">Total Revenue (All Time)</div>
+            <div className="text-3xl lg:text-4xl font-black text-indigo-700 dark:text-indigo-400 tracking-tight">
+              {formatINR(totalRevenue)}
+            </div>
+            <div className="text-xs text-indigo-500/70 dark:text-indigo-400/50 mt-2 font-medium">
+              Across {invoiceRepository.getAll().length} total invoices
+            </div>
+          </Card>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="p-4 flex flex-col justify-center bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-transparent border-emerald-100 dark:border-emerald-900/50">
+              <div className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">Paid</div>
+              <div className="text-lg font-bold text-emerald-700 dark:text-emerald-400 truncate" title={formatINR(totalPaid)}>{formatINR(totalPaid)}</div>
+            </Card>
+            <Card className="p-4 flex flex-col justify-center bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-transparent border-rose-100 dark:border-rose-900/50">
+              <div className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-1">Unpaid</div>
+              <div className="text-lg font-bold text-rose-700 dark:text-rose-400 truncate" title={formatINR(totalUnpaid)}>{formatINR(totalUnpaid)}</div>
+            </Card>
           </div>
-          <div className="text-xs text-indigo-500/70 dark:text-indigo-400/50 mt-2 font-medium">
-            Across {invoiceRepository.getAll().length} total invoices
-          </div>
-        </Card>
+        </div>
         
-        <Card className="p-4 lg:col-span-2 h-[200px]">
+        <Card className="p-4 lg:col-span-2 h-[200px] lg:h-auto lg:min-h-[220px]">
           <div className="text-xs font-semibold text-[var(--color-text-muted)] mb-4 ml-2 uppercase tracking-wider">Revenue Trend (Last 6 Months)</div>
           <div className="h-[140px] w-full">
             <ResponsiveContainer width="100%" height="100%">
