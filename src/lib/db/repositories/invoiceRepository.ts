@@ -33,7 +33,8 @@ export const invoiceRepository = {
       const q = query.toLowerCase();
       results = results.filter(i =>
         i.invoiceNumber.toLowerCase().includes(q) ||
-        i.customerName.toLowerCase().includes(q)
+        i.customerName.toLowerCase().includes(q) ||
+        (i.customerAddress && i.customerAddress.toLowerCase().includes(q))
       );
     }
     if (businessId) results = results.filter(i => i.businessId === businessId);
