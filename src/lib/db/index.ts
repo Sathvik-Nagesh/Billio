@@ -46,7 +46,8 @@ export const db = {
   saveStore,
   getCollection: <T>(name: keyof DBStore): T[] => {
     const store = getStore();
-    return (store[name] as T[]) || [];
+    // Return a shallow copy to ensure new array references for React state
+    return [...((store[name] as T[]) || [])];
   },
   setCollection: <T>(name: keyof DBStore, items: T[]): void => {
     const store = getStore();
