@@ -98,11 +98,12 @@ export const CardContent = ({ className, children, ...props }: React.HTMLAttribu
 
 // Badge
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'warning' | 'destructive';
+  variant?: 'default' | 'success' | 'warning' | 'destructive' | 'outline';
 }
 export const Badge = ({ className, variant = 'default', ...props }: BadgeProps) => {
   const variants = {
     default: 'bg-[var(--color-surface-tertiary)] text-[var(--color-text-secondary)]',
+    outline: 'border border-[var(--color-border)] bg-transparent text-[var(--color-text-secondary)]',
     success: 'bg-emerald-600 text-white dark:bg-emerald-900 dark:text-emerald-300',
     warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
     destructive: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
