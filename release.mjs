@@ -34,7 +34,10 @@ try {
     console.log("Release folder not found or couldn't be deleted.");
   }
 
-  // 4. Build electron app
+  // 4. Build frontend and electron app
+  console.log("\n🔨 Building frontend...");
+  execSync('npm run build', { stdio: 'inherit' });
+  
   console.log("\n🔨 Building Electron app...");
   execSync('npx electron-builder --win -p never', { stdio: 'inherit' });
 
