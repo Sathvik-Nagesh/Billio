@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
+import { bookRepository } from '@/lib/db/repositories/bookRepository';
 
 interface AuthorAutocompleteProps {
   id?: string;
@@ -21,20 +22,32 @@ export function AuthorAutocomplete({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { form } = useInvoiceStore();
 
+  // Merge authors from: (1) full book catalog, (2) current invoice items
+  // This ensures the dropdown is populated even on a brand-new invoice
   const allAuthors = useMemo(() => {
-    const rawAuthors = form.items.map(i => i.author).filter(a => a && a.trim().length > 0) as string[];
     const unique = new Map<string, string>();
-    rawAuthors.forEach(a => {
-      const lower = a.trim().toLowerCase();
-      if (!unique.has(lower)) {
-        unique.set(lower, a.trim());
+
+    // Source 1: Book catalog (all authors ever saved across all invoices)
+    bookRepository.getAll().forEach(book => {
+      if (book.author && book.author.trim()) {
+        const lower = book.author.trim().toLowerCase();
+        if (!unique.has(lower)) unique.set(lower, book.author.trim());
       }
     });
-    return Array.from(unique.values());
+
+    // Source 2: Current invoice items (in-progress entries)
+    form.items.forEach(item => {
+      if (item.author && item.author.trim()) {
+        const lower = item.author.trim().toLowerCase();
+        if (!unique.has(lower)) unique.set(lower, item.author.trim());
+      }
+    });
+
+    return Array.from(unique.values()).sort((a, b) => a.localeCompare(b));
   }, [form.items]);
 
   const suggestions = useMemo(() => {
-    if (!value) return allAuthors;
+    if (!value || !value.trim()) return allAuthors;
     const lowerVal = value.trim().toLowerCase();
     return allAuthors.filter(a => a.toLowerCase().includes(lowerVal));
   }, [value, allAuthors]);

@@ -97,7 +97,8 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
             value={item.unitPrice === 0 ? '' : item.unitPrice}
             onChange={(e) => {
               const val = e.target.value;
-              onUpdate('unitPrice', val === '' ? 0 : parseFloat(val));
+              const num = parseFloat(val);
+              onUpdate('unitPrice', val === '' ? 0 : Math.max(0, isNaN(num) ? 0 : num));
             }}
             className="h-7 text-sm pl-6"
           />
@@ -112,7 +113,8 @@ export function LineItemRow({ item, onUpdate, onRemove, showIsbn = false, showSl
           value={item.quantity === 0 ? '' : item.quantity}
           onChange={(e) => {
             const val = e.target.value;
-            onUpdate('quantity', val === '' ? 0 : parseInt(val, 10));
+            const num = parseInt(val, 10);
+            onUpdate('quantity', val === '' ? 0 : Math.max(0, isNaN(num) ? 0 : num));
           }}
           className="h-7 text-sm text-center"
           ref={lastInputRef}

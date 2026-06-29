@@ -9,11 +9,13 @@ export function calculateInvoice(
   const rawSubtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const subtotal = Number(rawSubtotal.toFixed(2));
 
+  const safeDiscount = isNaN(discountValue) || discountValue < 0 ? 0 : discountValue;
+
   let discountAmount = 0;
   if (discountType === 'percentage') {
-    discountAmount = Number(((subtotal * Math.min(discountValue, 100)) / 100).toFixed(2));
+    discountAmount = Number(((subtotal * Math.min(safeDiscount, 100)) / 100).toFixed(2));
   } else {
-    discountAmount = Number(Math.min(discountValue, subtotal).toFixed(2));
+    discountAmount = Number(Math.min(safeDiscount, subtotal).toFixed(2));
   }
 
   const afterDiscount = Number((subtotal - discountAmount).toFixed(2));

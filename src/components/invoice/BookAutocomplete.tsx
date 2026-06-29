@@ -106,7 +106,12 @@ export function BookAutocomplete({
                       : 'hover:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)]'
                   }`}
                 >
-                  <span className="truncate pr-4">{book.name}</span>
+                  <div className="min-w-0 flex-1 pr-2">
+                    <div className="truncate font-medium">{book.name}</div>
+                    {book.author && (
+                      <div className="text-xs text-[var(--color-text-muted)] truncate">{book.author}</div>
+                    )}
+                  </div>
                   <span className="text-xs font-mono text-[var(--color-text-muted)] shrink-0">
                     {formatINR(book.unitPrice)}
                   </span>

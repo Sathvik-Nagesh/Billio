@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FilePlus, Copy, Eye, Trash2, FileText, Search, Calendar } from 'lucide-react';
 import { Button, Card, Badge, Skeleton } from '@/components/ui';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
@@ -13,6 +13,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 
 export function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { businesses, activeBusiness } = useBusinessStore();
   const { resetForm, loadInvoice } = useInvoiceStore();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -20,9 +21,9 @@ export function HomePage() {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
   const [totalUnpaid, setTotalUnpaid] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     const all = invoiceRepository.getAll();
     setInvoices(all.slice(0, 15)); // Last 15 for recent list
     
@@ -58,6 +59,15 @@ export function HomePage() {
     setChartData(last6Months);
     setLoading(false);
   }, []);
+
+  // Reload stats every time this page is navigated to
+  useEffect(() => { loadStats(); }, [location.key]);
+
+  // Also reload on window focus (catches updates made in other windows)
+  useEffect(() => {
+    window.addEventListener('focus', loadStats);
+    return () => window.removeEventListener('focus', loadStats);
+  }, [loadStats]);
 
   const handleNewInvoice = () => {
     resetForm();
