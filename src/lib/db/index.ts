@@ -41,6 +41,17 @@ function saveStore(store: DBStore): void {
   localStorage.setItem(DB_KEY, JSON.stringify(store));
 }
 
+// Keep memory cache perfectly synced if local storage changes from another window or backup script
+window.addEventListener('storage', (e) => {
+  if (e.key === DB_KEY && e.newValue) {
+    try {
+      memoryCache = { ...defaultStore, ...JSON.parse(e.newValue) };
+    } catch {
+      // ignore
+    }
+  }
+});
+
 export const db = {
   getStore,
   saveStore,
