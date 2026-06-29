@@ -79,6 +79,10 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
       toast.error('Please select a business first');
       return;
     }
+    if (!business) {
+      toast.error('Selected business no longer exists. Please select another business.');
+      return;
+    }
     if (!form.customerName) {
       toast.error('Please enter customer name');
       return;

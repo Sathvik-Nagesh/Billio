@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Invoice } from '@/types';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { formatDate } from '@/lib/utils/dateFormat';
+import { toast } from 'sonner';
 
 export function InvoiceHistoryPage() {
   const navigate = useNavigate();
@@ -62,7 +63,10 @@ export function InvoiceHistoryPage() {
 
   const handleDuplicate = (inv: Invoice) => {
     const biz = businesses.find(b => b.id === inv.businessId);
-    if (!biz) return;
+    if (!biz) {
+      toast.error('Cannot duplicate: The associated business profile was deleted');
+      return;
+    }
     const nextNum = invoiceRepository.getNextSequenceNumber(biz.id);
     const newNumber = generateInvoiceNumber(biz, nextNum);
     invoiceRepository.duplicate(inv.id, newNumber);

@@ -1,6 +1,8 @@
 // Database module - uses localStorage as mock for browser-only mode
 // In Tauri, this will use tauri-plugin-sql
 
+import { toast } from 'sonner';
+
 const DB_KEY = 'billio_db';
 
 interface DBStore {
@@ -38,7 +40,16 @@ function getStore(): DBStore {
 
 function saveStore(store: DBStore): void {
   memoryCache = store;
-  localStorage.setItem(DB_KEY, JSON.stringify(store));
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(store));
+  } catch (err: any) {
+    if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.error('Storage full! Data could not be saved to disk.');
+      toast.error('Storage Full! Please delete old invoices or businesses to save new data.');
+    } else {
+      console.error('Failed to save to localStorage:', err);
+    }
+  }
 }
 
 // Keep memory cache perfectly synced if local storage changes from another window or backup script

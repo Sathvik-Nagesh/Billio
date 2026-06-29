@@ -32,8 +32,8 @@ export const invoiceRepository = {
     if (query) {
       const q = query.toLowerCase();
       results = results.filter(i =>
-        i.invoiceNumber.toLowerCase().includes(q) ||
-        i.customerName.toLowerCase().includes(q) ||
+        i.invoiceNumber?.toLowerCase().includes(q) ||
+        i.customerName?.toLowerCase().includes(q) ||
         (i.customerAddress && i.customerAddress.toLowerCase().includes(q))
       );
     }

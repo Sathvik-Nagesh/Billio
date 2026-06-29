@@ -255,7 +255,12 @@ export function SettingsPage() {
                   <span className="text-xs font-mono">{Math.round(updateProgress)}%</span>
                 </div>
               ) : updateStatus === 'downloaded' ? (
-                <Button onClick={() => updater.installUpdate()} size="sm" variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={async () => {
+                  toast.loading('Creating backup before update...', { id: 'update-backup' });
+                  await createBackup();
+                  toast.success('Backup created', { id: 'update-backup' });
+                  updater.installUpdate();
+                }} size="sm" variant="default" className="bg-emerald-600 hover:bg-emerald-700">
                   Restart & Install
                 </Button>
               ) : null}
