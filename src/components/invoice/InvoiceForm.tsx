@@ -300,8 +300,8 @@ export function InvoiceForm() {
           </div>
         </CardHeader>
         <CardContent className="px-2">
-          <div className="overflow-visible">
-            <table className="w-full min-w-[500px]">
+          <div className="table-responsive-container overflow-x-auto pb-1">
+            <table className="w-full min-w-[480px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
                   <th className="py-2 px-2 text-left text-xs font-medium text-[var(--color-text-muted)] w-8">#</th>

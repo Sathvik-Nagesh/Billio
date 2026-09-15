@@ -15,6 +15,7 @@ export function NewInvoicePage() {
   const navigate = useNavigate();
   const { activeBusiness, businesses } = useBusinessStore();
   const { form, updateField, editingInvoiceId } = useInvoiceStore();
+  const [mobileTab, setMobileTab] = React.useState<'form' | 'preview'>('form');
 
   // Auto-set business and generate invoice number
   useEffect(() => {
@@ -49,31 +50,48 @@ export function NewInvoicePage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col min-w-0">
       {/* Top action bar */}
-      <div className="flex-shrink-0 px-4 py-3 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between gap-4 no-print">
-        <div className="text-sm">
+      <div className="flex-shrink-0 px-3 sm:px-4 py-2.5 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between gap-2 sm:gap-4 no-print flex-wrap">
+        <div className="text-xs sm:text-sm truncate">
           <span className="text-[var(--color-text-muted)]">Invoice: </span>
           <span className="font-semibold text-[var(--color-text-primary)]">{form.invoiceNumber || 'Draft'}</span>
-          {editingInvoiceId && <span className="ml-2 text-xs text-[var(--color-primary)] font-medium">(Editing)</span>}
+          {editingInvoiceId && <span className="ml-1.5 text-xs text-[var(--color-primary)] font-medium">(Editing)</span>}
         </div>
+
+        {/* Mobile View Toggle Switcher (Form / Preview) */}
+        <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-[var(--color-surface-tertiary)] border border-[var(--color-border)]">
+          <button
+            onClick={() => setMobileTab('form')}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mobileTab === 'form' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+          >
+            Form Editor
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mobileTab === 'preview' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+          >
+            Live Preview
+          </button>
+        </div>
+
         <InvoiceActions />
       </div>
 
-      {/* Side-by-side: Form (left) + Preview (right) */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Container: Stacked/Tabbed on Mobile/Tablet (<1024px), Side-by-side on Desktop (>=1024px) */}
+      <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Form panel */}
-        <div className="w-[600px] min-w-[450px] max-w-[60vw] flex-shrink-0 border-r border-[var(--color-border)] resize-x overflow-auto flex flex-col">
+        <div className={`w-full lg:w-[520px] xl:w-[600px] lg:min-w-[420px] flex-shrink-0 border-r border-[var(--color-border)] overflow-y-auto flex flex-col ${mobileTab === 'form' ? 'flex' : 'hidden lg:flex'}`}>
           <InvoiceForm />
         </div>
 
         {/* Preview panel */}
-        <div className="flex-1 overflow-hidden">
+        <div className={`flex-1 overflow-hidden min-w-0 ${mobileTab === 'preview' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
           <InvoicePreview />
         </div>
       </div>
 
-      {/* Dedicated hidden print layout for flawless PDF capture */}
+      {/* Dedicated hidden print layout for PDF capture */}
       <div className="fixed top-0 left-[-9999px] z-[-9999] pointer-events-none">
         <InvoicePrintLayout id="invoice-pdf-layout" />
       </div>

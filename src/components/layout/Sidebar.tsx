@@ -1,8 +1,8 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   Home, FilePlus, FileText, Building2, Settings, BookOpen,
-  ChevronLeft, ChevronRight, Zap
+  ChevronLeft, ChevronRight, Zap, X
 } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -17,103 +17,137 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Settings', id: 'nav-settings' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
   const { activeBusiness } = useBusinessStore();
 
   return (
-    <aside
-      id="app-sidebar"
-      className={`flex flex-col h-full bg-[var(--color-sidebar)] transition-all duration-300 ease-in-out relative z-30 no-print ${
-        sidebarCollapsed ? 'w-16' : 'w-60'
-      }`}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-primary-600)] flex items-center justify-center flex-shrink-0 shadow-lg">
-          <Zap size={16} className="text-white" strokeWidth={2.5} />
-        </div>
-        {!sidebarCollapsed && (
-          <div className="animate-fade-in">
-            <span className="text-white font-bold text-lg tracking-tight font-display">Billio</span>
-            <div className="text-xs text-[var(--color-primary-300)] font-medium leading-none mt-0.5">Invoice Generator</div>
-          </div>
-        )}
-      </div>
-
-      {/* Active Business Badge */}
-      {!sidebarCollapsed && activeBusiness && (
-        <div className="mx-3 mt-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 animate-fade-in">
-          <div className="text-xs text-[var(--color-sidebar-text)] font-medium truncate leading-none mb-0.5">Active Business</div>
-          <div className="text-sm text-white font-semibold truncate">{activeBusiness.name}</div>
-        </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden transition-opacity animate-fade-in"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label, id }) => (
-          sidebarCollapsed ? (
-            <Tooltip key={to} content={label}>
+      <aside
+        id="app-sidebar"
+        className={`flex flex-col h-full bg-[var(--color-sidebar)] transition-all duration-300 ease-in-out z-50 no-print
+          fixed inset-y-0 left-0 md:static
+          ${mobileOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'}
+          ${sidebarCollapsed ? 'md:w-16' : 'md:w-60'}
+        `}
+      >
+        {/* Logo & Mobile Close */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-primary-600)] flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Zap size={16} className="text-white" strokeWidth={2.5} />
+            </div>
+            {(!sidebarCollapsed || mobileOpen) && (
+              <div className="animate-fade-in">
+                <span className="text-white font-bold text-lg tracking-tight font-display">Billio</span>
+                <div className="text-xs text-[var(--color-primary-300)] font-medium leading-none mt-0.5">Invoice Generator</div>
+              </div>
+            )}
+          </div>
+          {mobileOpen && (
+            <button
+              onClick={onMobileClose}
+              className="md:hidden p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
+
+        {/* Active Business Badge */}
+        {(!sidebarCollapsed || mobileOpen) && activeBusiness && (
+          <div className="mx-3 mt-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 animate-fade-in">
+            <div className="text-xs text-[var(--color-sidebar-text)] font-medium truncate leading-none mb-0.5">Active Business</div>
+            <div className="text-sm text-white font-semibold truncate">{activeBusiness.name}</div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          {navItems.map(({ to, icon: Icon, label, id }) => {
+            const isCollapsedOnDesktop = sidebarCollapsed && !mobileOpen;
+
+            return isCollapsedOnDesktop ? (
+              <Tooltip key={to} content={label}>
+                <NavLink
+                  to={to}
+                  id={id}
+                  end={to === '/'}
+                  onClick={onMobileClose}
+                  className={({ isActive }) =>
+                    `flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-150 ${
+                      isActive
+                        ? 'bg-[var(--color-sidebar-item-active)] text-[var(--color-sidebar-text-active)]'
+                        : 'text-[var(--color-sidebar-text)] hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon size={18} />
+                </NavLink>
+              </Tooltip>
+            ) : (
               <NavLink
+                key={to}
                 to={to}
                 id={id}
                 end={to === '/'}
+                onClick={onMobileClose}
                 className={({ isActive }) =>
-                  `flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-150 ${
+                  `flex items-center gap-3 h-10 px-3 rounded-lg transition-all duration-150 text-sm font-medium ${
                     isActive
-                      ? 'bg-[var(--color-sidebar-item-active)] text-[var(--color-sidebar-text-active)]'
+                      ? 'bg-[var(--color-sidebar-item-active)] text-[var(--color-sidebar-text-active)] shadow-sm'
                       : 'text-[var(--color-sidebar-text)] hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
-                <Icon size={18} />
+                <Icon size={18} className="flex-shrink-0" />
+                <span className="animate-fade-in truncate">{label}</span>
               </NavLink>
-            </Tooltip>
-          ) : (
-            <NavLink
-              key={to}
-              to={to}
-              id={id}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 h-10 px-3 rounded-lg transition-all duration-150 text-sm font-medium ${
-                  isActive
-                    ? 'bg-[var(--color-sidebar-item-active)] text-[var(--color-sidebar-text-active)] shadow-sm'
-                    : 'text-[var(--color-sidebar-text)] hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              <Icon size={18} className="flex-shrink-0" />
-              <span className="animate-fade-in truncate">{label}</span>
-            </NavLink>
-          )
-        ))}
-      </nav>
+            );
+          })}
+        </nav>
 
-      {/* Collapse Toggle */}
-      <div className="px-2 pb-4 border-t border-white/10 pt-3">
-        <button
-          onClick={toggleSidebar}
-          id="sidebar-toggle"
-          className="flex items-center justify-center h-9 w-9 mx-auto rounded-lg text-[var(--color-sidebar-text)] hover:bg-white/10 hover:text-white transition-all duration-150"
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-      </div>
-      {/* Built By */}
-      {!sidebarCollapsed && (
-        <div className="px-4 pb-4 pt-2 text-center animate-fade-in border-t border-white/10 mt-auto">
-          <a
-            href="https://www.instagram.com/sathvik_nagesh/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-[var(--color-sidebar-text)] hover:text-white transition-colors duration-200"
+        {/* Collapse Toggle (Desktop only) */}
+        <div className="hidden md:block px-2 pb-4 border-t border-white/10 pt-3">
+          <button
+            onClick={toggleSidebar}
+            id="sidebar-toggle"
+            className="flex items-center justify-center h-9 w-9 mx-auto rounded-lg text-[var(--color-sidebar-text)] hover:bg-white/10 hover:text-white transition-all duration-150"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            Built by <span className="font-semibold underline">Sathvik Nagesh</span>
-          </a>
+            {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
         </div>
-      )}
-    </aside>
+
+        {/* Built By */}
+        {(!sidebarCollapsed || mobileOpen) && (
+          <div className="px-4 pb-4 pt-2 text-center animate-fade-in border-t border-white/10 mt-auto">
+            <a
+              href="https://www.instagram.com/sathvik_nagesh/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-[var(--color-sidebar-text)] hover:text-white transition-colors duration-200"
+            >
+              Built by <span className="font-semibold underline">Sathvik Nagesh</span>
+            </a>
+          </div>
+        )}
+      </aside>
+    </>
   );
 }

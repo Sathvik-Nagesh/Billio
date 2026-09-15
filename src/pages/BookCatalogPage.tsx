@@ -157,8 +157,9 @@ export function BookCatalogPage() {
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-y-auto p-0">
-          <table className="w-full text-left text-sm whitespace-nowrap">
+        <CardContent className="flex-1 overflow-hidden p-0 flex flex-col">
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap min-w-[500px]">
             <thead className="sticky top-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] shadow-[0_1px_0_var(--color-border)]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Book Name</th>
@@ -205,8 +206,9 @@ export function BookCatalogPage() {
               )}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
