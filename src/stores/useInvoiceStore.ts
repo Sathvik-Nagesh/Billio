@@ -34,6 +34,10 @@ const defaultState = (): InvoiceFormState => ({
   templateId: 'minimal-modern',
   themeOverrides: {},
   status: 'draft',
+  paymentMethod: 'cash',
+  paymentStatus: 'paid',
+  receivedAmount: 0,
+  changeAmount: 0,
   showIsbn: false,
   showSlNo: false,
   showAuthor: false,
@@ -49,7 +53,10 @@ interface InvoiceStore {
   loadInvoice: (form: InvoiceFormState, id: string) => void;
   updateField: <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => void;
   updateTheme: (overrides: Partial<ThemeOverrides>) => void;
+  setPaymentDetails: (method: 'cash' | 'upi' | 'credit', receivedAmount?: number) => void;
   addItem: () => void;
+  addBookItem: (book: { name: string; unitPrice: number; author?: string; isbn?: string }) => void;
+  addMultipleBooks: (books: { name: string; unitPrice: number; author?: string; isbn?: string }[]) => void;
   removeItem: (id: string) => void;
   updateItem: <K extends keyof InvoiceItemForm>(id: string, key: K, value: InvoiceItemForm[K]) => void;
   reorderItems: (from: number, to: number) => void;
@@ -57,6 +64,7 @@ interface InvoiceStore {
   toggleShowSlNo: () => void;
   toggleShowAuthor: () => void;
   setBulkQuantity: (quantity: number) => void;
+  setQuickDiscount: (percentage: number) => void;
 }
 
 function recalculate(state: InvoiceStore) {
@@ -66,7 +74,20 @@ function recalculate(state: InvoiceStore) {
     lineTotal: calculateLineTotal(item.quantity, item.unitPrice),
   }));
   const calculations = calculateInvoice(items, state.form.discountType, state.form.discountValue);
-  return { items, calculations };
+  
+  // Calculate change if cash received is entered
+  const received = state.form.receivedAmount || 0;
+  const changeAmount = state.form.paymentMethod === 'cash' && received >= calculations.grandTotal
+    ? Math.round((received - calculations.grandTotal) * 100) / 100
+    : 0;
+
+  const form = {
+    ...state.form,
+    items,
+    changeAmount,
+  };
+
+  return { form, items, calculations };
 }
 
 export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
@@ -96,7 +117,12 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
     const hasAuthorData = (form.items ?? []).some(i => (i as any).author && (i as any).author.trim() !== '');
     const showAuthor = form.showAuthor ?? hasAuthorData;
 
-    const enrichedForm = { ...form, showIsbn, showSlNo, showAuthor };
+    const paymentMethod = form.paymentMethod ?? 'cash';
+    const paymentStatus: 'paid' | 'pending' = form.paymentStatus ?? (paymentMethod === 'credit' ? 'pending' : 'paid');
+    const receivedAmount = form.receivedAmount ?? 0;
+    const changeAmount = form.changeAmount ?? 0;
+
+    const enrichedForm = { ...form, showIsbn, showSlNo, showAuthor, paymentMethod, paymentStatus, receivedAmount, changeAmount };
     const calculations = calculateInvoice(enrichedForm.items, enrichedForm.discountType, enrichedForm.discountValue);
     set({ form: enrichedForm, calculations, editingInvoiceId: id });
   },
@@ -110,8 +136,23 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
         form.showIsbn = true;
       }
 
-      const { calculations } = recalculate({ ...state, form });
-      return { form, calculations };
+      const { calculations, form: updatedForm } = recalculate({ ...state, form });
+      return { form: updatedForm, calculations };
+    });
+  },
+
+  setPaymentDetails: (method, receivedAmount) => {
+    set(state => {
+      const status: 'paid' | 'pending' = method === 'credit' ? 'pending' : 'paid';
+      const received = receivedAmount !== undefined ? receivedAmount : state.form.receivedAmount;
+      const form = {
+        ...state.form,
+        paymentMethod: method,
+        paymentStatus: status,
+        receivedAmount: received,
+      };
+      const { calculations, form: updatedForm } = recalculate({ ...state, form });
+      return { form: updatedForm, calculations };
     });
   },
 
@@ -126,6 +167,81 @@ export const useInvoiceStore = create<InvoiceStore>()((set, get) => ({
       const items = [...state.form.items, { ...defaultItem(), id: generateId(), srNo: state.form.items.length + 1 }];
       const form = { ...state.form, items };
       const calculations = calculateInvoice(items, form.discountType, form.discountValue);
+      return { form, calculations };
+    });
+  },
+
+  addBookItem: (book) => {
+    set(state => {
+      let items = [...state.form.items];
+      // Check if the only existing item is empty
+      if (items.length === 1 && !items[0].productName.trim() && items[0].unitPrice === 0) {
+        items[0] = {
+          ...items[0],
+          productName: book.name,
+          unitPrice: book.unitPrice,
+          author: book.author || items[0].author || '',
+          isbn: book.isbn || items[0].isbn || '',
+          quantity: 1,
+          lineTotal: book.unitPrice,
+        };
+      } else {
+        items.push({
+          ...defaultItem(),
+          id: generateId(),
+          srNo: items.length + 1,
+          productName: book.name,
+          unitPrice: book.unitPrice,
+          author: book.author || '',
+          isbn: book.isbn || '',
+          quantity: 1,
+          lineTotal: book.unitPrice,
+        });
+      }
+      // Reindex srNo
+      items = items.map((it, idx) => ({ ...it, srNo: idx + 1 }));
+      const form = { ...state.form, items };
+      const calculations = calculateInvoice(items, form.discountType, form.discountValue);
+      return { form, calculations };
+    });
+  },
+
+  addMultipleBooks: (books) => {
+    set(state => {
+      if (!books.length) return state;
+      let items = [...state.form.items];
+      // If only 1 item and it's empty, remove it first
+      if (items.length === 1 && !items[0].productName.trim() && items[0].unitPrice === 0) {
+        items = [];
+      }
+      for (const book of books) {
+        items.push({
+          ...defaultItem(),
+          id: generateId(),
+          srNo: items.length + 1,
+          productName: book.name,
+          unitPrice: book.unitPrice,
+          author: book.author || '',
+          isbn: book.isbn || '',
+          quantity: 1,
+          lineTotal: book.unitPrice,
+        });
+      }
+      items = items.map((it, idx) => ({ ...it, srNo: idx + 1 }));
+      const form = { ...state.form, items };
+      const calculations = calculateInvoice(items, form.discountType, form.discountValue);
+      return { form, calculations };
+    });
+  },
+
+  setQuickDiscount: (percentage) => {
+    set(state => {
+      const form = {
+        ...state.form,
+        discountType: 'percentage' as const,
+        discountValue: percentage,
+      };
+      const { calculations } = recalculate({ ...state, form });
       return { form, calculations };
     });
   },

@@ -8,7 +8,7 @@
  *   settings.json         — all persisted Zustand stores
  */
 
-import JSZip from 'jszip';
+// Lazy import JSZip only when backup/restore operations are initiated
 
 const DB_KEY = 'billio_db';
 const SETTINGS_KEYS = [
@@ -66,6 +66,7 @@ export async function createBackup(): Promise<{ success: boolean; filename?: str
     }
 
     // Build ZIP
+    const JSZip = (await import('jszip')).default;
     const zip = new JSZip();
     zip.file('backup_manifest.json', JSON.stringify(manifest, null, 2));
     zip.file('db.json', JSON.stringify(dbData, null, 2));
@@ -102,6 +103,7 @@ export async function parseBackup(file: File): Promise<
   { success: false; error: string }
 > {
   try {
+    const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(file);
 
     // Validate manifest exists

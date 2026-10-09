@@ -88,6 +88,10 @@ export interface Invoice {
   pdfPath?: string;
   status: 'draft' | 'final';
   isPaid?: boolean;
+  paymentMethod?: 'cash' | 'upi' | 'credit';
+  paymentStatus?: 'paid' | 'pending';
+  receivedAmount?: number;
+  changeAmount?: number;
   createdAt: string;
   updatedAt: string;
   // Joined fields
@@ -131,6 +135,10 @@ export interface InvoiceFormState {
   templateId: string;
   themeOverrides: ThemeOverrides;
   status: 'draft' | 'final';
+  paymentMethod: 'cash' | 'upi' | 'credit';
+  paymentStatus: 'paid' | 'pending';
+  receivedAmount: number;
+  changeAmount: number;
   showIsbn: boolean;
   showSlNo: boolean;
   showAuthor: boolean;

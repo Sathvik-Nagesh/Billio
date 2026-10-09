@@ -3,6 +3,7 @@ import { Download, Printer, Share2, CheckCircle, Loader2, Save } from 'lucide-re
 import { Button } from '@/components/ui';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
+import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
 import { TEMPLATE_REGISTRY } from '@/templates';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { customerRepository } from '@/lib/db/repositories/customerRepository';
@@ -69,6 +70,11 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
         themeOverrides: form.themeOverrides,
         invoiceLanguage: form.invoiceLanguage,
         status: 'final' as const,
+        isPaid: form.paymentMethod !== 'credit',
+        paymentMethod: (form.paymentMethod || 'cash') as 'cash' | 'upi' | 'credit',
+        paymentStatus: (form.paymentMethod === 'credit' ? 'pending' : 'paid') as 'paid' | 'pending',
+        receivedAmount: form.receivedAmount || 0,
+        changeAmount: form.changeAmount || 0,
       },
       items,
     };
@@ -312,14 +318,30 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
   };
 
   const handleWhatsApp = async () => {
+    const { whatsappTemplate } = useAppSettingsStore.getState();
     const phone = form.customerPhone?.replace(/\D/g, '');
-    const message = encodeURIComponent(
-      `Dear ${form.customerName},\n\nPlease find attached your invoice ${form.invoiceNumber || ''} for ₹${calculations.grandTotal.toFixed(2)}.\n\nThank you for your business!\n\n${business?.name ?? ''}`
-    );
+    
+    // Replace template tags
+    let rawMsg = whatsappTemplate || `Dear {customer_name},\n\nPlease find attached your invoice {invoice_number} for {amount} ({payment_mode}).\n\nThank you for your business!\n{business_name}`;
+    const paymentModeLabel = form.paymentMethod === 'upi' ? 'Paid via UPI' : form.paymentMethod === 'credit' ? 'Payment Due' : 'Paid in Cash';
+    rawMsg = rawMsg
+      .replace(/{customer_name}/g, form.customerName || 'Customer')
+      .replace(/{invoice_number}/g, form.invoiceNumber || '')
+      .replace(/{amount}/g, `₹${calculations.grandTotal.toFixed(2)}`)
+      .replace(/{payment_mode}/g, paymentModeLabel)
+      .replace(/{payment_status}/g, form.paymentMethod === 'credit' ? 'Pending' : 'Paid')
+      .replace(/{business_name}/g, business?.name ?? '');
+
+    const message = encodeURIComponent(rawMsg);
     const url = phone
       ? `https://wa.me/${phone}?text=${message}`
-      : `https://web.whatsapp.com/`;
+      : `https://api.whatsapp.com/send?text=${message}`;
     window.open(url, '_blank');
+  };
+
+  const handleDownloadAndShare = async () => {
+    await handleDownloadPdf();
+    handleWhatsApp();
   };
 
   return (
@@ -330,7 +352,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
           id="invoice-save-btn"
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 min-w-[100px]"
+          className="flex-1 min-w-[90px]"
         >
           {saving ? (
             <><Loader2 size={14} className="animate-spin" /> Saving...</>
@@ -363,15 +385,16 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
           Print
         </Button>
 
-        {/* WhatsApp */}
+        {/* Auto Share (Download PDF + WhatsApp) */}
         <Button
-          id="invoice-whatsapp-btn"
-          variant="outline"
-          onClick={handleWhatsApp}
-          className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-950"
+          id="invoice-share-pdf-whatsapp-btn"
+          onClick={handleDownloadAndShare}
+          disabled={saving}
+          className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold shadow-xs"
+          title="Download PDF and open WhatsApp in one click"
         >
           <Share2 size={14} />
-          WhatsApp
+          PDF & WhatsApp
         </Button>
       </div>
     </>

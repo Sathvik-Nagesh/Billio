@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
+import { useTenant } from '@/contexts/TenantContext';
 import { Tooltip } from '@/components/ui';
 
 const navItems = [
@@ -25,6 +26,7 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
   const { activeBusiness } = useBusinessStore();
+  const { branding, currentTenant } = useTenant();
 
   return (
     <>
@@ -48,13 +50,25 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {/* Logo & Mobile Close */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-primary-600)] flex items-center justify-center flex-shrink-0 shadow-lg">
-              <Zap size={16} className="text-white" strokeWidth={2.5} />
-            </div>
+            {branding.logoUrl ? (
+              <img
+                src={branding.logoUrl}
+                alt={branding.brandName || 'Brand Logo'}
+                className="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5 shadow-lg flex-shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-primary-600)] flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Zap size={16} className="text-white" strokeWidth={2.5} />
+              </div>
+            )}
             {(!sidebarCollapsed || mobileOpen) && (
-              <div className="animate-fade-in">
-                <span className="text-white font-bold text-lg tracking-tight font-display">Billio</span>
-                <div className="text-xs text-[var(--color-primary-300)] font-medium leading-none mt-0.5">Invoice Generator</div>
+              <div className="animate-fade-in truncate">
+                <span className="text-white font-bold text-lg tracking-tight font-display truncate block">
+                  {branding.brandName || 'Billio'}
+                </span>
+                <div className="text-xs text-[var(--color-primary-300)] font-medium leading-none mt-0.5 truncate">
+                  {branding.tagline || 'Invoice Generator'}
+                </div>
               </div>
             )}
           </div>

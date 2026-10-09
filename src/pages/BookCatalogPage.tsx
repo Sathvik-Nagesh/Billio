@@ -55,8 +55,7 @@ export function BookCatalogPage() {
 
   const handleClearAll = () => {
     if (!confirm('WARNING: This will delete ALL books in your catalog. This cannot be undone. Proceed?')) return;
-    const all = bookRepository.getAll();
-    all.forEach(b => bookRepository.delete(b.id));
+    bookRepository.clearAll();
     toast.success('Catalog cleared');
     loadBooks();
   };
@@ -86,14 +85,14 @@ export function BookCatalogPage() {
     reader.onload = (evt) => {
       const text = evt.target?.result as string;
       const lines = text.split('\n');
-      let count = 0;
+      const itemsToImport: Array<{ name: string; unitPrice: number; author?: string }> = [];
       
       // Skip header (i=1)
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         
-        // Basic CSV parsing (handles quotes simply)
+        // Basic CSV parsing (handles quotes)
         const parts = line.split(',');
         let name = parts[0] || '';
         let author = parts[1] || '';
@@ -103,12 +102,17 @@ export function BookCatalogPage() {
         if (author.startsWith('"') && author.endsWith('"')) author = author.slice(1, -1);
         
         const price = parseFloat(priceStr) || 0;
-        if (name) {
-          bookRepository.upsert(name, price, author || undefined);
-          count++;
+        if (name.trim()) {
+          itemsToImport.push({
+            name: name.trim(),
+            unitPrice: price,
+            author: author.trim() || undefined,
+          });
         }
       }
-      toast.success(`Imported ${count} books successfully`);
+
+      const importedCount = bookRepository.upsertMany(itemsToImport);
+      toast.success(`Imported ${importedCount} books successfully`);
       loadBooks();
     };
     reader.readAsText(file);

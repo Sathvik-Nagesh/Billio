@@ -35,6 +35,7 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+
         {/* Business Selector */}
         {businesses.length > 0 && (
           <div className="flex items-center gap-2 max-w-[140px] sm:max-w-xs">

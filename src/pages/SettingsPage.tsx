@@ -1,13 +1,12 @@
 import React from 'react';
-import { Moon, Sun, Keyboard, Info, Calendar, Printer } from 'lucide-react';
+import { Moon, Sun, Keyboard, Info, Calendar, MessageSquare, Download, Upload, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Switch, Separator, Button } from '@/components/ui';
 import { useThemeStore } from '@/stores/useThemeStore';
-import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
+import { useAppSettingsStore, DEFAULT_WHATSAPP_TEMPLATE } from '@/stores/useAppSettingsStore';
 import { DATE_FORMAT_OPTIONS } from '@/lib/utils/dateFormat';
 import { createBackup, parseBackup, restoreBackup } from '@/lib/backup';
 import type { RestorePreview } from '@/lib/backup';
 import { updater } from '@/lib/updater';
-import { Download, Upload, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const SHORTCUTS = [
@@ -20,7 +19,7 @@ const SELECT_CLS = "h-9 w-full rounded-lg border border-[var(--color-border)] bg
 
 export function SettingsPage() {
   const { mode, toggleMode } = useThemeStore();
-  const { dateFormat, setDateFormat, documentLabel, setDocumentLabel } = useAppSettingsStore();
+  const { dateFormat, setDateFormat, documentLabel, setDocumentLabel, whatsappTemplate, setWhatsappTemplate } = useAppSettingsStore();
   
   // Backup state
   const [isRestoreOpen, setIsRestoreOpen] = React.useState(false);
@@ -188,6 +187,41 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* WhatsApp Sharing Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <MessageSquare size={16} /> WhatsApp Sharing Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+                Default WhatsApp Message Template
+              </label>
+              <textarea
+                id="settings-whatsapp-template"
+                rows={5}
+                value={whatsappTemplate}
+                onChange={(e) => setWhatsappTemplate(e.target.value)}
+                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-xs sm:text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] font-mono resize-y"
+                placeholder="Enter template message..."
+              />
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  Available tags: <code className="bg-[var(--color-surface-tertiary)] px-1 rounded">{'{customer_name}'}</code> <code className="bg-[var(--color-surface-tertiary)] px-1 rounded">{'{invoice_number}'}</code> <code className="bg-[var(--color-surface-tertiary)] px-1 rounded">{'{amount}'}</code> <code className="bg-[var(--color-surface-tertiary)] px-1 rounded">{'{business_name}'}</code>
+                </p>
+                <button
+                  onClick={() => setWhatsappTemplate(DEFAULT_WHATSAPP_TEMPLATE)}
+                  className="text-xs text-[var(--color-primary)] hover:underline shrink-0"
+                >
+                  Reset Default
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Data & Backup */}
         <Card>
           <CardHeader>
@@ -244,9 +278,14 @@ export function SettingsPage() {
                   <CheckCircle2 size={14} /> Up to date
                 </div>
               ) : updateStatus === 'available' ? (
-                <Button onClick={() => updater.downloadUpdate()} size="sm" variant="default" className="gap-2">
-                  <Download size={14} /> Download Update
-                </Button>
+                <div className="flex items-center gap-2">
+                  {updateInfo?.version && (
+                    <span className="text-xs text-[var(--color-primary)] font-semibold">v{updateInfo.version}</span>
+                  )}
+                  <Button onClick={() => updater.downloadUpdate()} size="sm" variant="default" className="gap-2">
+                    <Download size={14} /> Download Update
+                  </Button>
+                </div>
               ) : updateStatus === 'downloading' ? (
                 <div className="flex items-center gap-2 w-32">
                   <div className="h-1.5 flex-1 bg-[var(--color-surface-tertiary)] rounded-full overflow-hidden">

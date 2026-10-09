@@ -1,11 +1,27 @@
-// Database module - uses localStorage as mock for browser-only mode
-// In Tauri, this will use tauri-plugin-sql
+// High-performance Multi-tenant database module
+// Features: Instant in-memory cache, batched disk sync, zero-latency reads/writes
 
 import { toast } from 'sonner';
 
-const DB_KEY = 'billio_db';
+const BASE_DB_KEY = 'billio_db';
+const ACTIVE_TENANT_KEY = 'billio_active_tenant_id';
 
-interface DBStore {
+let currentTenantId: string = (() => {
+  try {
+    return localStorage.getItem(ACTIVE_TENANT_KEY) || 'default';
+  } catch {
+    return 'default';
+  }
+})();
+
+function getDbKey(tenantId: string = currentTenantId): string {
+  if (!tenantId || tenantId === 'default' || tenantId === 'tenant_default') {
+    return BASE_DB_KEY;
+  }
+  return `${BASE_DB_KEY}_${tenantId}`;
+}
+
+export interface DBStore {
   businesses: Record<string, unknown>[];
   customers: Record<string, unknown>[];
   invoices: Record<string, unknown>[];
@@ -25,25 +41,29 @@ const defaultStore: DBStore = {
   books: [],
 };
 
-let memoryCache: DBStore | null = null;
+const memoryCaches: Record<string, DBStore> = {};
+const pendingWrites: Set<string> = new Set();
+let flushTimer: any = null;
 
-function getStore(): DBStore {
-  if (memoryCache) return memoryCache;
+function getStore(tenantId: string = currentTenantId): DBStore {
+  const key = getDbKey(tenantId);
+  if (memoryCaches[key]) return memoryCaches[key];
   try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (!raw) return (memoryCache = { ...defaultStore });
-    return (memoryCache = { ...defaultStore, ...JSON.parse(raw) });
+    const raw = localStorage.getItem(key);
+    if (!raw) return (memoryCaches[key] = { ...defaultStore });
+    return (memoryCaches[key] = { ...defaultStore, ...JSON.parse(raw) });
   } catch {
-    return (memoryCache = { ...defaultStore });
+    return (memoryCaches[key] = { ...defaultStore });
   }
 }
 
-function saveStore(store: DBStore): void {
-  memoryCache = store;
+function flushKeyToDisk(key: string): void {
+  const store = memoryCaches[key];
+  if (!store) return;
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(store));
+    localStorage.setItem(key, JSON.stringify(store));
   } catch (err: any) {
-    if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+    if (err?.name === 'QuotaExceededError' || err?.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
       console.error('Storage full! Data could not be saved to disk.');
       toast.error('Storage Full! Please delete old invoices or businesses to save new data.');
     } else {
@@ -52,41 +72,78 @@ function saveStore(store: DBStore): void {
   }
 }
 
-// Keep memory cache perfectly synced if local storage changes from another window or backup script
-window.addEventListener('storage', (e) => {
-  if (e.key === DB_KEY && e.newValue) {
-    try {
-      memoryCache = { ...defaultStore, ...JSON.parse(e.newValue) };
-    } catch {
-      // ignore
+function scheduleSaveStore(tenantId: string = currentTenantId): void {
+  const key = getDbKey(tenantId);
+  pendingWrites.add(key);
+
+  if (flushTimer) return;
+  flushTimer = setTimeout(() => {
+    flushTimer = null;
+    pendingWrites.forEach((k) => {
+      flushKeyToDisk(k);
+    });
+    pendingWrites.clear();
+  }, 50);
+}
+
+function saveStore(store: DBStore, tenantId: string = currentTenantId): void {
+  const key = getDbKey(tenantId);
+  memoryCaches[key] = store;
+  scheduleSaveStore(tenantId);
+}
+
+// Ensure all pending writes are flushed immediately before page unloads
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (pendingWrites.size > 0) {
+      pendingWrites.forEach((k) => flushKeyToDisk(k));
+      pendingWrites.clear();
     }
-  }
-});
+  });
+
+  // Keep memory cache synced if local storage changes across tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key && e.key.startsWith(BASE_DB_KEY) && e.newValue) {
+      try {
+        memoryCaches[e.key] = { ...defaultStore, ...JSON.parse(e.newValue) };
+      } catch {
+        // ignore
+      }
+    }
+  });
+}
 
 export const db = {
-  getStore,
-  saveStore,
-  getCollection: <T>(name: keyof DBStore): T[] => {
-    const store = getStore();
-    // Return a shallow copy to ensure new array references for React state
-    return [...((store[name] as T[]) || [])];
+  getTenantId: (): string => currentTenantId,
+  setTenantId: (tenantId: string): void => {
+    currentTenantId = tenantId || 'default';
   },
-  setCollection: <T>(name: keyof DBStore, items: T[]): void => {
-    const store = getStore();
+  getStore: (tenantId?: string): DBStore => getStore(tenantId),
+  saveStore: (store: DBStore, tenantId?: string): void => saveStore(store, tenantId),
+  flush: (): void => {
+    pendingWrites.forEach((k) => flushKeyToDisk(k));
+    pendingWrites.clear();
+  },
+  getCollection: <T>(name: keyof DBStore, tenantId?: string): T[] => {
+    const store = getStore(tenantId);
+    return (store[name] as T[]) || [];
+  },
+  setCollection: <T>(name: keyof DBStore, items: T[], tenantId?: string): void => {
+    const store = getStore(tenantId);
     (store as unknown as Record<string, unknown>)[name] = items;
-    saveStore(store);
+    saveStore(store, tenantId);
   },
-  getSetting: (key: string): string | null => {
-    const store = getStore();
+  getSetting: (key: string, tenantId?: string): string | null => {
+    const store = getStore(tenantId);
     return store.settings[key] ?? null;
   },
-  setSetting: (key: string, value: string): void => {
-    const store = getStore();
+  setSetting: (key: string, value: string, tenantId?: string): void => {
+    const store = getStore(tenantId);
     store.settings[key] = value;
-    saveStore(store);
+    saveStore(store, tenantId);
   },
 };
 
 export function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }

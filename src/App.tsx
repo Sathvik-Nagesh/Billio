@@ -1,17 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { HomePage } from '@/pages/HomePage';
-import { NewInvoicePage } from '@/pages/NewInvoicePage';
-import { InvoiceHistoryPage } from '@/pages/InvoiceHistoryPage';
-import { BusinessProfilesPage } from '@/pages/BusinessProfilesPage';
-import { BusinessFormPage } from '@/pages/BusinessFormPage';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { BookCatalogPage } from '@/pages/BookCatalogPage';
+import { ConvexProvider } from '@/lib/convex/ConvexProvider';
+import { TenantProvider } from '@/contexts/TenantContext';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useNavigate } from 'react-router-dom';
+
+const HomePage = lazy(() => import('@/pages/HomePage').then(m => ({ default: m.HomePage })));
+const NewInvoicePage = lazy(() => import('@/pages/NewInvoicePage').then(m => ({ default: m.NewInvoicePage })));
+const InvoiceHistoryPage = lazy(() => import('@/pages/InvoiceHistoryPage').then(m => ({ default: m.InvoiceHistoryPage })));
+const BusinessProfilesPage = lazy(() => import('@/pages/BusinessProfilesPage').then(m => ({ default: m.BusinessProfilesPage })));
+const BusinessFormPage = lazy(() => import('@/pages/BusinessFormPage').then(m => ({ default: m.BusinessFormPage })));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const BookCatalogPage = lazy(() => import('@/pages/BookCatalogPage').then(m => ({ default: m.BookCatalogPage })));
+
+function RouteLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 function KeyboardShortcuts() {
   const navigate = useNavigate();
@@ -52,34 +63,43 @@ function AppInit() {
   const { load } = useBusinessStore();
 
   useEffect(() => {
-    // Apply theme on mount
+    // Apply theme on mount and when mode changes
     document.documentElement.classList.toggle('dark', mode === 'dark');
+  }, [mode]);
+
+  useEffect(() => {
     // Load businesses
     load();
-  }, []);
+  }, [load]);
 
   return null;
 }
 
 export default function App() {
   return (
-    <HashRouter>
-      <AppInit />
-      <AppLayout>
-        <KeyboardShortcuts />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/invoice/new" element={<NewInvoicePage />} />
-          <Route path="/invoice/edit/:id" element={<NewInvoicePage />} />
-          <Route path="/history" element={<InvoiceHistoryPage />} />
-          <Route path="/businesses" element={<BusinessProfilesPage />} />
-          <Route path="/businesses/new" element={<BusinessFormPage />} />
-          <Route path="/businesses/edit/:id" element={<BusinessFormPage />} />
-          <Route path="/books" element={<BookCatalogPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AppLayout>
-    </HashRouter>
+    <ConvexProvider>
+      <TenantProvider>
+        <HashRouter>
+          <AppInit />
+          <AppLayout>
+            <KeyboardShortcuts />
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/invoice/new" element={<NewInvoicePage />} />
+                <Route path="/invoice/edit/:id" element={<NewInvoicePage />} />
+                <Route path="/history" element={<InvoiceHistoryPage />} />
+                <Route path="/businesses" element={<BusinessProfilesPage />} />
+                <Route path="/businesses/new" element={<BusinessFormPage />} />
+                <Route path="/businesses/edit/:id" element={<BusinessFormPage />} />
+                <Route path="/books" element={<BookCatalogPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </AppLayout>
+        </HashRouter>
+      </TenantProvider>
+    </ConvexProvider>
   );
 }

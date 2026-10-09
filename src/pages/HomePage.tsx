@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FilePlus, Copy, Eye, Trash2, FileText, Search, Calendar } from 'lucide-react';
+import { FilePlus, Copy, Eye, Trash2, FileText, Search, Calendar, Receipt, DollarSign, QrCode, Clock } from 'lucide-react';
 import { Button, Card, Badge, Skeleton } from '@/components/ui';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { businessRepository } from '@/lib/db/repositories/businessRepository';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
+import { DailyFairTallyModal } from '@/components/invoice/DailyFairTallyModal';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import { formatINR } from '@/lib/utils/currency';
 import type { Invoice, Business } from '@/types';
@@ -18,45 +19,75 @@ export function HomePage() {
   const { resetForm, loadInvoice } = useInvoiceStore();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [chartData, setChartData] = useState<{name: string, total: number}[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
   const [totalUnpaid, setTotalUnpaid] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isTallyOpen, setIsTallyOpen] = useState(false);
 
   const loadStats = useCallback(() => {
     const all = invoiceRepository.getAll();
+    setTotalCount(all.length);
     setInvoices(all.slice(0, 15)); // Last 15 for recent list
     
-    const { totalRev, paid, unpaid } = all.reduce((acc, inv) => {
-      acc.totalRev += inv.grandTotal;
-      if (inv.isPaid) acc.paid += inv.grandTotal;
-      else acc.unpaid += inv.grandTotal;
-      return acc;
-    }, { totalRev: 0, paid: 0, unpaid: 0 });
+    // Prepare 6-month buckets
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    const buckets: { year: number; month: number; name: string; total: number; key: string }[] = [];
+    const monthKeyMap = new Map<string, number>();
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currentYear, currentMonth - i, 1);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      const key = `${y}-${m}`;
+      const idx = buckets.length;
+      buckets.push({
+        year: y,
+        month: m,
+        name: d.toLocaleString('default', { month: 'short' }),
+        total: 0,
+        key,
+      });
+      monthKeyMap.set(key, idx);
+    }
+
+    let totalRev = 0;
+    let paid = 0;
+    let unpaid = 0;
+
+    for (let i = 0; i < all.length; i++) {
+      const inv = all[i];
+      const gt = inv.grandTotal || 0;
+      totalRev += gt;
+      if (inv.isPaid) {
+        paid += gt;
+      } else {
+        unpaid += gt;
+      }
+
+      // Fast month lookup
+      if (inv.invoiceDate) {
+        const parts = inv.invoiceDate.split('-');
+        if (parts.length >= 2) {
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1; // 0-indexed
+          const key = `${y}-${m}`;
+          const bIdx = monthKeyMap.get(key);
+          if (bIdx !== undefined) {
+            buckets[bIdx].total += gt;
+          }
+        }
+      }
+    }
     
     setTotalRevenue(totalRev);
     setTotalPaid(paid);
     setTotalUnpaid(unpaid);
-
-    // Calculate revenue trends for last 6 months
-    const last6Months = Array.from({ length: 6 }).map((_, i) => {
-      const d = new Date();
-      d.setMonth(d.getMonth() - (5 - i));
-      return { 
-        year: d.getFullYear(), 
-        month: d.getMonth(), 
-        name: d.toLocaleString('default', { month: 'short' }),
-        total: 0 
-      };
-    });
-
-    all.forEach(inv => {
-      const d = new Date(inv.invoiceDate);
-      const m = last6Months.find(x => x.year === d.getFullYear() && x.month === d.getMonth());
-      if (m) m.total += inv.grandTotal;
-    });
-
-    setChartData(last6Months);
+    setChartData(buckets);
     setLoading(false);
   }, []);
 
@@ -110,6 +141,10 @@ export function HomePage() {
           templateId: fullDup.templateId ?? 'minimal-modern',
           themeOverrides: fullDup.themeOverrides ?? {},
           status: 'draft' as const,
+          paymentMethod: fullDup.paymentMethod ?? 'cash',
+          paymentStatus: fullDup.paymentStatus ?? (fullDup.isPaid ? 'paid' : 'pending'),
+          receivedAmount: fullDup.receivedAmount ?? 0,
+          changeAmount: fullDup.changeAmount ?? 0,
           showIsbn: hasIsbnData || fullDup.templateId === 'publication-focus',
           showSlNo: hasSlNoData,
           showAuthor: (fullDup.items ?? []).some(i => i.author && i.author.trim() !== ''),
@@ -143,6 +178,10 @@ export function HomePage() {
       templateId: full.templateId ?? 'minimal-modern',
       themeOverrides: full.themeOverrides ?? {},
       status: full.status,
+      paymentMethod: full.paymentMethod ?? 'cash',
+      paymentStatus: full.paymentStatus ?? (full.isPaid ? 'paid' : 'pending'),
+      receivedAmount: full.receivedAmount ?? 0,
+      changeAmount: full.changeAmount ?? 0,
       showIsbn: hasIsbnData || full.templateId === 'publication-focus',
       showSlNo: hasSlNoData,
       showAuthor: (full.items ?? []).some(i => i.author && i.author.trim() !== ''),
@@ -163,53 +202,65 @@ export function HomePage() {
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6 animate-fade-in">
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <button
           id="home-new-invoice-btn"
           onClick={handleNewInvoice}
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] p-5 sm:p-6 text-white text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] p-5 text-white text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-          <FilePlus size={28} className="mb-2 sm:mb-3 relative z-10" strokeWidth={1.5} />
-          <div className="text-lg sm:text-xl font-bold relative z-10">New Invoice</div>
-          <div className="text-xs sm:text-sm text-white/70 relative z-10 mt-1">Create a fresh invoice from scratch</div>
-          <div className="mt-2 sm:mt-3 text-xs text-white/50 relative z-10">Ctrl+N</div>
+          <FilePlus size={26} className="mb-2 relative z-10" strokeWidth={1.5} />
+          <div className="text-base sm:text-lg font-bold relative z-10">New Invoice</div>
+          <div className="text-xs text-white/70 relative z-10 mt-0.5">Speed billing & PDF generator</div>
+          <div className="mt-2 text-xs text-white/50 relative z-10 font-mono">Alt+N</div>
         </button>
 
         <button
           id="home-duplicate-btn"
           onClick={handleDuplicateLast}
-          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 sm:p-6 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)] rounded-full -translate-y-8 translate-x-8 opacity-50" />
-          <Copy size={28} className="mb-2 sm:mb-3 text-[var(--color-primary)] relative z-10" strokeWidth={1.5} />
-          <div className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] relative z-10">Duplicate Last</div>
-          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] relative z-10 mt-1">Copy last invoice with a new number</div>
-          <div className="mt-2 sm:mt-3 text-xs text-[var(--color-text-muted)] relative z-10">Quick repeat billing</div>
+          <Copy size={26} className="mb-2 text-[var(--color-primary)] relative z-10" strokeWidth={1.5} />
+          <div className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] relative z-10">Duplicate Last</div>
+          <div className="text-xs text-[var(--color-text-secondary)] relative z-10 mt-0.5">Copy last invoice with next number</div>
+          <div className="mt-2 text-xs text-[var(--color-text-muted)] relative z-10">Quick repeat billing</div>
+        </button>
+
+        <button
+          id="home-daily-tally-btn"
+          onClick={() => setIsTallyOpen(true)}
+          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 dark:bg-emerald-950 rounded-full -translate-y-8 translate-x-8 opacity-60" />
+          <Receipt size={26} className="mb-2 text-emerald-600 dark:text-emerald-400 relative z-10" strokeWidth={1.5} />
+          <div className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] relative z-10">Daily Fair Tally</div>
+          <div className="text-xs text-[var(--color-text-secondary)] relative z-10 mt-0.5">Reconcile cash in hand & UPI</div>
+          <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold relative z-10 font-mono">Alt+T</div>
         </button>
       </div>
 
       {/* Stats & Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <Card className="p-5 sm:p-6 flex flex-col justify-center bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-transparent border-indigo-100 dark:border-indigo-900/50 flex-1">
-            <div className="text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-1 sm:mb-2">Total Revenue (All Time)</div>
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-indigo-700 dark:text-indigo-400 tracking-tight truncate">
+          <Card className="p-5 sm:p-6 flex flex-col justify-center bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs flex-1 rounded-2xl">
+            <div className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1 sm:mb-2">Total Revenue (All Time)</div>
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)] tracking-tight truncate">
               {formatINR(totalRevenue)}
             </div>
-            <div className="text-xs text-indigo-500/70 dark:text-indigo-400/50 mt-1.5 sm:mt-2 font-medium">
-              Across {invoiceRepository.getAll().length} total invoices
+            <div className="text-xs text-[var(--color-text-muted)] mt-1.5 sm:mt-2 font-medium">
+              Across {totalCount} total invoices
             </div>
           </Card>
           
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-transparent border-emerald-100 dark:border-emerald-900/50">
-              <div className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">Paid</div>
-              <div className="text-base sm:text-lg font-bold text-emerald-700 dark:text-emerald-400 truncate" title={formatINR(totalPaid)}>{formatINR(totalPaid)}</div>
+            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 shadow-xs rounded-xl">
+              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Paid Invoices</div>
+              <div className="text-base sm:text-xl font-black text-emerald-800 dark:text-emerald-300 truncate" title={formatINR(totalPaid)}>{formatINR(totalPaid)}</div>
             </Card>
-            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-transparent border-rose-100 dark:border-rose-900/50">
-              <div className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-1">Unpaid</div>
-              <div className="text-base sm:text-lg font-bold text-rose-700 dark:text-rose-400 truncate" title={formatINR(totalUnpaid)}>{formatINR(totalUnpaid)}</div>
+            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-rose-300 dark:border-rose-800 shadow-xs rounded-xl">
+              <div className="text-xs font-bold text-rose-700 dark:text-rose-400 mb-1">Pending Due</div>
+              <div className="text-base sm:text-xl font-black text-rose-800 dark:text-rose-300 truncate" title={formatINR(totalUnpaid)}>{formatINR(totalUnpaid)}</div>
             </Card>
           </div>
         </div>
@@ -269,18 +320,28 @@ export function HomePage() {
         <div className="space-y-2">
           {invoices.map(inv => {
             const biz = getBusiness(inv.businessId);
+            const method = inv.paymentMethod || 'cash';
             return (
               <div
                 key={inv.id}
-                className="group flex items-center gap-4 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all animate-fade-in-up"
+                className="group flex items-center gap-3 sm:gap-4 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all animate-fade-in-up"
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: biz?.accentColor ? `${biz.accentColor}20` : 'var(--color-primary-50)' }}>
                   <FileText size={18} style={{ color: biz?.accentColor ?? 'var(--color-primary)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{inv.customerName}</span>
                     <Badge variant="default" className="text-xs shrink-0">{inv.invoiceNumber}</Badge>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
+                      method === 'cash'
+                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                        : method === 'upi'
+                        ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
+                        : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                    }`}>
+                      {method}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">
                     <span className="flex items-center gap-1"><Calendar size={10} />{inv.invoiceDate}</span>
@@ -308,6 +369,14 @@ export function HomePage() {
             );
           })}
         </div>
+      )}
+
+      {/* Daily Fair Tally Modal */}
+      {isTallyOpen && (
+        <DailyFairTallyModal
+          isOpen={isTallyOpen}
+          onClose={() => setIsTallyOpen(false)}
+        />
       )}
     </div>
   );
