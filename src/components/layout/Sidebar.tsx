@@ -2,11 +2,12 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Home, FilePlus, FileText, Building2, Settings, BookOpen,
-  ChevronLeft, ChevronRight, Zap, X
+  ChevronLeft, ChevronRight, Zap, X, Sparkles, HelpCircle
 } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useTenant } from '@/contexts/TenantContext';
+import { useTourStore } from '@/stores/useTourStore';
 import { Tooltip } from '@/components/ui';
 
 const navItems = [
@@ -26,7 +27,8 @@ interface SidebarProps {
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
   const { activeBusiness } = useBusinessStore();
-  const { branding, currentTenant } = useTenant();
+  const { branding } = useTenant();
+  const { openHelpModal } = useTourStore();
 
   return (
     <>
@@ -134,6 +136,34 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               </NavLink>
             );
           })}
+
+          {/* Quick Guide & Interactive Tour Item */}
+          <div className="pt-2 mt-2 border-t border-white/10">
+            {sidebarCollapsed && !mobileOpen ? (
+              <Tooltip content="Interactive Guide & Tour">
+                <button
+                  onClick={() => {
+                    if (onMobileClose) onMobileClose();
+                    openHelpModal();
+                  }}
+                  className="flex items-center justify-center h-10 w-10 mx-auto rounded-lg text-amber-300 hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  <Sparkles size={18} />
+                </button>
+              </Tooltip>
+            ) : (
+              <button
+                onClick={() => {
+                  if (onMobileClose) onMobileClose();
+                  openHelpModal();
+                }}
+                className="w-full flex items-center gap-3 h-10 px-3 rounded-lg text-amber-300 hover:bg-white/10 transition-all text-sm font-medium cursor-pointer"
+              >
+                <Sparkles size={18} className="flex-shrink-0 text-amber-300" />
+                <span className="animate-fade-in truncate">Guide & Tour</span>
+              </button>
+            )}
+          </div>
         </nav>
 
         {/* Collapse Toggle (Desktop only) */}

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Moon, Sun, Keyboard, Info, Calendar, MessageSquare, Download, Upload, AlertTriangle, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Moon, Sun, Keyboard, Info, Calendar, MessageSquare, Download, Upload, AlertTriangle, RefreshCw, CheckCircle2, User, Sparkles, LogOut, Shield } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Switch, Separator, Button } from '@/components/ui';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useAppSettingsStore, DEFAULT_WHATSAPP_TEMPLATE } from '@/stores/useAppSettingsStore';
 import { DATE_FORMAT_OPTIONS } from '@/lib/utils/dateFormat';
 import { createBackup, parseBackup, restoreBackup } from '@/lib/backup';
@@ -19,6 +20,7 @@ const SELECT_CLS = "h-9 w-full rounded-lg border border-[var(--color-border)] bg
 
 export function SettingsPage() {
   const { mode, toggleMode } = useThemeStore();
+  const { user, logout, resetOnboarding } = useAuthStore();
   const { dateFormat, setDateFormat, documentLabel, setDocumentLabel, whatsappTemplate, setWhatsappTemplate } = useAppSettingsStore();
   
   // Backup state
@@ -98,6 +100,56 @@ export function SettingsPage() {
     <div className="h-full overflow-y-auto p-6 animate-fade-in">
       <div className="max-w-lg mx-auto space-y-4">
         <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-6">Settings</h2>
+
+        {/* User Account & Tour */}
+        <Card className="border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 shadow-xs">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><User size={15} />User Account & Setup</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] text-white flex items-center justify-center font-bold text-sm">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-[var(--color-text-primary)]">{user?.name || 'Store User'}</div>
+                  <div className="text-xs text-[var(--color-text-muted)]">{user?.email || 'Offline User'}</div>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-950)] text-[var(--color-primary)]">
+                {user?.role || 'owner'}
+              </span>
+            </div>
+
+            <Separator />
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resetOnboarding();
+                  toast.info('Restarting interactive setup wizard...');
+                }}
+                className="flex-1 gap-1.5 text-xs text-[var(--color-text-primary)]"
+              >
+                <Sparkles size={14} className="text-amber-500" /> Restart Setup & Tour
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  logout();
+                  toast.success('Signed out');
+                }}
+                className="gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+              >
+                <LogOut size={14} /> Sign Out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Appearance */}
         <Card>

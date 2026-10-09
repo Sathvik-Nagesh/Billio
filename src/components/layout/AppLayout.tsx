@@ -2,6 +2,8 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { InteractiveTour } from '../guide/InteractiveTour';
+import { HelpGuideModal } from '../guide/HelpGuideModal';
 import { Toaster } from 'sonner';
 
 const pageTitles: Record<string, string> = {
@@ -37,6 +39,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
       </div>
+
+      {/* Global Interactive Walkthrough & Spotlight Tour */}
+      <InteractiveTour />
+      <HelpGuideModal />
     </>
   );
 }

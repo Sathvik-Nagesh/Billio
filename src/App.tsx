@@ -6,6 +6,9 @@ import { TenantProvider } from '@/contexts/TenantContext';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { AuthPage } from '@/components/auth/AuthPage';
+import { InteractiveOnboarding } from '@/components/onboarding/InteractiveOnboarding';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = lazy(() => import('@/pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -76,29 +79,37 @@ function AppInit() {
 }
 
 export default function App() {
+  const { isAuthenticated, hasCompletedOnboarding } = useAuthStore();
+
   return (
     <ConvexProvider>
       <TenantProvider>
-        <HashRouter>
-          <AppInit />
-          <AppLayout>
-            <KeyboardShortcuts />
-            <Suspense fallback={<RouteLoading />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/invoice/new" element={<NewInvoicePage />} />
-                <Route path="/invoice/edit/:id" element={<NewInvoicePage />} />
-                <Route path="/history" element={<InvoiceHistoryPage />} />
-                <Route path="/businesses" element={<BusinessProfilesPage />} />
-                <Route path="/businesses/new" element={<BusinessFormPage />} />
-                <Route path="/businesses/edit/:id" element={<BusinessFormPage />} />
-                <Route path="/books" element={<BookCatalogPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </AppLayout>
-        </HashRouter>
+        <AppInit />
+        {!isAuthenticated ? (
+          <AuthPage />
+        ) : !hasCompletedOnboarding ? (
+          <InteractiveOnboarding />
+        ) : (
+          <HashRouter>
+            <AppLayout>
+              <KeyboardShortcuts />
+              <Suspense fallback={<RouteLoading />}>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/invoice/new" element={<NewInvoicePage />} />
+                  <Route path="/invoice/edit/:id" element={<NewInvoicePage />} />
+                  <Route path="/history" element={<InvoiceHistoryPage />} />
+                  <Route path="/businesses" element={<BusinessProfilesPage />} />
+                  <Route path="/businesses/new" element={<BusinessFormPage />} />
+                  <Route path="/businesses/edit/:id" element={<BusinessFormPage />} />
+                  <Route path="/books" element={<BookCatalogPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </AppLayout>
+          </HashRouter>
+        )}
       </TenantProvider>
     </ConvexProvider>
   );
