@@ -85,15 +85,16 @@ jobs:
           npm run build
           npx cap sync android
 
-      - name: Accept Android SDK Licenses
+      - name: Setup Android SDK 36 Packages
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Build Android APK with Gradle
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew clean assembleDebug --no-daemon --stacktrace --info
 
       - name: Prepare APK Artifact
         run: |
