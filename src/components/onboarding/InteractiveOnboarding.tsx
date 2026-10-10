@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import {
-  Zap, Building2, Receipt, BookOpen, Sparkles, ArrowRight, ArrowLeft,
-  CheckCircle2, Check, Smartphone, Printer, QrCode, Keyboard, FileText
+  Building2, Receipt, BookOpen, Sparkles, ArrowRight, ArrowLeft,
+  CheckCircle2, Check, Smartphone, Printer, Keyboard, Upload, Edit3, X, Image as ImageIcon
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { businessRepository } from '@/lib/db/repositories/businessRepository';
 import { bookRepository } from '@/lib/db/repositories/bookRepository';
 import { Button, Card } from '@/components/ui';
+import { SignatureEditorModal } from '@/components/common/SignatureEditorModal';
+import { formatPhoneDisplay } from '@/lib/utils/phone';
 import { TEMPLATE_LIST } from '@/templates';
 import { toast } from 'sonner';
 
@@ -23,9 +25,9 @@ const SAMPLE_BOOKS = [
 ];
 
 const ACCENT_COLORS = [
-  { name: 'Classic Blue', hex: '#3b82f6' },
-  { name: 'Emerald Green', hex: '#10b981' },
   { name: 'Indigo Purple', hex: '#6366f1' },
+  { name: 'Emerald Green', hex: '#10b981' },
+  { name: 'Classic Blue', hex: '#3b82f6' },
   { name: 'Warm Amber', hex: '#f59e0b' },
   { name: 'Rose Red', hex: '#f43f5e' },
 ];
@@ -37,61 +39,77 @@ export function InteractiveOnboarding() {
   const [step, setStep] = useState(1);
   const totalSteps = 4;
 
-  // Step 1: Store Info
+  // Step 1: Store & Logo
   const [businessName, setBusinessName] = useState(user?.name ? `${user.name}'s Publications` : 'Sri Rama Publications');
   const [phone, setPhone] = useState('+91 98765 43210');
   const [email, setEmail] = useState(user?.email || 'contact@publications.com');
   const [address, setAddress] = useState('Gandhi Bazaar, Basavanagudi, Bengaluru, Karnataka 560004');
   const [gstin, setGstin] = useState('');
-  const [accentColor, setAccentColor] = useState('#3b82f6');
+  const [upiId, setUpiId] = useState('');
+  const [logoPath, setLogoPath] = useState('');
+  const [accentColor, setAccentColor] = useState('#6366f1');
 
-  // Step 2: Invoice Defaults
+  // Step 2: Signature & Seal
+  const [signaturePath, setSignaturePath] = useState('');
+  const [sealPath, setSealPath] = useState('');
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isSealModalOpen, setIsSealModalOpen] = useState(false);
+
+  // Step 3: Invoicing Preferences
   const [invoicePrefix, setInvoicePrefix] = useState('INV');
   const [defaultTemplate, setDefaultTemplate] = useState('minimal-modern');
   const [primaryLanguage, setPrimaryLanguage] = useState<'en' | 'kn' | 'bilingual'>('bilingual');
   const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'credit'>('cash');
 
-  // Step 3: Catalog Import
+  // Step 4: Starter Catalog
   const [loadSampleCatalog, setLoadSampleCatalog] = useState(true);
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { optimizeImage } = await import('@/lib/utils/imageOptimizer');
+      const optimized = await optimizeImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.88, preserveTransparency: true });
+      setLogoPath(optimized);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = (ev) => setLogoPath(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleFinish = () => {
-    // 1. Create or update default business profile
     const existing = businessRepository.getAll();
     let bizId: string;
 
+    const payload = {
+      name: businessName.trim() || 'My Publications',
+      phone: phone.trim(),
+      email: email.trim(),
+      address: address.trim(),
+      gstin: gstin.trim() || undefined,
+      upiId: upiId.trim() || undefined,
+      logoPath: logoPath || undefined,
+      signaturePath: signaturePath || undefined,
+      sealPath: sealPath || undefined,
+      accentColor,
+      invoicePrefix: invoicePrefix.trim() || 'INV',
+      invoiceYearFormat: 'YYYY' as const,
+      invoiceSeparator: '-',
+      invoicePadding: 3,
+      invoiceStartNumber: 1,
+      templateId: defaultTemplate,
+      isDefault: true,
+    };
+
     if (existing.length > 0) {
       bizId = existing[0].id;
-      businessRepository.update(bizId, {
-        name: businessName.trim() || 'My Publications',
-        phone: phone.trim(),
-        email: email.trim(),
-        address: address.trim(),
-        gstin: gstin.trim() || undefined,
-        accentColor,
-        invoicePrefix: invoicePrefix.trim() || 'INV',
-        templateId: defaultTemplate,
-        isDefault: true,
-      });
+      businessRepository.update(bizId, payload);
     } else {
-      const created = businessRepository.create({
-        name: businessName.trim() || 'My Publications',
-        phone: phone.trim(),
-        email: email.trim(),
-        address: address.trim(),
-        gstin: gstin.trim() || undefined,
-        accentColor,
-        invoicePrefix: invoicePrefix.trim() || 'INV',
-        invoiceYearFormat: 'YYYY',
-        invoiceSeparator: '-',
-        invoicePadding: 3,
-        invoiceStartNumber: 1,
-        templateId: defaultTemplate,
-        isDefault: true,
-      });
+      const created = businessRepository.create(payload);
       bizId = created.id;
     }
 
-    // 2. Pre-populate sample catalog if selected
     if (loadSampleCatalog) {
       const currentBooks = bookRepository.getAll();
       if (currentBooks.length === 0) {
@@ -105,47 +123,46 @@ export function InteractiveOnboarding() {
       }
     }
 
-    // 3. Reload store state and mark complete
     load();
     setActiveBusiness(bizId);
     setOnboardingCompleted(true);
-    toast.success('Your store is ready for high-speed billing!');
+    toast.success('Your business is set up and ready for instant billing!');
   };
 
   return (
-    <div className="min-h-screen w-full bg-[var(--color-surface-secondary)] flex flex-col justify-between p-4 sm:p-6 relative overflow-hidden">
-      {/* Decorative Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--color-primary-500)]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen w-full bg-[var(--color-surface-secondary)] flex flex-col justify-between p-3 sm:p-6 relative overflow-x-hidden">
+      {/* Glow backgrounds */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[var(--color-primary)]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Header & Step Indicator */}
-      <div className="w-full max-w-4xl mx-auto z-10">
-        <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="w-full max-w-3xl mx-auto z-10 pt-2">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] flex items-center justify-center shadow-md">
-              <Sparkles size={18} className="text-white" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-700)] flex items-center justify-center text-white shadow-md">
+              <Sparkles size={18} />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-[var(--color-text-primary)] font-display">
-                Welcome to Billio
+              <h2 className="font-bold text-base sm:text-lg text-[var(--color-text-primary)] font-display">
+                Quick Store Setup
               </h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
+              <p className="text-[11px] text-[var(--color-text-muted)]">
                 Step {step} of {totalSteps}
               </p>
             </div>
           </div>
 
-          {/* Step Progress Bar */}
+          {/* Progress Indicators */}
           <div className="flex items-center gap-1.5">
             {[1, 2, 3, 4].map(s => (
               <div
                 key={s}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   s === step
-                    ? 'w-8 bg-[var(--color-primary)]'
+                    ? 'w-7 bg-[var(--color-primary)]'
                     : s < step
-                    ? 'w-4 bg-emerald-500'
-                    : 'w-4 bg-[var(--color-border)]'
+                    ? 'w-3.5 bg-emerald-500'
+                    : 'w-3.5 bg-[var(--color-border)]'
                 }`}
               />
             ))}
@@ -154,23 +171,55 @@ export function InteractiveOnboarding() {
       </div>
 
       {/* Center Wizard Container */}
-      <div className="w-full max-w-4xl mx-auto my-auto z-10 py-4">
-        <Card className="p-6 sm:p-8 bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl rounded-3xl min-h-[480px] flex flex-col justify-between">
-          {/* STEP 1: Store & Business Identity */}
+      <div className="w-full max-w-3xl mx-auto my-auto z-10 py-2">
+        <Card className="p-4 sm:p-7 bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl rounded-3xl min-h-[460px] flex flex-col justify-between">
+          {/* STEP 1: Business Identity & Logo */}
           {step === 1 && (
-            <div className="animate-fade-in space-y-6">
+            <div className="animate-fade-in space-y-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
-                  Let's set up your Publisher / Store Identity
+                <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
+                  Store / Publisher Details & Logo
                 </h1>
-                <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1">
-                  This information will be printed on all your invoices, thermal receipts, and reports.
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  This will be shown on all printed and digital WhatsApp bills.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Logo Upload Box */}
+              <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
+                <div className="relative w-16 h-16 rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-surface)] flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {logoPath ? (
+                    <>
+                      <img src={logoPath} alt="Store Logo" className="w-full h-full object-contain p-1" />
+                      <button
+                        type="button"
+                        onClick={() => setLogoPath('')}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow"
+                      >
+                        <X size={10} />
+                      </button>
+                    </>
+                  ) : (
+                    <ImageIcon size={22} className="text-[var(--color-text-muted)]" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-[var(--color-text-primary)]">Store Logo</div>
+                  <div className="text-[11px] text-[var(--color-text-muted)] mb-1.5 truncate">
+                    PNG / JPG format (printed on header)
+                  </div>
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] hover:border-[var(--color-primary)] cursor-pointer shadow-2xs">
+                    <Upload size={12} />
+                    <span>{logoPath ? 'Change Logo' : 'Upload Logo'}</span>
+                    <input type="file" accept="image/*" className="sr-only" onChange={handleLogoUpload} />
+                  </label>
+                </div>
+              </div>
+
+              {/* Input Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
                     Business / Publication Name *
                   </label>
                   <input
@@ -184,62 +233,223 @@ export function InteractiveOnboarding() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    GSTIN / Tax ID (Optional)
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    Phone / WhatsApp Number *
                   </label>
                   <input
                     type="text"
-                    value={gstin}
-                    onChange={e => setGstin(e.target.value.toUpperCase())}
-                    placeholder="29AAAAA0000A1Z5 (or leave empty)"
-                    className="w-full h-10 px-3 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Official Phone / WhatsApp
-                  </label>
-                  <input
-                    type="text"
+                    required
                     value={phone}
-                    onChange={e => setPhone(e.target.value)}
+                    onChange={e => setPhone(formatPhoneDisplay(e.target.value))}
                     placeholder="+91 98765 43210"
                     className="w-full h-10 px-3 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Store Email
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    UPI ID (for auto-generated QR code)
                   </label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="sales@publications.com"
+                    type="text"
+                    value={upiId}
+                    onChange={e => setUpiId(e.target.value)}
+                    placeholder="yourstore@okhdfcbank"
                     className="w-full h-10 px-3 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    GSTIN (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={gstin}
+                    onChange={e => setGstin(e.target.value.toUpperCase())}
+                    placeholder="29AAAAA0000A1Z5"
+                    className="w-full h-10 px-3 text-sm font-mono uppercase rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                </div>
+
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Address / Fair Stall Location
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    Store Address / Fair Stall Location
                   </label>
                   <input
                     type="text"
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    placeholder="Stall #14, National Book Fair, Bengaluru"
+                    placeholder="City, State or Stall # at Book Fair"
                     className="w-full h-10 px-3 text-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Signature & Stamp with Smart Contrast */}
+          {step === 2 && (
+            <div className="animate-fade-in space-y-4">
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
+                  Authorized Signature & Stamp
+                </h1>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  Sign directly on screen with your finger or upload a photo of your paper signature with smart auto-contrast.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Signature Box */}
+                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-[var(--color-text-primary)]">Authorized Signature</span>
+                      {signaturePath && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-md">
+                          ✓ Ready
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      Draw with finger or upload a photo with auto background removal.
+                    </p>
+                  </div>
+
+                  <div className="h-28 rounded-xl border border-[var(--color-border)] bg-white flex items-center justify-center p-2 relative overflow-hidden">
+                    {signaturePath ? (
+                      <>
+                        <img src={signaturePath} alt="Signature" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setSignaturePath('')}
+                          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow"
+                        >
+                          <X size={10} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-medium">No signature configured</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className="w-full h-9 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-bold text-[var(--color-primary)] hover:border-[var(--color-primary)] flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Edit3 size={13} />
+                    <span>{signaturePath ? 'Edit Signature & Contrast' : 'Draw or Upload Signature'}</span>
+                  </button>
+                </div>
+
+                {/* Company Seal Box */}
+                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-[var(--color-text-primary)]">Official Stamp / Seal (Optional)</span>
+                      {sealPath && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-md">
+                          ✓ Ready
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      Upload photo of your rubber stamp seal.
+                    </p>
+                  </div>
+
+                  <div className="h-28 rounded-xl border border-[var(--color-border)] bg-white flex items-center justify-center p-2 relative overflow-hidden">
+                    {sealPath ? (
+                      <>
+                        <img src={sealPath} alt="Seal" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setSealPath('')}
+                          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow"
+                        >
+                          <X size={10} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-medium">Optional company seal</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSealModalOpen(true)}
+                    className="w-full h-9 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-hover)] flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Upload size={13} />
+                    <span>{sealPath ? 'Edit Stamp' : 'Upload Stamp Photo'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Invoice Theme & Language (Vyapar Style) */}
+          {step === 3 && (
+            <div className="animate-fade-in space-y-4">
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
+                  Billing Theme & Language
+                </h1>
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  Select your invoice format and brand color scheme.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    Invoice Prefix
+                  </label>
+                  <input
+                    type="text"
+                    value={invoicePrefix}
+                    onChange={e => setInvoicePrefix(e.target.value)}
+                    placeholder="INV-"
+                    className="w-full h-10 px-3 text-sm font-mono rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                  <span className="text-[11px] text-[var(--color-text-muted)] mt-1 block">
+                    Format: {invoicePrefix}2026-001
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    Default Payment Mode
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'cash', label: '💵 Cash' },
+                      { id: 'upi', label: '📱 UPI' },
+                      { id: 'credit', label: '⏳ Credit' },
+                    ].map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setPaymentMode(p.id as any)}
+                        className={`h-10 rounded-xl text-xs font-bold border transition-all ${
+                          paymentMode === p.id
+                            ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-xs'
+                            : 'bg-[var(--color-surface-secondary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-2">
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
                     Brand Accent Color
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     {ACCENT_COLORS.map(c => (
                       <button
                         key={c.hex}
@@ -256,94 +466,10 @@ export function InteractiveOnboarding() {
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* STEP 2: Invoicing & Billing Preferences */}
-          {step === 2 && (
-            <div className="animate-fade-in space-y-6">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
-                  Invoicing & Fair POS Preferences
-                </h1>
-                <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1">
-                  Configure sequence prefixes, receipt languages, and default invoice themes.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Invoice Number Prefix
-                  </label>
-                  <input
-                    type="text"
-                    value={invoicePrefix}
-                    onChange={e => setInvoicePrefix(e.target.value)}
-                    placeholder="INV-2025/"
-                    className="w-full h-10 px-3 text-sm font-mono rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  />
-                  <span className="text-[11px] text-[var(--color-text-muted)] mt-1 block">
-                    Example: {invoicePrefix}001
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Default Payment Mode
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'cash', label: '💵 Cash' },
-                      { id: 'upi', label: '📱 UPI' },
-                      { id: 'credit', label: '⏳ Credit' },
-                    ].map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPaymentMode(p.id as any)}
-                        className={`h-10 rounded-xl text-xs font-semibold border transition-all ${
-                          paymentMode === p.id
-                            ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-xs'
-                            : 'bg-[var(--color-surface-secondary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                        }`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Receipt Language
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'bilingual', label: 'English + ಕನ್ನಡ' },
-                      { id: 'kn', label: 'ಕನ್ನಡ ಮಾತ್ರ' },
-                      { id: 'en', label: 'English Only' },
-                    ].map(l => (
-                      <button
-                        key={l.id}
-                        type="button"
-                        onClick={() => setPrimaryLanguage(l.id as any)}
-                        className={`h-10 rounded-xl text-xs font-medium border transition-all ${
-                          primaryLanguage === l.id
-                            ? 'bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-950)] border-[var(--color-primary)] text-[var(--color-primary)] font-bold'
-                            : 'bg-[var(--color-surface-secondary)] border-[var(--color-border)] text-[var(--color-text-secondary)]'
-                        }`}
-                      >
-                        {l.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1.5">
-                    Default Template Theme
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                    Invoice Template
                   </label>
                   <select
                     value={defaultTemplate}
@@ -359,184 +485,126 @@ export function InteractiveOnboarding() {
             </div>
           )}
 
-          {/* STEP 3: Book Catalog Setup */}
-          {step === 3 && (
-            <div className="animate-fade-in space-y-6">
+          {/* STEP 4: Starter Catalog & Quick Launch */}
+          {step === 4 && (
+            <div className="animate-fade-in space-y-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
-                  Instant Product / Book Catalog
+                <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
+                  Starter Catalog & Ready to Bill!
                 </h1>
-                <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1">
-                  Speed-billing is fastest when item names, authors, and prices autocomplete as you type or scan barcodes.
+                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  Pre-load popular bestseller titles for instant autocompletion.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <button
                   type="button"
                   onClick={() => setLoadSampleCatalog(true)}
-                  className={`p-5 rounded-2xl border text-left transition-all relative ${
+                  className={`p-4 rounded-2xl border text-left transition-all ${
                     loadSampleCatalog
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 dark:bg-[var(--color-primary-950)]/40 shadow-sm'
-                      : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:border-[var(--color-border-hover)]'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 dark:bg-[var(--color-primary-950)]/40 shadow-xs'
+                      : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)]'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <BookOpen size={24} className="text-[var(--color-primary)]" />
-                    {loadSampleCatalog && <CheckCircle2 size={18} className="text-[var(--color-primary)]" />}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <BookOpen size={20} className="text-[var(--color-primary)]" />
+                    {loadSampleCatalog && <CheckCircle2 size={16} className="text-[var(--color-primary)]" />}
                   </div>
-                  <div className="font-bold text-sm text-[var(--color-text-primary)]">
-                    Load Starter Bestsellers (Recommended)
+                  <div className="font-bold text-xs sm:text-sm text-[var(--color-text-primary)]">
+                    Load Bestseller Catalog (Recommended)
                   </div>
-                  <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                    Pre-loads 8 classic Kannada & English books with ISBNs, titles, authors, and prices.
+                  <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                    Pre-loads 8 classic titles with ISBNs & prices for instant fast billing.
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setLoadSampleCatalog(false)}
-                  className={`p-5 rounded-2xl border text-left transition-all relative ${
+                  className={`p-4 rounded-2xl border text-left transition-all ${
                     !loadSampleCatalog
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 dark:bg-[var(--color-primary-950)]/40 shadow-sm'
-                      : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:border-[var(--color-border-hover)]'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-50)]/40 dark:bg-[var(--color-primary-950)]/40 shadow-xs'
+                      : 'border-[var(--color-border)] bg-[var(--color-surface-secondary)]'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <Building2 size={24} className="text-[var(--color-text-secondary)]" />
-                    {!loadSampleCatalog && <CheckCircle2 size={18} className="text-[var(--color-primary)]" />}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Building2 size={20} className="text-[var(--color-text-secondary)]" />
+                    {!loadSampleCatalog && <CheckCircle2 size={16} className="text-[var(--color-primary)]" />}
                   </div>
-                  <div className="font-bold text-sm text-[var(--color-text-primary)]">
-                    Start with Empty Catalog
+                  <div className="font-bold text-xs sm:text-sm text-[var(--color-text-primary)]">
+                    Start Empty Catalog
                   </div>
-                  <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                    Import your own custom CSV catalog later in the Book Catalog page.
+                  <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">
+                    You can type books directly or import CSV catalog later.
                   </div>
                 </button>
               </div>
 
-              {loadSampleCatalog && (
-                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] max-h-40 overflow-y-auto space-y-1.5">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
-                    Sample Books Included:
-                  </div>
-                  {SAMPLE_BOOKS.map(b => (
-                    <div key={b.isbn} className="flex items-center justify-between text-xs py-1 border-b border-[var(--color-border)] last:border-0">
-                      <span className="font-medium text-[var(--color-text-primary)] truncate max-w-[280px]">{b.name}</span>
-                      <span className="text-[var(--color-text-muted)] shrink-0">₹{b.price}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 4: Interactive Feature Tour */}
-          {step === 4 && (
-            <div className="animate-fade-in space-y-6">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
-                  Speed-Billing Pro Tips
-                </h1>
-                <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-1">
-                  Master these key features to create invoices in under 5 seconds during busy fair rushes.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
-                    <Keyboard size={20} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-1.5">
-                      Alt+N <span className="text-xs text-[var(--color-text-muted)] font-normal">New Invoice</span>
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      Jump straight into a clean billing form with instant barcode/title autocompletion.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 shrink-0">
-                    <Receipt size={20} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-1.5">
-                      Alt+T <span className="text-xs text-[var(--color-text-muted)] font-normal">Daily Fair Tally</span>
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      Reconcile cash drawer, UPI transactions, and total titles sold at day end with 1 click.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 shrink-0">
-                    <Smartphone size={20} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                      1-Click WhatsApp Share
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      Send itemized receipts directly to customer WhatsApp without printing paper.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[var(--color-surface-secondary)] border border-[var(--color-border)] flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 shrink-0">
-                    <Printer size={20} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                      Offline-First & Cloud Sync
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                      Works completely offline during fair ground power/network cuts; syncs when online.
-                    </div>
-                  </div>
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-3">
+                <Sparkles size={20} className="text-emerald-600 flex-shrink-0" />
+                <div className="text-xs text-emerald-950 dark:text-emerald-200">
+                  <strong className="font-bold">Auto-Seeding Active:</strong> Whenever you type or scan any new book during billing, it will automatically save into your database!
                 </div>
               </div>
             </div>
           )}
 
           {/* Navigation Controls */}
-          <div className="flex items-center justify-between pt-6 border-t border-[var(--color-border)] mt-6">
+          <div className="flex items-center justify-between pt-5 border-t border-[var(--color-border)] mt-4">
             {step > 1 ? (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setStep(prev => prev - 1)}
-                className="gap-2"
+                className="gap-1.5"
               >
-                <ArrowLeft size={16} /> Back
+                <ArrowLeft size={14} /> Back
               </Button>
             ) : <div />}
 
             {step < totalSteps ? (
               <Button
+                size="sm"
                 onClick={() => setStep(prev => prev + 1)}
-                className="gap-2 shadow-md shadow-[var(--color-primary)]/20"
+                className="gap-1.5 font-bold shadow-md shadow-[var(--color-primary)]/20"
               >
-                Continue <ArrowRight size={16} />
+                Continue <ArrowRight size={14} />
               </Button>
             ) : (
               <Button
+                size="sm"
                 onClick={handleFinish}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
+                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20"
               >
-                <CheckCircle2 size={16} /> Finish Setup & Launch
+                <CheckCircle2 size={14} /> Finish & Start Billing
               </Button>
             )}
           </div>
         </Card>
       </div>
 
+      {/* Signature Editor Modal */}
+      <SignatureEditorModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSave={(dataUrl) => setSignaturePath(dataUrl)}
+        initialValue={signaturePath}
+        title="Signature Studio"
+      />
+
+      {/* Seal Editor Modal */}
+      <SignatureEditorModal
+        isOpen={isSealModalOpen}
+        onClose={() => setIsSealModalOpen(false)}
+        onSave={(dataUrl) => setSealPath(dataUrl)}
+        initialValue={sealPath}
+        title="Official Stamp Studio"
+      />
+
       {/* Footer */}
-      <div className="text-center text-xs text-[var(--color-text-muted)] z-10">
-        You can always customize these preferences later in Settings.
+      <div className="text-center text-[11px] text-[var(--color-text-muted)] z-10 py-1">
+        You can always update store profile and signatures in Settings.
       </div>
     </div>
   );

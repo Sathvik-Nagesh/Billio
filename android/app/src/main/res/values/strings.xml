@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Billio</string>
+    <string name="title_activity_main">Billio</string>
+    <string name="package_name">com.billio.app</string>
+    <string name="custom_url_scheme">com.billio.app</string>
+</resources>

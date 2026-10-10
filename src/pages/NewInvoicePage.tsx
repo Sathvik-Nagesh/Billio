@@ -9,7 +9,7 @@ import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { Button } from '@/components/ui';
-import { Building2 } from 'lucide-react';
+import { Building2, Eye, FileEdit } from 'lucide-react';
 
 export function NewInvoicePage() {
   const navigate = useNavigate();
@@ -50,45 +50,67 @@ export function NewInvoicePage() {
   }
 
   return (
-    <div className="h-full flex flex-col min-w-0">
-      {/* Top action bar */}
-      <div className="flex-shrink-0 px-3 sm:px-4 py-2.5 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between gap-2 sm:gap-4 no-print flex-wrap">
-        <div className="text-xs sm:text-sm truncate">
-          <span className="text-[var(--color-text-muted)]">Invoice: </span>
-          <span className="font-semibold text-[var(--color-text-primary)]">{form.invoiceNumber || 'Draft'}</span>
-          {editingInvoiceId && <span className="ml-1.5 text-xs text-[var(--color-primary)] font-medium">(Editing)</span>}
+    <div className="h-full flex flex-col min-w-0 relative">
+      {/* Sleek Top Bar (Single Row, No Wrapping Clutter) */}
+      <div className="flex-shrink-0 px-3 sm:px-4 py-2 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between gap-2 no-print">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="text-xs sm:text-sm truncate">
+            <span className="text-[var(--color-text-muted)]">Bill: </span>
+            <span className="font-bold text-[var(--color-text-primary)]">{form.invoiceNumber || 'Draft'}</span>
+            {editingInvoiceId && <span className="ml-1.5 text-xs text-[var(--color-primary)] font-bold">(Editing)</span>}
+          </div>
         </div>
 
-        {/* Mobile View Toggle Switcher (Form / Preview) */}
-        <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-[var(--color-surface-tertiary)] border border-[var(--color-border)]">
+        {/* Mobile View Switcher (Form / Preview) */}
+        <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)]">
           <button
             onClick={() => setMobileTab('form')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mobileTab === 'form' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+            className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+              mobileTab === 'form'
+                ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-xs font-bold'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+            }`}
           >
-            Form Editor
+            <FileEdit size={12} />
+            <span>Bill Editor</span>
           </button>
           <button
             onClick={() => setMobileTab('preview')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${mobileTab === 'preview' ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+            className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all ${
+              mobileTab === 'preview'
+                ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-xs font-bold'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+            }`}
           >
-            Live Preview
+            <Eye size={12} />
+            <span>Preview</span>
           </button>
         </div>
 
-        <InvoiceActions />
+        {/* Minimal Top Bar Actions */}
+        <InvoiceActions variant="top-bar" />
       </div>
 
-      {/* Main Container: Stacked/Tabbed on Mobile/Tablet (<1024px), Side-by-side on Desktop (>=1024px) */}
-      <div className="flex-1 flex overflow-hidden min-w-0">
+      {/* Main Form & Preview Viewport */}
+      <div className="flex-1 flex overflow-hidden min-w-0 relative">
         {/* Form panel */}
-        <div className={`w-full lg:w-[520px] xl:w-[600px] lg:min-w-[420px] flex-shrink-0 border-r border-[var(--color-border)] overflow-y-auto flex flex-col ${mobileTab === 'form' ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`w-full lg:w-[540px] xl:w-[620px] lg:min-w-[440px] flex-shrink-0 border-r border-[var(--color-border)] overflow-hidden flex flex-col ${
+          mobileTab === 'form' ? 'flex' : 'hidden lg:flex'
+        }`}>
           <InvoiceForm />
         </div>
 
         {/* Preview panel */}
-        <div className={`flex-1 overflow-hidden min-w-0 ${mobileTab === 'preview' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
+        <div className={`flex-1 overflow-hidden min-w-0 ${
+          mobileTab === 'preview' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'
+        }`}>
           <InvoicePreview />
         </div>
+      </div>
+
+      {/* Sticky Bottom POS Checkout Bar */}
+      <div className="flex-shrink-0">
+        <InvoiceActions variant="bottom-bar" />
       </div>
 
       {/* Dedicated hidden print layout for PDF capture */}

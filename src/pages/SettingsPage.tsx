@@ -97,16 +97,16 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6 animate-fade-in">
-      <div className="max-w-lg mx-auto space-y-4">
-        <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-6">Settings</h2>
+    <div className="h-full overflow-y-auto p-3 sm:p-6 animate-fade-in pb-24">
+      <div className="max-w-lg mx-auto space-y-3.5 sm:space-y-4">
+        <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mb-4 sm:mb-6">Settings</h2>
 
         {/* User Account & Tour */}
-        <Card className="border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 shadow-xs">
-          <CardHeader>
+        <Card className="border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 shadow-xs rounded-2xl">
+          <CardHeader className="p-3.5 sm:p-4 pb-2">
             <CardTitle className="flex items-center gap-2"><User size={15} />User Account & Setup</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3.5">
+          <CardContent className="p-3.5 sm:p-4 pt-1 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] text-white flex items-center justify-center font-bold text-sm">
@@ -392,26 +392,26 @@ export function SettingsPage() {
 
       {/* Restore Confirmation Modal */}
       {isRestoreOpen && restorePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-          <div className="bg-[var(--color-surface)] rounded-xl shadow-xl w-full max-w-md p-6 m-4">
-            <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-4">
-              <AlertTriangle className="text-amber-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-2xl w-[calc(100vw-24px)] max-w-md p-4 sm:p-6 max-h-[88dvh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-3 sm:mb-4">
+              <AlertTriangle className="text-amber-500" size={18} />
               Restore Backup
             </h3>
             
-            <div className="space-y-3 mb-6">
-              <p className="text-sm text-[var(--color-text-secondary)]">
+            <div className="space-y-3 mb-5 sm:mb-6">
+              <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
                 You are about to restore a backup created on <strong className="text-[var(--color-text-primary)]">{new Date(restorePreview.createdAt).toLocaleString()}</strong>.
               </p>
               
-              <div className="bg-[var(--color-surface-secondary)] p-3 rounded-lg border border-[var(--color-border)] grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-[var(--color-surface-secondary)] p-3 rounded-xl border border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs sm:text-sm">
                 <div>Businesses: <strong>{restorePreview.businessCount}</strong></div>
                 <div>Invoices: <strong>{restorePreview.invoiceCount}</strong></div>
                 <div>Customers: <strong>{restorePreview.customerCount}</strong></div>
                 <div>Books: <strong>{restorePreview.bookCount}</strong></div>
               </div>
               
-              <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-900 text-sm text-red-800 dark:text-red-400">
+              <div className="bg-red-50 dark:bg-red-950/30 p-3 rounded-xl border border-red-200 dark:border-red-900 text-xs sm:text-sm text-red-800 dark:text-red-400">
                 <strong>Warning:</strong> This will completely overwrite all your current data. This action cannot be undone.
               </div>
 
@@ -420,15 +420,15 @@ export function SettingsPage() {
                   type="checkbox" 
                   checked={autoBackupFirst} 
                   onChange={(e) => setAutoBackupFirst(e.target.checked)} 
-                  className="rounded border-gray-300" 
+                  className="rounded border-gray-300 w-4 h-4 accent-[var(--color-primary)]" 
                 />
-                <span className="text-sm font-medium">Create an automatic backup before restoring</span>
+                <span className="text-xs sm:text-sm font-medium">Create an automatic backup before restoring</span>
               </label>
             </div>
             
-            <div className="flex items-center justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsRestoreOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleRestore}>Confirm Restore</Button>
+            <div className="flex items-center justify-end gap-2.5">
+              <Button variant="outline" size="sm" onClick={() => setIsRestoreOpen(false)}>Cancel</Button>
+              <Button variant="destructive" size="sm" onClick={handleRestore}>Confirm Restore</Button>
             </div>
           </div>
         </div>

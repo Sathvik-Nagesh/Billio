@@ -23,6 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# Desktop Builds
+# Desktop & Mobile Builds
 release/
 winCodeSign.7z
+dist-release/
+dist-apk/
+release-assets/
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+.gradle/

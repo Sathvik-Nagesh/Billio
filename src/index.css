@@ -86,6 +86,8 @@ body {
   height: 100dvh;
   width: 100%;
   max-width: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
   padding-top: env(safe-area-inset-top);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
@@ -100,6 +102,24 @@ body {
   display: flex;
   overflow: hidden;
 }
+
+/* Touch & Mobile UX Fixes */
+button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS Safari from auto-zooming on input focus */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe Area Inset Helpers */
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe { padding-right: env(safe-area-inset-right, 0px); }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -160,11 +180,6 @@ body {
   to { transform: scale(1); opacity: 1; }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 .animate-slide-in-left { animation: slideInLeft 0.3s ease; }
 .animate-slide-in-right { animation: slideInRight 0.3s ease; }
 .animate-fade-in-up { animation: fadeInUp 0.3s ease; }
@@ -191,25 +206,16 @@ body {
   .print-only { display: block !important; }
   #app-sidebar, #app-header { display: none !important; }
   @page { size: A4; margin: 0; }
-  /* Ensure table headers repeat on each page */
   thead { display: table-header-group !important; }
   tfoot { display: table-footer-group !important; }
-  /* Avoid breaking rows across pages */
   tr { page-break-inside: avoid !important; }
   img { page-break-inside: avoid !important; }
-  /* The invoice itself should print naturally without forced positioning */
   #invoice-print-area {
     width: 210mm !important;
     min-height: unset !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-}
-
-
-/* Invoice preview container */
-.invoice-preview-scale {
-  transform-origin: top center;
 }
 
 /* Custom number input */
@@ -268,4 +274,3 @@ input[type=number] { -moz-appearance: textfield; }
 .font-invoice-merriweather { font-family: 'Merriweather', serif; }
 .font-invoice-playfair { font-family: 'Playfair Display', serif; }
 .font-invoice-kannada { font-family: 'Noto Sans Kannada', sans-serif; }
-

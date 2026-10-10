@@ -1,28 +1,30 @@
-import React, { useRef, useState } from 'react';
-import { Download, Printer, Share2, CheckCircle, Loader2, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Printer, Share2, CheckCircle, Loader2, Send, MoreVertical, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useInvoiceStore } from '@/stores/useInvoiceStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { useAppSettingsStore } from '@/stores/useAppSettingsStore';
-import { TEMPLATE_REGISTRY } from '@/templates';
 import { invoiceRepository } from '@/lib/db/repositories/invoiceRepository';
 import { customerRepository } from '@/lib/db/repositories/customerRepository';
 import { bookRepository } from '@/lib/db/repositories/bookRepository';
 import { generateInvoiceNumber } from '@/lib/utils/invoiceNumber';
+import { formatINR, formatNumber } from '@/lib/utils/currency';
 import type { InvoiceItem } from '@/types';
+import { getWhatsAppShareUrl } from '@/lib/utils/phone';
+import { getBilingualWhatsAppGreeting } from '@/lib/utils/kannadaLabels';
 import { toast } from 'sonner';
 
 interface InvoiceActionsProps {
   onSaved?: (id: string) => void;
+  variant?: 'top-bar' | 'bottom-bar' | 'all';
 }
 
-export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
-  const { form, calculations, editingInvoiceId, resetForm } = useInvoiceStore();
+export function InvoiceActions({ onSaved, variant = 'all' }: InvoiceActionsProps) {
+  const { form, calculations, editingInvoiceId } = useInvoiceStore();
   const { businesses } = useBusinessStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  // Track the off-screen clone element to clean up properly
-  const cloneRef = useRef<HTMLElement | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const business = businesses.find(b => b.id === form.businessId) ?? null;
 
@@ -53,7 +55,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
         invoiceNumber: getInvoiceNumber(),
         invoiceDate: form.invoiceDate,
         dueDate: form.dueDate || undefined,
-        customerName: form.customerName,
+        customerName: form.customerName || 'Walk-in Customer',
         customerPhone: form.customerPhone || undefined,
         customerEmail: form.customerEmail || undefined,
         customerAddress: form.customerAddress || undefined,
@@ -80,29 +82,25 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
     };
   };
 
-  const handleSave = async () => {
+  const handleSave = async (options?: { silent?: boolean }) => {
     if (!form.businessId) {
       toast.error('Please select a business first');
-      return;
+      return null;
     }
     if (!business) {
-      toast.error('Selected business no longer exists. Please select another business.');
-      return;
-    }
-    if (!form.customerName) {
-      toast.error('Please enter customer name');
-      return;
+      toast.error('Selected business not found. Please re-select business.');
+      return null;
     }
     if (form.items.every(i => !i.productName)) {
       toast.error('Please add at least one item');
-      return;
+      return null;
     }
 
     setSaving(true);
     try {
       const { invoiceData, items } = buildInvoiceData();
 
-      // Auto-save customer
+      // Auto-save customer details
       if (form.customerName) {
         customerRepository.upsertByName({
           name: form.customerName,
@@ -114,7 +112,7 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
         });
       }
 
-      // Auto-save books
+      // Auto-seed books into repository & catalog automatically
       for (const item of items) {
         if (item.productName && item.productName.trim()) {
           bookRepository.upsert(item.productName.trim(), item.unitPrice, item.author?.trim() || undefined);
@@ -125,40 +123,129 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
       if (editingInvoiceId) {
         invoiceRepository.update(editingInvoiceId, invoiceData, items as Omit<InvoiceItem, 'id' | 'invoiceId'>[]);
         savedId = editingInvoiceId;
-        toast.success('Invoice updated successfully');
+        if (!options?.silent) toast.success('Invoice updated successfully');
       } else {
         const created = invoiceRepository.create(invoiceData as any, items as any);
         savedId = created.id;
-        toast.success('Invoice saved successfully');
+        if (!options?.silent) toast.success('Invoice saved successfully');
       }
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       onSaved?.(savedId);
+      return savedId;
     } catch (err) {
       console.error(err);
       toast.error('Failed to save invoice');
+      return null;
     } finally {
       setSaving(false);
     }
   };
 
-  /**
-   * Get the invoice print area element and capture its current computed styles.
-   * Returns null if not found.
-   */
   const getInvoiceElement = (): HTMLElement | null => {
     return document.getElementById('invoice-pdf-layout');
   };
 
-  // PDF/Print utilities removed in favor of live-DOM capture
+  const generatePdfBlob = async (): Promise<Blob | null> => {
+    const invoiceEl = getInvoiceElement();
+    if (!invoiceEl) return null;
+
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+
+    // @ts-ignore — html2pdf.js loaded as ESM
+    const html2pdf = (await import('html2pdf.js')).default;
+    const expectedPages = invoiceEl.children.length;
+
+    const opt = {
+      margin: 0,
+      filename: `Invoice-${form.invoiceNumber || 'draft'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 794,
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait' as const,
+        compress: true,
+      },
+      pagebreak: {
+        mode: 'css',
+      },
+    };
+
+    const worker = html2pdf().set(opt).from(invoiceEl);
+    await worker.toPdf().get('pdf').then((pdf: any) => {
+      const actualPages = pdf.internal.getNumberOfPages();
+      if (actualPages > expectedPages) {
+        let pagesToRemove = actualPages - expectedPages;
+        for (let i = 0; i < pagesToRemove; i++) {
+          pdf.deletePage(actualPages - i);
+        }
+      }
+    });
+
+    return await worker.output('blob');
+  };
+
+  const getGreetingMessage = (): string => {
+    const { whatsappTemplate } = useAppSettingsStore.getState();
+    const customerName = form.customerName || 'Valued Customer';
+    const businessName = business?.name || 'Billio';
+    const invNum = form.invoiceNumber || getInvoiceNumber();
+    const amount = `₹${formatNumber(calculations.grandTotal)}`;
+    const paymentModeLabel = form.paymentMethod === 'upi' ? 'Paid via UPI / QR' : form.paymentMethod === 'credit' ? 'Payment Due' : 'Paid in Cash';
+    const totalItems = form.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
+
+    if (whatsappTemplate && whatsappTemplate.trim()) {
+      return whatsappTemplate
+        .replace(/{customer_name}/g, customerName)
+        .replace(/{invoice_number}/g, invNum)
+        .replace(/{amount}/g, amount)
+        .replace(/{payment_mode}/g, paymentModeLabel)
+        .replace(/{payment_status}/g, form.paymentMethod === 'credit' ? 'Pending' : 'Paid')
+        .replace(/{business_name}/g, businessName);
+    }
+
+    if (form.invoiceLanguage === 'kn') {
+      return getBilingualWhatsAppGreeting({
+        customerName: form.customerName,
+        businessName: business?.name,
+        invoiceNumber: invNum,
+        grandTotal: calculations.grandTotal,
+        balanceDue: form.paymentMethod === 'credit' ? calculations.grandTotal : undefined,
+        paymentMode: paymentModeLabel,
+        isKannada: true,
+      });
+    }
+
+    // Default Greeting Template with clear emoji formatting
+    return `📚 *${businessName}*\n` +
+      `────────────────────────\n` +
+      `🙏 *Namaste ${customerName},*\n\n` +
+      `Thank you for your purchase! Here are your bill details:\n\n` +
+      `🧾 *Invoice No:* ${invNum}\n` +
+      `📅 *Date:* ${form.invoiceDate}\n` +
+      `📦 *Items:* ${totalItems} item(s)\n` +
+      `💰 *Grand Total:* ${amount}\n` +
+      `💵 *Payment:* ${paymentModeLabel}\n\n` +
+      `✨ Thank you for choosing *${businessName}*! Please visit again.`;
+  };
 
   const handlePrint = async () => {
-    await handleSave();
+    await handleSave({ silent: true });
 
     const invoiceEl = getInvoiceElement();
     if (!invoiceEl) {
-      toast.error('Invoice preview not found');
+      toast.error('Invoice preview not ready');
       return;
     }
 
@@ -190,10 +277,8 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
     `);
     printWin.document.close();
 
-    // Wait for fonts to load before printing to avoid blank/wrong-font output
     printWin.onload = () => {
       printWin.focus();
-      // Use document.fonts.ready if available
       const doprint = () => {
         setTimeout(() => {
           printWin.print();
@@ -209,102 +294,20 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
   };
 
   const handleDownloadPdf = async () => {
-    await handleSave();
-
-    const invoiceEl = getInvoiceElement();
-    if (!invoiceEl) {
-      toast.error('Invoice preview not found. Please wait for it to load.');
-      return;
-    }
-
+    await handleSave({ silent: true });
     const toastId = toast.loading('Generating PDF…');
-    let parentTransform = '';
-    let parentEl: HTMLElement | null = null;
-    
     try {
-      // 1. Debug Logs & Validation
-      console.log('--- PDF Debug Init ---');
-      console.log('Invoice Element Exists:', !!invoiceEl);
-      
-      const expectedPages = invoiceEl.children.length;
-      console.log('Expected Page Count (DOM children):', expectedPages);
-      
-      let totalHeight = 0;
-      for (let i = 0; i < invoiceEl.children.length; i++) {
-        const child = invoiceEl.children[i] as HTMLElement;
-        const h = child.getBoundingClientRect().height;
-        totalHeight += h;
-        console.log(`Page ${i + 1} Height:`, h);
-      }
-      console.log('Total Document Height:', totalHeight);
-      
-      // Temporarily remove CSS scale from the parent container is NO LONGER NEEDED 
-      // because invoice-pdf-layout is rendered without scales!
-
-      // Wait for fonts to be available
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
+      const pdfBlob = await generatePdfBlob();
+      if (!pdfBlob) {
+        toast.error('Could not generate PDF. Please try again.');
+        toast.dismiss(toastId);
+        return;
       }
 
-      // @ts-ignore — html2pdf.js loaded as ESM
-      const html2pdf = (await import('html2pdf.js')).default;
-
-      const opt = {
-        margin: 0,
-        filename: `Invoice-${form.invoiceNumber || 'draft'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          logging: true, // Enabled for debugging
-          scrollX: 0,    // Force no scroll offset clipping
-          scrollY: 0,
-          windowWidth: 794,
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait' as const,
-          compress: true,
-        },
-        pagebreak: {
-          mode: 'css',
-        },
-      };
-
-      console.log('Starting html2pdf generation...');
-      
-      const worker = html2pdf().set(opt).from(invoiceEl);
-      
-      // Get the PDF object to log pages and validate
-      await worker.toPdf().get('pdf').then((pdf: any) => {
-         const actualPages = pdf.internal.getNumberOfPages();
-         console.log('Actual PDF Generated Page Count:', actualPages);
-         
-         if (actualPages > expectedPages) {
-           console.warn(`WARNING: Generated PDF has ${actualPages} pages, but expected ${expectedPages}. Blank page protection triggered. Automatically trimming trailing blank page.`);
-           
-           // Automatically remove trailing blank pages
-           let pagesToRemove = actualPages - expectedPages;
-           for (let i = 0; i < pagesToRemove; i++) {
-             pdf.deletePage(actualPages - i);
-           }
-         } else if (actualPages < expectedPages) {
-           throw new Error(`PDF generation failed: Expected ${expectedPages} pages but got ${actualPages}`);
-         }
-      });
-      
-      // Generate Blob
-      const pdfBlob = await worker.output('blob');
-      
-      console.log('PDF Blob Size:', pdfBlob.size, 'bytes');
-      
-      // Save manually so we can log the size
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = opt.filename;
+      a.download = `Invoice-${form.invoiceNumber || 'draft'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -313,90 +316,199 @@ export function InvoiceActions({ onSaved }: InvoiceActionsProps) {
     } catch (err) {
       console.error('PDF generation error:', err);
       toast.dismiss(toastId);
-      toast.error('PDF generation failed. Check console for details.');
+      toast.error('PDF generation failed.');
     }
   };
 
-  const handleWhatsApp = async () => {
-    const { whatsappTemplate } = useAppSettingsStore.getState();
-    const phone = form.customerPhone?.replace(/\D/g, '');
-    
-    // Replace template tags
-    let rawMsg = whatsappTemplate || `Dear {customer_name},\n\nPlease find attached your invoice {invoice_number} for {amount} ({payment_mode}).\n\nThank you for your business!\n{business_name}`;
-    const paymentModeLabel = form.paymentMethod === 'upi' ? 'Paid via UPI' : form.paymentMethod === 'credit' ? 'Payment Due' : 'Paid in Cash';
-    rawMsg = rawMsg
-      .replace(/{customer_name}/g, form.customerName || 'Customer')
-      .replace(/{invoice_number}/g, form.invoiceNumber || '')
-      .replace(/{amount}/g, `₹${calculations.grandTotal.toFixed(2)}`)
-      .replace(/{payment_mode}/g, paymentModeLabel)
-      .replace(/{payment_status}/g, form.paymentMethod === 'credit' ? 'Pending' : 'Paid')
-      .replace(/{business_name}/g, business?.name ?? '');
+  /**
+   * Fast 1-Tap PDF + WhatsApp with Native Mobile File Sharing
+   */
+  const handleSendBill = async () => {
+    await handleSave({ silent: true });
+    const toastId = toast.loading('Preparing Bill & PDF…');
 
-    const message = encodeURIComponent(rawMsg);
-    const url = phone
-      ? `https://wa.me/${phone}?text=${message}`
-      : `https://api.whatsapp.com/send?text=${message}`;
-    window.open(url, '_blank');
+    try {
+      const greetingMsg = getGreetingMessage();
+      const phone = form.customerPhone?.replace(/\D/g, '');
+      const pdfBlob = await generatePdfBlob();
+
+      // Check if mobile native share API supports sharing the PDF file directly
+      if (pdfBlob && navigator.canShare) {
+        const fileName = `Invoice-${form.invoiceNumber || 'draft'}.pdf`;
+        const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+        if (navigator.canShare({ files: [pdfFile] })) {
+          toast.dismiss(toastId);
+          await navigator.share({
+            title: `Invoice ${form.invoiceNumber || ''}`,
+            text: greetingMsg,
+            files: [pdfFile],
+          });
+          toast.success('Bill shared successfully!');
+          return;
+        }
+      }
+
+      // If PDF file sharing is not supported by the browser, auto-download PDF and launch WhatsApp
+      if (pdfBlob) {
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Invoice-${form.invoiceNumber || 'draft'}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toast.dismiss(toastId);
+      const waUrl = getWhatsAppShareUrl(form.customerPhone, greetingMsg);
+      window.open(waUrl, '_blank');
+      toast.success('WhatsApp opened with bill message!');
+    } catch (err) {
+      console.error('Send bill error:', err);
+      toast.dismiss(toastId);
+      toast.error('Failed to send bill');
+    }
   };
 
-  const handleDownloadAndShare = async () => {
-    await handleDownloadPdf();
-    handleWhatsApp();
-  };
-
-  return (
-    <>
-      <div className="flex items-center gap-2 flex-wrap no-print">
-        {/* Save */}
+  // Minimal Top-Bar Variant
+  if (variant === 'top-bar') {
+    return (
+      <div className="flex items-center gap-1.5 no-print">
         <Button
-          id="invoice-save-btn"
-          onClick={handleSave}
-          disabled={saving}
-          className="flex-1 min-w-[90px]"
-        >
-          {saving ? (
-            <><Loader2 size={14} className="animate-spin" /> Saving...</>
-          ) : saved ? (
-            <><CheckCircle size={14} /> Saved!</>
-          ) : (
-            <><Save size={14} /> Save</>
-          )}
-        </Button>
-
-        {/* PDF */}
-        <Button
-          id="invoice-pdf-btn"
+          id="top-invoice-pdf-btn"
           variant="outline"
+          size="sm"
           onClick={handleDownloadPdf}
           disabled={saving}
+          className="hidden sm:inline-flex h-8 px-2.5 text-xs"
+          title="Download PDF"
         >
-          <Download size={14} />
+          <Download size={13} className="mr-1" />
           PDF
         </Button>
 
-        {/* Print */}
         <Button
-          id="invoice-print-btn"
+          id="top-invoice-print-btn"
           variant="outline"
+          size="sm"
           onClick={handlePrint}
           disabled={saving}
+          className="hidden sm:inline-flex h-8 px-2.5 text-xs"
+          title="Print Invoice"
         >
-          <Printer size={14} />
+          <Printer size={13} className="mr-1" />
           Print
         </Button>
 
-        {/* Auto Share (Download PDF + WhatsApp) */}
         <Button
-          id="invoice-share-pdf-whatsapp-btn"
-          onClick={handleDownloadAndShare}
+          id="top-invoice-whatsapp-btn"
+          size="sm"
+          onClick={handleSendBill}
           disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold shadow-xs"
-          title="Download PDF and open WhatsApp in one click"
+          className="h-8 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs font-bold"
+          title="Send PDF & WhatsApp Bill"
         >
-          <Share2 size={14} />
-          PDF & WhatsApp
+          <Send size={13} className="sm:mr-1" />
+          <span className="hidden sm:inline">Send Bill</span>
         </Button>
       </div>
-    </>
+    );
+  }
+
+  // Sticky POS Checkout Bar (Default / Mobile-first Power Bar)
+  const totalItemCount = form.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
+  const paymentLabel = form.paymentMethod === 'upi' ? 'UPI' : form.paymentMethod === 'credit' ? 'Credit' : 'Cash';
+
+  return (
+    <div className="w-full bg-[var(--color-surface)] border-t border-[var(--color-border)] shadow-lg p-2.5 sm:p-4 flex items-center justify-between gap-2 sm:gap-3 no-print z-40">
+      {/* Live Total & Payment Mode Badge */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-wider text-[var(--color-text-muted)]">
+              Total ({totalItemCount} {totalItemCount === 1 ? 'item' : 'items'})
+            </span>
+            <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+              form.paymentMethod === 'upi'
+                ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                : form.paymentMethod === 'credit'
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+            }`}>
+              {paymentLabel}
+            </span>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-[var(--color-primary)] tracking-tight">
+            {formatINR(calculations.grandTotal)}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Checkout Actions */}
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {/* Send Bill: WhatsApp + PDF Combo with Native File Sharing */}
+        <button
+          type="button"
+          id="invoice-share-pdf-whatsapp-btn"
+          onClick={handleSendBill}
+          disabled={saving}
+          className="flex items-center gap-1.5 h-11 px-3 sm:px-4 text-xs sm:text-sm font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white transition-all shadow-md cursor-pointer"
+          title="Send PDF & Greeting via WhatsApp"
+        >
+          <Send size={15} />
+          <span>Send Bill</span>
+        </button>
+
+        {/* Save / Finalize button */}
+        <Button
+          id="invoice-save-btn"
+          onClick={() => handleSave()}
+          disabled={saving}
+          className="h-11 px-3 sm:px-5 text-xs sm:text-sm font-extrabold rounded-xl shadow-md bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 text-white active:scale-98 transition-all cursor-pointer flex items-center gap-1.5"
+        >
+          {saving ? (
+            <><Loader2 size={15} className="animate-spin" /> Saving</>
+          ) : saved ? (
+            <><CheckCircle size={15} /> Saved!</>
+          ) : (
+            <><Sparkles size={15} /> {editingInvoiceId ? 'Update' : 'Save Bill'}</>
+          )}
+        </Button>
+
+        {/* More Actions Dropdown Menu (PDF, Print) */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            className="h-11 w-10 flex items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] transition-all"
+            title="More Options"
+          >
+            <MoreVertical size={18} />
+          </button>
+
+          {showMoreMenu && (
+            <div
+              className="absolute right-0 bottom-full mb-2 w-48 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl py-1.5 z-50 text-xs font-medium"
+              onClick={() => setShowMoreMenu(false)}
+            >
+              <button
+                onClick={handleDownloadPdf}
+                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)]"
+              >
+                <Download size={14} />
+                <span>Download PDF</span>
+              </button>
+              <button
+                onClick={handlePrint}
+                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-[var(--color-surface-secondary)] text-[var(--color-text-primary)]"
+              >
+                <Printer size={14} />
+                <span>Print Bill</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

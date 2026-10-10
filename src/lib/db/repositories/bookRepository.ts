@@ -1,4 +1,11 @@
 import { db, generateId } from '../index';
+import {
+  syncBooksToIndexedDB,
+  deleteBookFromIndexedDB,
+  clearIndexedDBBooks,
+  getAllBooksFromIndexedDB,
+  searchBooksIndexedDB
+} from '../indexedDB';
 import type { Book } from '../../../types';
 
 const COLLECTION = 'books' as const;
@@ -9,6 +16,16 @@ export const bookRepository = {
     return books.slice().sort((a, b) => b.usageCount - a.usageCount || a.name.localeCompare(b.name));
   },
 
+  async getAllAsync(): Promise<Book[]> {
+    const memBooks = this.getAll();
+    if (memBooks.length > 0) return memBooks;
+    const coldBooks = await getAllBooksFromIndexedDB();
+    if (coldBooks.length > 0) {
+      db.setCollection(COLLECTION, coldBooks);
+    }
+    return coldBooks;
+  },
+
   search(query: string): Book[] {
     const books = db.getCollection<Book>(COLLECTION);
     const q = query.trim().toLowerCase();
@@ -17,6 +34,12 @@ export const bookRepository = {
     }
     const filtered = books.filter(b => b.name.toLowerCase().includes(q) || (b.author && b.author.toLowerCase().includes(q)));
     return filtered.sort((a, b) => b.usageCount - a.usageCount || a.name.localeCompare(b.name));
+  },
+
+  async searchAsync(query: string, limit = 50): Promise<Book[]> {
+    const syncRes = this.search(query);
+    if (syncRes.length > 0) return syncRes.slice(0, limit);
+    return searchBooksIndexedDB(query, limit);
   },
 
   upsert(name: string, unitPrice: number, author?: string): Book {
@@ -31,6 +54,7 @@ export const bookRepository = {
       existing.updatedAt = new Date().toISOString();
       books[existingIndex] = existing;
       db.setCollection(COLLECTION, books);
+      syncBooksToIndexedDB([existing]).catch(() => {});
       return existing;
     }
 
@@ -46,6 +70,7 @@ export const bookRepository = {
     };
     books.push(newBook);
     db.setCollection(COLLECTION, books);
+    syncBooksToIndexedDB([newBook]).catch(() => {});
     return newBook;
   },
 
@@ -63,6 +88,7 @@ export const bookRepository = {
 
     const now = new Date().toISOString();
     let count = 0;
+    const modifiedBooks: Book[] = [];
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -72,12 +98,14 @@ export const bookRepository = {
       const lower = cleanName.toLowerCase();
       if (mapByName.has(lower)) {
         const idx = mapByName.get(lower)!;
-        books[idx] = {
+        const updated = {
           ...books[idx],
           usageCount: books[idx].usageCount + 1,
           author: item.author ? item.author.trim() : books[idx].author,
           updatedAt: now,
         };
+        books[idx] = updated;
+        modifiedBooks.push(updated);
       } else {
         const newBook: Book = {
           id: generateId(),
@@ -90,11 +118,13 @@ export const bookRepository = {
         };
         const newIdx = books.push(newBook) - 1;
         mapByName.set(lower, newIdx);
+        modifiedBooks.push(newBook);
       }
       count++;
     }
 
     db.setCollection(COLLECTION, books);
+    syncBooksToIndexedDB(modifiedBooks).catch(() => {});
     return count;
   },
 
@@ -105,16 +135,19 @@ export const bookRepository = {
     
     books[index] = { ...books[index], ...data, updatedAt: new Date().toISOString() };
     db.setCollection(COLLECTION, books);
+    syncBooksToIndexedDB([books[index]]).catch(() => {});
     return books[index];
   },
 
   delete(id: string): void {
     const books = db.getCollection<Book>(COLLECTION);
     db.setCollection(COLLECTION, books.filter(b => b.id !== id));
+    deleteBookFromIndexedDB(id).catch(() => {});
   },
 
   clearAll(): void {
     db.setCollection(COLLECTION, []);
+    clearIndexedDBBooks().catch(() => {});
   },
 
   incrementUsage(id: string): void {
@@ -123,6 +156,7 @@ export const bookRepository = {
     if (index !== -1) {
       books[index] = { ...books[index], usageCount: books[index].usageCount + 1 };
       db.setCollection(COLLECTION, books);
+      syncBooksToIndexedDB([books[index]]).catch(() => {});
     }
   }
 };

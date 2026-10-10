@@ -206,10 +206,10 @@ export function HomePage() {
         <button
           id="home-new-invoice-btn"
           onClick={handleNewInvoice}
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] p-5 text-white text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] p-4 sm:p-5 text-white text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-          <FilePlus size={26} className="mb-2 relative z-10" strokeWidth={1.5} />
+          <FilePlus size={24} className="mb-2 relative z-10" strokeWidth={1.5} />
           <div className="text-base sm:text-lg font-bold relative z-10">New Invoice</div>
           <div className="text-xs text-white/70 relative z-10 mt-0.5">Speed billing & PDF generator</div>
           <div className="mt-2 text-xs text-white/50 relative z-10 font-mono">Alt+N</div>
@@ -218,10 +218,10 @@ export function HomePage() {
         <button
           id="home-duplicate-btn"
           onClick={handleDuplicateLast}
-          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 sm:p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)] rounded-full -translate-y-8 translate-x-8 opacity-50" />
-          <Copy size={26} className="mb-2 text-[var(--color-primary)] relative z-10" strokeWidth={1.5} />
+          <Copy size={24} className="mb-2 text-[var(--color-primary)] relative z-10" strokeWidth={1.5} />
           <div className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] relative z-10">Duplicate Last</div>
           <div className="text-xs text-[var(--color-text-secondary)] relative z-10 mt-0.5">Copy last invoice with next number</div>
           <div className="mt-2 text-xs text-[var(--color-text-muted)] relative z-10">Quick repeat billing</div>
@@ -230,10 +230,10 @@ export function HomePage() {
         <button
           id="home-daily-tally-btn"
           onClick={() => setIsTallyOpen(true)}
-          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
+          className="group relative overflow-hidden rounded-2xl bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 p-4 sm:p-5 text-left transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xs hover:shadow-md cursor-pointer"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 dark:bg-emerald-950 rounded-full -translate-y-8 translate-x-8 opacity-60" />
-          <Receipt size={26} className="mb-2 text-emerald-600 dark:text-emerald-400 relative z-10" strokeWidth={1.5} />
+          <Receipt size={24} className="mb-2 text-emerald-600 dark:text-emerald-400 relative z-10" strokeWidth={1.5} />
           <div className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] relative z-10">Daily Fair Tally</div>
           <div className="text-xs text-[var(--color-text-secondary)] relative z-10 mt-0.5">Reconcile cash in hand & UPI</div>
           <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold relative z-10 font-mono">Alt+T</div>
@@ -241,9 +241,9 @@ export function HomePage() {
       </div>
 
       {/* Stats & Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <Card className="p-5 sm:p-6 flex flex-col justify-center bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs flex-1 rounded-2xl">
+          <Card className="p-4 sm:p-6 flex flex-col justify-center bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs flex-1 rounded-2xl">
             <div className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1 sm:mb-2">Total Revenue (All Time)</div>
             <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-[var(--color-primary-600)] dark:text-[var(--color-primary-400)] tracking-tight truncate">
               {formatINR(totalRevenue)}
@@ -253,14 +253,14 @@ export function HomePage() {
             </div>
           </Card>
           
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 shadow-xs rounded-xl">
-              <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Paid Invoices</div>
-              <div className="text-base sm:text-xl font-black text-emerald-800 dark:text-emerald-300 truncate" title={formatINR(totalPaid)}>{formatINR(totalPaid)}</div>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+            <Card className="p-3 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-emerald-300 dark:border-emerald-800 shadow-xs rounded-xl">
+              <div className="text-[11px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">Paid Invoices</div>
+              <div className="text-sm sm:text-xl font-black text-emerald-800 dark:text-emerald-300 truncate" title={formatINR(totalPaid)}>{formatINR(totalPaid)}</div>
             </Card>
-            <Card className="p-3.5 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-rose-300 dark:border-rose-800 shadow-xs rounded-xl">
-              <div className="text-xs font-bold text-rose-700 dark:text-rose-400 mb-1">Pending Due</div>
-              <div className="text-base sm:text-xl font-black text-rose-800 dark:text-rose-300 truncate" title={formatINR(totalUnpaid)}>{formatINR(totalUnpaid)}</div>
+            <Card className="p-3 sm:p-4 flex flex-col justify-center bg-[var(--color-surface)] border border-rose-300 dark:border-rose-800 shadow-xs rounded-xl">
+              <div className="text-[11px] sm:text-xs font-bold text-rose-700 dark:text-rose-400 mb-1">Pending Due</div>
+              <div className="text-sm sm:text-xl font-black text-rose-800 dark:text-rose-300 truncate" title={formatINR(totalUnpaid)}>{formatINR(totalUnpaid)}</div>
             </Card>
           </div>
         </div>
@@ -297,7 +297,7 @@ export function HomePage() {
         <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">Recent Invoices</h2>
         <button
           onClick={() => navigate('/history')}
-          className="text-xs text-[var(--color-primary)] hover:underline"
+          className="text-xs text-[var(--color-primary)] hover:underline font-semibold"
         >
           View all →
         </button>
@@ -324,16 +324,16 @@ export function HomePage() {
             return (
               <div
                 key={inv.id}
-                className="group flex items-center gap-3 sm:gap-4 px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all animate-fade-in-up"
+                className="group flex items-center gap-3 sm:gap-4 px-3.5 sm:px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all animate-fade-in-up"
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: biz?.accentColor ? `${biz.accentColor}20` : 'var(--color-primary-50)' }}>
-                  <FileText size={18} style={{ color: biz?.accentColor ?? 'var(--color-primary)' }} />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: biz?.accentColor ? `${biz.accentColor}20` : 'var(--color-primary-50)' }}>
+                  <FileText size={17} style={{ color: biz?.accentColor ?? 'var(--color-primary)' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{inv.customerName}</span>
-                    <Badge variant="default" className="text-xs shrink-0">{inv.invoiceNumber}</Badge>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <span className="text-xs sm:text-sm font-semibold text-[var(--color-text-primary)] truncate max-w-[130px] sm:max-w-none">{inv.customerName}</span>
+                    <Badge variant="default" className="text-[10px] sm:text-xs shrink-0">{inv.invoiceNumber}</Badge>
+                    <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
                       method === 'cash'
                         ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
                         : method === 'upi'
@@ -343,26 +343,26 @@ export function HomePage() {
                       {method}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)] mt-0.5">
+                  <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[var(--color-text-muted)] mt-0.5">
                     <span className="flex items-center gap-1"><Calendar size={10} />{inv.invoiceDate}</span>
-                    {biz && <span className="truncate">{biz.name}</span>}
+                    {biz && <span className="truncate max-w-[100px] sm:max-w-none">{biz.name}</span>}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-[var(--color-text-primary)] shrink-0">{formatINR(inv.grandTotal)}</div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="text-xs sm:text-sm font-bold text-[var(--color-text-primary)] shrink-0">{formatINR(inv.grandTotal)}</div>
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                   <button
                     onClick={() => handleView(inv)}
-                    className="h-7 w-7 rounded flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] transition-all"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] transition-all cursor-pointer"
                     title="View/Edit"
                   >
-                    <Eye size={13} />
+                    <Eye size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(inv.id)}
-                    className="h-7 w-7 rounded flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all cursor-pointer"
                     title="Delete"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

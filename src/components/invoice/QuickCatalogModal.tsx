@@ -67,26 +67,26 @@ export function QuickCatalogModal({ isOpen, onClose, onAddBook, onAddMultiple }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-2xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+        className="w-[calc(100vw-24px)] max-w-2xl bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-2xl flex flex-col max-h-[88dvh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]/50">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)]/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold shrink-0">
               <BookOpen size={18} />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[var(--color-text-primary)]">Quick Book Catalog</h3>
-              <p className="text-xs text-[var(--color-text-muted)]">Tap or select books to instantly add them to the bill</p>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--color-text-primary)]">Quick Book Catalog</h3>
+              <p className="text-[11px] sm:text-xs text-[var(--color-text-muted)]">Tap or select books to instantly add them to the bill</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-surface-secondary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>

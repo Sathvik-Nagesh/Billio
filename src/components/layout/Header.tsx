@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Moon, Sun, FilePlus, Menu, User, LogOut, Sparkles, KeyRound, HelpCircle } from 'lucide-react';
 import { useThemeStore } from '@/stores/useThemeStore';
 import { useBusinessStore } from '@/stores/useBusinessStore';
@@ -44,35 +44,36 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
     toast.success('Logged out successfully');
   };
 
+  const isNewInvoicePage = location.pathname === '/invoice/new';
+
   return (
     <header
       id="app-header"
-      className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[var(--color-surface)] border-b border-[var(--color-border)] no-print shrink-0 h-[60px]"
+      className="flex items-center justify-between px-3 sm:px-6 py-2.5 bg-[var(--color-surface)] border-b border-[var(--color-border)] no-print shrink-0 h-[56px] sm:h-[60px]"
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           onClick={onMobileMenuToggle}
-          className="md:hidden p-2 -ml-1 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+          className="md:hidden p-1.5 -ml-1 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
           aria-label="Open menu"
         >
           <Menu size={20} />
         </button>
 
-        <h1 className="text-base font-semibold text-[var(--color-text-primary)] font-display truncate">
+        <h1 className="text-sm sm:text-base font-semibold text-[var(--color-text-primary)] font-display truncate">
           {title}
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         {/* Business Selector */}
         {businesses.length > 0 && (
-          <div className="flex items-center gap-2 max-w-[140px] sm:max-w-xs">
-            <span className="text-xs text-[var(--color-text-muted)] hidden md:block">Business:</span>
+          <div className="flex items-center gap-1.5 max-w-[130px] sm:max-w-[200px]">
             <select
               id="header-business-selector"
               value={activeBusiness?.id ?? ''}
               onChange={(e) => setActiveBusiness(e.target.value)}
-              className="h-8 pl-2 pr-6 sm:pl-3 sm:pr-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs sm:text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all cursor-pointer truncate"
+              className="h-8 pl-2 pr-5 sm:pr-7 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all cursor-pointer truncate font-medium"
             >
               {businesses.map(biz => (
                 <option key={biz.id} value={biz.id}>{biz.name}</option>
@@ -81,36 +82,38 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
           </div>
         )}
 
-        {/* New Invoice Quick Button */}
-        <Button
-          id="header-new-invoice-btn"
-          size="sm"
-          onClick={() => navigate('/invoice/new')}
-          className="hidden sm:flex"
-        >
-          <FilePlus size={14} />
-          New Invoice
-        </Button>
+        {/* New Invoice Quick Button (Only on desktop and when not already on New Invoice page) */}
+        {!isNewInvoicePage && (
+          <Button
+            id="header-new-invoice-btn"
+            size="sm"
+            onClick={() => navigate('/invoice/new')}
+            className="hidden md:flex h-8 px-3 text-xs"
+          >
+            <FilePlus size={13} />
+            New Invoice
+          </Button>
+        )}
 
         {/* Theme Toggle */}
         <button
           id="theme-toggle"
           onClick={toggleMode}
-          className="h-9 w-9 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all duration-150 cursor-pointer"
+          className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
           title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
-          {mode === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          {mode === 'light' ? <Moon size={15} /> : <Sun size={15} />}
         </button>
 
         {/* Interactive Guide & Walkthrough Trigger */}
         <button
           id="header-help-guide-btn"
           onClick={() => openHelpModal()}
-          className="h-9 px-2.5 rounded-xl border border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 bg-[var(--color-primary-50)]/60 dark:bg-[var(--color-primary-950)]/60 hover:bg-[var(--color-primary-100)]/60 text-[var(--color-primary)] flex items-center gap-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          className="hidden sm:flex h-8 sm:h-9 px-2.5 rounded-lg border border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 bg-[var(--color-primary-50)]/60 dark:bg-[var(--color-primary-950)]/60 hover:bg-[var(--color-primary-100)]/60 text-[var(--color-primary)] items-center gap-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer"
           title="Interactive Walkthrough & Shortcuts"
         >
-          <HelpCircle size={15} />
-          <span className="hidden md:inline">Guide</span>
+          <HelpCircle size={14} />
+          <span>Guide</span>
         </button>
 
         {/* User Profile Menu */}

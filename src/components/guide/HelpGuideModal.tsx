@@ -131,72 +131,72 @@ export function HelpGuideModal() {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl shadow-2xl w-[calc(100vw-24px)] max-w-4xl max-h-[88dvh] flex flex-col overflow-hidden animate-fade-in-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] text-white flex items-center justify-center shadow-md">
-              <Sparkles size={20} />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] text-white flex items-center justify-center shadow-md shrink-0">
+              <Sparkles size={18} />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)] font-display flex items-center gap-2">
-                Billio Interactive Guide & Walkthrough
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-lg font-bold text-[var(--color-text-primary)] font-display truncate">
+                Billio Interactive Guide
               </h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Master speed-billing, daily tallies, catalog search, and hotkeys
+              <p className="text-[11px] sm:text-xs text-[var(--color-text-muted)] truncate">
+                Master speed-billing, daily tallies & hotkeys
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               size="sm"
               onClick={startTour}
-              className="gap-1.5 shadow-xs bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-primary-500)] text-white text-xs font-semibold"
+              className="gap-1 shadow-xs bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-primary-500)] text-white text-[11px] sm:text-xs font-semibold h-8 px-2 sm:px-3"
             >
-              <Play size={13} fill="currentColor" /> Start Live App Tour
+              <Play size={12} fill="currentColor" /> <span className="hidden sm:inline">Start Live App Tour</span><span className="sm:hidden">Tour</span>
             </Button>
             <button
               onClick={closeHelpModal}
-              className="h-9 w-9 rounded-xl flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] transition-all cursor-pointer"
+              className="h-8 w-8 rounded-xl flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-secondary)] transition-all cursor-pointer"
             >
-              <X size={18} />
+              <X size={17} />
             </button>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 px-6 pt-3 pb-2 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs font-semibold shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 pt-2.5 pb-2 border-b border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs font-semibold shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab('guides')}
-            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+            className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'guides'
                 ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-xs font-bold'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            📚 Interactive Walkthroughs
+            📚 Walkthroughs
           </button>
           <button
             onClick={() => setActiveTab('shortcuts')}
-            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+            className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'shortcuts'
                 ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-xs font-bold'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            ⌨️ Keyboard Shortcuts
+            ⌨️ Shortcuts
           </button>
           <button
             onClick={() => setActiveTab('faqs')}
-            className={`px-3.5 py-1.5 rounded-xl transition-all ${
+            className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'faqs'
                 ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-xs font-bold'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            💡 Pro Tips & FAQs
+            💡 FAQs & Tips
           </button>
         </div>
 

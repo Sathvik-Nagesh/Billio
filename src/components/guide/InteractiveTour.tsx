@@ -81,8 +81,9 @@ export function InteractiveTour() {
 
   // Position tooltip relative to target rect
   const padding = 12;
+  const tooltipWidth = Math.min(360, window.innerWidth - 32);
   let tooltipTop = targetRect.top + targetRect.height + padding;
-  let tooltipLeft = Math.max(16, Math.min(window.innerWidth - 380, targetRect.left));
+  let tooltipLeft = Math.max(16, Math.min(window.innerWidth - tooltipWidth - 16, targetRect.left));
 
   // Adjust if overflow bottom
   if (tooltipTop + 240 > window.innerHeight) {
@@ -130,10 +131,11 @@ export function InteractiveTour() {
       {/* Floating Tour Tooltip Card */}
       <div
         ref={tooltipRef}
-        className="absolute w-[360px] max-w-[calc(100vw-32px)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl rounded-2xl p-5 z-[101] transition-all duration-300 backdrop-blur-md animate-fade-in-up"
+        className="absolute w-[360px] max-w-[calc(100vw-32px)] bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl rounded-2xl p-4 sm:p-5 z-[101] transition-all duration-300 backdrop-blur-md animate-fade-in-up"
         style={{
           top: tooltipTop,
           left: tooltipLeft,
+          width: `${tooltipWidth}px`,
         }}
       >
         {/* Header */}

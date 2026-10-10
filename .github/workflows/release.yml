@@ -1,0 +1,146 @@
+name: Release Billio (Windows EXE & Android APK)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.1.24)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web Frontend
+        run: npm run build
+
+      - name: Package Windows Installer & EXE
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win -p never
+
+      - name: Prepare Windows Release Artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-release
+          Get-ChildItem -Path release -Include *.exe, *.blockmap, latest.yml -Recurse | ForEach-Object {
+            Copy-Item $_.FullName -Destination dist-release/
+          }
+          Get-ChildItem dist-release
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binaries
+          path: dist-release/*
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Frontend & Sync Capacitor
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Build Android APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Prepare APK Artifact
+        run: |
+          mkdir -p dist-apk
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
+            TAG_NAME="${{ github.event.inputs.version }}"
+          fi
+          if [ -z "$TAG_NAME" ]; then
+            TAG_NAME="latest"
+          fi
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apk/Billio-${TAG_NAME}.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apk/Billio.apk
+          ls -la dist-apk
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-binaries
+          path: dist-apk/*
+
+  publish-release:
+    name: Create GitHub Release
+    needs: [build-windows, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-binaries
+          path: release-assets
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-binaries
+          path: release-assets
+
+      - name: List Release Assets
+        run: ls -la release-assets
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

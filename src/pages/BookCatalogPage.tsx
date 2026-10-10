@@ -120,99 +120,152 @@ export function BookCatalogPage() {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+    <div className="h-full flex flex-col p-3 sm:p-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-            <BookOpen className="text-[var(--color-primary)]" />
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+            <BookOpen className="text-[var(--color-primary)]" size={20} />
             Book Catalog
           </h2>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+          <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">
             Manage your reusable product catalog. Books are auto-saved here when you create invoices.
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
-            <Download size={14} /> Export CSV
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 px-2.5" onClick={handleExportCSV}>
+            <Download size={13} /> Export CSV
           </Button>
           <div className="relative">
             <input type="file" id="import-csv" accept=".csv" className="hidden" onChange={handleImportCSV} />
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => document.getElementById('import-csv')?.click()}>
-              <Upload size={14} /> Import CSV
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8 px-2.5" onClick={() => document.getElementById('import-csv')?.click()}>
+              <Upload size={13} /> Import CSV
             </Button>
           </div>
-          <Button variant="destructive" size="sm" className="gap-2" onClick={handleClearAll}>
-            <AlertTriangle size={14} /> Clear All
+          <Button variant="destructive" size="sm" className="gap-1.5 text-xs h-8 px-2.5" onClick={handleClearAll}>
+            <AlertTriangle size={13} /> Clear All
           </Button>
         </div>
       </div>
 
-      <Card className="flex-1 flex flex-col min-h-0">
-        <CardHeader className="pb-3 border-b border-[var(--color-border)]">
-          <div className="flex items-center gap-3 relative max-w-md">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+      <Card className="flex-1 flex flex-col min-h-0 rounded-2xl">
+        <CardHeader className="p-3 sm:p-4 pb-3 border-b border-[var(--color-border)]">
+          <div className="flex items-center gap-3 relative max-w-md w-full">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search books..."
-              className="pl-9 h-9"
+              placeholder="Search by book name or author..."
+              className="pl-9 h-9 text-xs sm:text-sm"
             />
           </div>
         </CardHeader>
         
         <CardContent className="flex-1 overflow-hidden p-0 flex flex-col">
-          <div className="flex-1 overflow-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap min-w-[500px]">
-            <thead className="sticky top-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] shadow-[0_1px_0_var(--color-border)]">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Book Name</th>
-                <th className="px-4 py-3 font-semibold">Author</th>
-                <th className="px-4 py-3 font-semibold w-32">Unit Price</th>
-                <th className="px-4 py-3 font-semibold w-24 text-center">Times Used</th>
-                <th className="px-4 py-3 font-semibold w-32 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {books.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-[var(--color-text-muted)]">
-                    {query ? 'No books match your search.' : 'Your catalog is empty. Books are automatically added when you create an invoice.'}
-                  </td>
-                </tr>
-              ) : (
-                books.map(book => (
-                  <tr key={book.id} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-surface-tertiary)] group">
-                    <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] truncate max-w-[200px]">
+          {/* Mobile Card List (<640px) */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 sm:hidden">
+            {books.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[var(--color-text-muted)]">
+                {query ? 'No books match your search.' : 'Your catalog is empty. Books are automatically added when you create an invoice.'}
+              </div>
+            ) : (
+              books.map(book => (
+                <div
+                  key={book.id}
+                  className="p-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-xs sm:text-sm text-[var(--color-text-primary)] truncate">
                       {book.name}
-                    </td>
-                    <td className="px-4 py-3 text-[var(--color-text-secondary)] truncate max-w-[150px]">
-                      {book.author || '-'}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[var(--color-text-secondary)]">
-                      {formatINR(book.unitPrice)}
-                    </td>
-                    <td className="px-4 py-3 text-center text-[var(--color-text-muted)]">
-                      {book.usageCount}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleEdit(book)} className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] rounded transition-colors" title="Edit">
-                          <Edit2 size={14} />
-                        </button>
-                        <button onClick={() => handleDelete(book.id)} className="p-1.5 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                    </div>
+                    <div className="text-[11px] text-[var(--color-text-muted)] truncate mt-0.5">
+                      {book.author ? `by ${book.author}` : 'No author specified'}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-[var(--color-primary)] font-mono">
+                        {formatINR(book.unitPrice)}
+                      </span>
+                      {book.usageCount > 0 && (
+                        <span className="text-[10px] text-[var(--color-text-muted)] font-medium">
+                          • {book.usageCount} billed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleEdit(book)}
+                      className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] transition-colors cursor-pointer"
+                      title="Edit"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(book.id)}
+                      className="h-8 w-8 rounded-lg flex items-center justify-center text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table (>=640px) */}
+          <div className="hidden sm:block flex-1 overflow-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap min-w-[500px]">
+              <thead className="sticky top-0 bg-[var(--color-surface-secondary)] text-[var(--color-text-secondary)] shadow-[0_1px_0_var(--color-border)]">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Book Name</th>
+                  <th className="px-4 py-3 font-semibold">Author</th>
+                  <th className="px-4 py-3 font-semibold w-32">Unit Price</th>
+                  <th className="px-4 py-3 font-semibold w-24 text-center">Times Used</th>
+                  <th className="px-4 py-3 font-semibold w-32 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {books.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-[var(--color-text-muted)]">
+                      {query ? 'No books match your search.' : 'Your catalog is empty. Books are automatically added when you create an invoice.'}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+                ) : (
+                  books.map(book => (
+                    <tr key={book.id} className="border-b border-[var(--color-border-light)] hover:bg-[var(--color-surface-tertiary)] group">
+                      <td className="px-4 py-3 font-medium text-[var(--color-text-primary)] truncate max-w-[200px]">
+                        {book.name}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-text-secondary)] truncate max-w-[150px]">
+                        {book.author || '-'}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[var(--color-text-secondary)]">
+                        {formatINR(book.unitPrice)}
+                      </td>
+                      <td className="px-4 py-3 text-center text-[var(--color-text-muted)]">
+                        {book.usageCount}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleEdit(book)} className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-50)] rounded transition-colors cursor-pointer" title="Edit">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDelete(book.id)} className="p-1.5 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

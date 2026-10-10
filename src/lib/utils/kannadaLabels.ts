@@ -48,6 +48,21 @@ export const kannadaLabels = {
   // Status
   original: 'ಮೂಲ',
   duplicate: 'ಪ್ರತಿ',
+
+  // Payment Modes (Cash, UPI, Due / Credit)
+  paymentMode: 'ಪಾವತಿ ವಿಧಾನ',
+  cash: 'ನಗದು (Cash)',
+  upi: 'ಯುಪಿಐ (UPI / QR)',
+  creditDue: 'ಉದ್ದರಿ / ಬಾಕಿ (Credit/Due)',
+  receivedCash: 'ಸ್ವೀಕರಿಸಿದ ನಗದು',
+  changeDue: 'ಹಿಂತಿರುಗಿಸಬೇಕಾದ ಹಣ (Change)',
+
+  // Common POS Actions
+  saveAndPrint: 'ಉಳಿಸಿ & ಮುದ್ರಿಸಿ',
+  shareWhatsApp: 'ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿ',
+  addBook: 'ಪುಸ್ತಕ ಸೇರಿಸಿ',
+  scanQr: 'ಕ್ಯೂಆರ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
+  thankYou: 'ಧನ್ಯವಾದಗಳು, ಪುನಃ ಭೇಟಿ ನೀಡಿ',
 };
 
 export const englishLabels = {
@@ -85,7 +100,73 @@ export const englishLabels = {
   forCompany: 'For',
   original: 'ORIGINAL',
   duplicate: 'DUPLICATE',
+
+  // Payment Modes
+  paymentMode: 'Payment Mode',
+  cash: 'Cash',
+  upi: 'UPI / QR',
+  creditDue: 'Credit / Due',
+  receivedCash: 'Received Cash',
+  changeDue: 'Change Due',
+
+  // Actions
+  saveAndPrint: 'Save & Print',
+  shareWhatsApp: 'Send WhatsApp',
+  addBook: 'Add Book',
+  scanQr: 'Scan QR',
+  thankYou: 'Thank you for your business! Visit again.',
 };
+
+/**
+ * Standard Kannada Terms & Conditions Presets for Bookstores and Publishers
+ */
+export const KANNADA_TERMS_PRESETS = [
+  'ಮಾರಾಟವಾದ ಪುಸ್ತಕಗಳನ್ನು ವಾಪಸ್ ಪಡೆಯಲಾಗುವುದಿಲ್ಲ.',
+  'ಲೋಪದೋಷವಿದ್ದಲ್ಲಿ ಮಾತ್ರ ೩ ದಿನಗಳೊಳಗೆ ಬದಲಾಯಿಸಿಕೊಡಲಾಗುವುದು.',
+  'ಧನ್ಯವಾದಗಳು! ನಿಮ್ಮ ಮುಂದಿನ ಭೇಟಿಯನ್ನು ಎದುರುನೋಡುತ್ತಿದ್ದೇವೆ.',
+  'ಬಾಕಿ ಮೊತ್ತವನ್ನು ೭ ದಿನಗಳ ಒಳಗೆ ಪಾವತಿಸುವುದು.',
+];
+
+/**
+ * Generates a localized greeting for WhatsApp messaging
+ */
+export function getBilingualWhatsAppGreeting(params: {
+  customerName?: string;
+  businessName?: string;
+  invoiceNumber?: string;
+  grandTotal: number;
+  balanceDue?: number;
+  paymentMode?: string;
+  isKannada?: boolean;
+}): string {
+  const { customerName, businessName, invoiceNumber, grandTotal, balanceDue, isKannada } = params;
+
+  if (isKannada) {
+    const lines = [
+      `ನಮಸ್ಕಾರ ${customerName ? customerName : 'ಗ್ರಾಹಕರೇ'},`,
+      `${businessName ? businessName : 'ನಮ್ಮ ಮಳಿಗೆ'}ಯಿಂದ ನಿಮ್ಮ ಬಿಲ್ ವಿವರ:`,
+      `📄 ಬಿಲ್ ಸಂಖ್ಯೆ: ${invoiceNumber || 'Draft'}`,
+      `💰 ಒಟ್ಟು ಮೊತ್ತ: ₹${grandTotal.toLocaleString('en-IN')}`,
+    ];
+    if (balanceDue && balanceDue > 0) {
+      lines.push(`⚠️ ಉಳಿದ ಬಾಕಿ ಮೊತ್ತ: ₹${balanceDue.toLocaleString('en-IN')}`);
+    }
+    lines.push('', 'ನಿಮ್ಮ ಖರೀದಿಗೆ ಧನ್ಯವಾದಗಳು! ಪುನಃ ಭೇಟಿ ನೀಡಿ 🙏');
+    return lines.join('\n');
+  }
+
+  const lines = [
+    `Hello ${customerName ? customerName : 'Customer'},`,
+    `Here is your bill from *${businessName || 'our store'}*:`,
+    `📄 Bill No: *${invoiceNumber || 'Draft'}*`,
+    `💰 Total Amount: *₹${grandTotal.toLocaleString('en-IN')}*`,
+  ];
+  if (balanceDue && balanceDue > 0) {
+    lines.push(`⚠️ Balance Due: *₹${balanceDue.toLocaleString('en-IN')}*`);
+  }
+  lines.push('', 'Thank you for shopping with us! Visit again. 🙏');
+  return lines.join('\n');
+}
 
 export function getLabels(language: 'en' | 'kn') {
   return language === 'kn' ? kannadaLabels : englishLabels;

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Input, Textarea, FormField, Card, CardHeader, CardTitle, CardContent, Separator } from '@/components/ui';
+import { Button, Input, Textarea, FormField, Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { useBusinessStore } from '@/stores/useBusinessStore';
 import { previewInvoiceNumber } from '@/lib/utils/invoiceNumber';
+import { SignatureEditorModal } from '@/components/common/SignatureEditorModal';
+import { formatPhoneDisplay } from '@/lib/utils/phone';
+import { KANNADA_TERMS_PRESETS } from '@/lib/utils/kannadaLabels';
 import type { Business } from '@/types';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Edit3 } from 'lucide-react';
 
 type FormData = Omit<Business, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -35,12 +38,18 @@ const defaultForm: FormData = {
 };
 
 function ImageUploadField({ label, value, onChange, id }: { label: string; value: string; onChange: (v: string) => void; id: string }) {
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => onChange(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const { optimizeImage } = await import('@/lib/utils/imageOptimizer');
+      const optimized = await optimizeImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.88, preserveTransparency: true });
+      onChange(optimized);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = (ev) => onChange(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -53,13 +62,13 @@ function ImageUploadField({ label, value, onChange, id }: { label: string; value
             <button
               type="button"
               onClick={() => onChange('')}
-              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+              className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 cursor-pointer"
             >
               <X size={10} />
             </button>
           </div>
         ) : null}
-        <label id={id} className="flex items-center gap-2 h-9 px-3 rounded-lg border border-dashed border-[var(--color-border)] text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] cursor-pointer transition-colors">
+        <label id={id} className="flex items-center gap-2 h-9 px-3 rounded-lg border border-dashed border-[var(--color-border)] text-xs font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] cursor-pointer transition-colors shadow-2xs">
           <Upload size={13} />
           {value ? 'Change' : 'Upload'}
           <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
@@ -72,9 +81,12 @@ function ImageUploadField({ label, value, onChange, id }: { label: string; value
 export function BusinessFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { businesses, createBusiness, updateBusiness, load } = useBusinessStore();
+  const { businesses, createBusiness, updateBusiness } = useBusinessStore();
   const [form, setForm] = useState<FormData>(defaultForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isSealModalOpen, setIsSealModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -112,167 +124,265 @@ export function BusinessFormPage() {
   const invoicePreview = previewInvoiceNumber(form, form.invoiceStartNumber);
 
   return (
-    <form onSubmit={handleSubmit} className="h-full overflow-y-auto p-6 animate-fade-in">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">{id ? 'Edit Business' : 'New Business Profile'}</h2>
-            <p className="text-sm text-[var(--color-text-muted)]">Fill in your business details</p>
+    <>
+      <form onSubmit={handleSubmit} className="h-full overflow-y-auto p-4 sm:p-6 animate-fade-in pb-20">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">{id ? 'Edit Business' : 'New Business Profile'}</h2>
+              <p className="text-sm text-[var(--color-text-muted)]">Configure publication branding, bank details, and signatures</p>
+            </div>
           </div>
-        </div>
 
-        {/* Basic Info */}
-        <Card>
-          <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-3">
-              <FormField label="Business Name *" error={errors.name}>
-                <Input id="biz-name" value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. ABC Publications" />
-              </FormField>
-              <ImageUploadField label="Logo" value={form.logoPath ?? ''} onChange={v => set('logoPath', v)} id="biz-logo-upload" />
-              <FormField label="Address">
-                <Textarea id="biz-address" value={form.address ?? ''} onChange={e => set('address', e.target.value)} placeholder="Full business address" className="min-h-[70px]" />
-              </FormField>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="GSTIN">
-                  <Input id="biz-gstin" value={form.gstin ?? ''} onChange={e => set('gstin', e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+          {/* Basic Info */}
+          <Card>
+            <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                <FormField label="Business Name *" error={errors.name}>
+                  <Input id="biz-name" value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. ABC Publications" />
                 </FormField>
-                <FormField label="Phone">
-                  <Input id="biz-phone" value={form.phone ?? ''} onChange={e => {
-                    let val = e.target.value;
-                    if (val === '+91' || val === '+91 ') val = '';
-                    else if (val.length > 0 && !val.startsWith('+')) val = '+91 ' + val;
-                    set('phone', val);
-                  }} placeholder="+91 XXXXX XXXXX" />
+                <ImageUploadField label="Logo" value={form.logoPath ?? ''} onChange={v => set('logoPath', v)} id="biz-logo-upload" />
+                <FormField label="Address">
+                  <Textarea id="biz-address" value={form.address ?? ''} onChange={e => set('address', e.target.value)} placeholder="Full business address" className="min-h-[70px]" />
                 </FormField>
-                <FormField label="Email">
-                  <Input id="biz-email" type="email" value={form.email ?? ''} onChange={e => set('email', e.target.value)} placeholder="email@business.com" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label="GSTIN">
+                    <Input id="biz-gstin" value={form.gstin ?? ''} onChange={e => set('gstin', e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+                  </FormField>
+                  <FormField label="Phone">
+                    <Input id="biz-phone" value={form.phone ?? ''} onChange={e => set('phone', formatPhoneDisplay(e.target.value))} placeholder="+91 XXXXX XXXXX" />
+                  </FormField>
+                  <FormField label="Email">
+                    <Input id="biz-email" type="email" value={form.email ?? ''} onChange={e => set('email', e.target.value)} placeholder="email@business.com" />
+                  </FormField>
+                  <FormField label="Accent Color">
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={form.accentColor} onChange={e => set('accentColor', e.target.value)} className="w-9 h-9 rounded-lg border border-[var(--color-border)] cursor-pointer p-0.5 shrink-0" id="biz-accent-color" />
+                      <Input value={form.accentColor} onChange={e => set('accentColor', e.target.value)} className="flex-1 font-mono text-xs uppercase" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+                          set('accentColor', randomColor);
+                        }}
+                        className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white hover:opacity-90 active:scale-95 transition-all shrink-0 cursor-pointer"
+                        title="Random color"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.13 15.57a9 9 0 1 0 3.84-10.36l-5.69 2.72"/></svg>
+                      </button>
+                    </div>
+                  </FormField>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bank Details */}
+          <Card>
+            <CardHeader><CardTitle>Bank Details & UPI</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Bank Name" className="sm:col-span-2">
+                  <Input id="biz-bank-name" value={form.bankName ?? ''} onChange={e => set('bankName', e.target.value)} placeholder="e.g. State Bank of India" />
                 </FormField>
-                <FormField label="Accent Color">
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={form.accentColor} onChange={e => set('accentColor', e.target.value)} className="w-9 h-9 rounded-lg border border-[var(--color-border)] cursor-pointer p-0.5 shrink-0" id="biz-accent-color" />
-                    <Input value={form.accentColor} onChange={e => set('accentColor', e.target.value)} className="flex-1 font-mono text-xs uppercase" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-                        set('accentColor', randomColor);
-                      }}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white hover:opacity-90 active:scale-95 transition-all shrink-0"
-                      title="Random color"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.13 15.57a9 9 0 1 0 3.84-10.36l-5.69 2.72"/></svg>
-                    </button>
+                <FormField label="Account Number">
+                  <Input id="biz-bank-account" value={form.bankAccount ?? ''} onChange={e => set('bankAccount', e.target.value)} placeholder="Account number" />
+                </FormField>
+                <FormField label="IFSC Code">
+                  <Input id="biz-bank-ifsc" value={form.bankIfsc ?? ''} onChange={e => set('bankIfsc', e.target.value.toUpperCase())} placeholder="SBIN0000000" />
+                </FormField>
+                <FormField label="Branch">
+                  <Input id="biz-bank-branch" value={form.bankBranch ?? ''} onChange={e => set('bankBranch', e.target.value)} placeholder="Branch name" />
+                </FormField>
+                <FormField label="UPI ID (for instant QR code)">
+                  <Input id="biz-upi-id" value={form.upiId ?? ''} onChange={e => set('upiId', e.target.value)} placeholder="e.g. yourname@upi" />
+                </FormField>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoice Numbering */}
+          <Card>
+            <CardHeader><CardTitle>Invoice Numbering</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FormField label="Invoice Prefix">
+                  <Input id="biz-prefix" value={form.invoicePrefix ?? ''} onChange={e => set('invoicePrefix', e.target.value)} placeholder="e.g. ABC, XYZ" />
+                </FormField>
+                <FormField label="Year Format">
+                  <select id="biz-year-format" value={form.invoiceYearFormat} onChange={e => set('invoiceYearFormat', e.target.value as Business['invoiceYearFormat'])} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                    <option value="FY">FY (2526 = 2025-26)</option>
+                    <option value="YYYY">YYYY (2026)</option>
+                    <option value="YY">YY (26)</option>
+                    <option value="none">None</option>
+                  </select>
+                </FormField>
+                <FormField label="Separator">
+                  <select id="biz-separator" value={form.invoiceSeparator} onChange={e => set('invoiceSeparator', e.target.value)} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                    <option value="-">Dash (-)</option>
+                    <option value="/">Slash (/)</option>
+                    <option value="">None</option>
+                  </select>
+                </FormField>
+                <FormField label="Padding (digits)">
+                  <select id="biz-padding" value={form.invoicePadding} onChange={e => set('invoicePadding', parseInt(e.target.value))} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                    <option value={1}>1 (1, 2, 3...)</option>
+                    <option value={2}>2 (01, 02...)</option>
+                    <option value={3}>3 (001, 002...)</option>
+                    <option value={4}>4 (0001, 0002...)</option>
+                  </select>
+                </FormField>
+                <FormField label="Starting Number">
+                  <Input id="biz-start-num" type="number" min={1} value={form.invoiceStartNumber} onChange={e => set('invoiceStartNumber', parseInt(e.target.value) || 1)} />
+                </FormField>
+                <FormField label="Preview">
+                  <div className="h-9 px-3 flex items-center rounded-lg bg-[var(--color-surface-tertiary)] border border-[var(--color-border)] font-mono text-sm font-semibold text-[var(--color-primary)]">
+                    {invoicePreview}
                   </div>
                 </FormField>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Bank Details */}
-        <Card>
-          <CardHeader><CardTitle>Bank Details</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Bank Name" className="col-span-2">
-                <Input id="biz-bank-name" value={form.bankName ?? ''} onChange={e => set('bankName', e.target.value)} placeholder="e.g. State Bank of India" />
-              </FormField>
-              <FormField label="Account Number">
-                <Input id="biz-bank-account" value={form.bankAccount ?? ''} onChange={e => set('bankAccount', e.target.value)} placeholder="Account number" />
-              </FormField>
-              <FormField label="IFSC Code">
-                <Input id="biz-bank-ifsc" value={form.bankIfsc ?? ''} onChange={e => set('bankIfsc', e.target.value.toUpperCase())} placeholder="SBIN0000000" />
-              </FormField>
-              <FormField label="Branch">
-                <Input id="biz-bank-branch" value={form.bankBranch ?? ''} onChange={e => set('bankBranch', e.target.value)} placeholder="Branch name" />
-              </FormField>
-              <FormField label="UPI ID (Dynamic QR Generator)">
-                <Input id="biz-upi-id" value={form.upiId ?? ''} onChange={e => set('upiId', e.target.value)} placeholder="e.g. yourname@upi" />
-              </FormField>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Invoice Numbering */}
-        <Card>
-          <CardHeader><CardTitle>Invoice Numbering</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Invoice Prefix">
-                <Input id="biz-prefix" value={form.invoicePrefix ?? ''} onChange={e => set('invoicePrefix', e.target.value)} placeholder="e.g. ABC, XYZ" />
-              </FormField>
-              <FormField label="Year Format">
-                <select id="biz-year-format" value={form.invoiceYearFormat} onChange={e => set('invoiceYearFormat', e.target.value as Business['invoiceYearFormat'])} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent">
-                  <option value="FY">FY (2526 = 2025-26)</option>
-                  <option value="YYYY">YYYY (2026)</option>
-                  <option value="YY">YY (26)</option>
-                  <option value="none">None</option>
-                </select>
-              </FormField>
-              <FormField label="Separator">
-                <select id="biz-separator" value={form.invoiceSeparator} onChange={e => set('invoiceSeparator', e.target.value)} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent">
-                  <option value="-">Dash (-)</option>
-                  <option value="/">Slash (/)</option>
-                  <option value="">None</option>
-                </select>
-              </FormField>
-              <FormField label="Padding (digits)">
-                <select id="biz-padding" value={form.invoicePadding} onChange={e => set('invoicePadding', parseInt(e.target.value))} className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent">
-                  <option value={1}>1 (1, 2, 3...)</option>
-                  <option value={2}>2 (01, 02...)</option>
-                  <option value={3}>3 (001, 002...)</option>
-                  <option value={4}>4 (0001, 0002...)</option>
-                </select>
-              </FormField>
-              <FormField label="Starting Number">
-                <Input id="biz-start-num" type="number" min={1} value={form.invoiceStartNumber} onChange={e => set('invoiceStartNumber', parseInt(e.target.value) || 1)} />
-              </FormField>
-              <FormField label="Preview">
-                <div className="h-9 px-3 flex items-center rounded-lg bg-[var(--color-surface-tertiary)] border border-[var(--color-border)] font-mono text-sm font-semibold text-[var(--color-primary)]">
-                  {invoicePreview}
+          {/* Signature & Seal with Smart Contrast Studio */}
+          <Card>
+            <CardHeader><CardTitle>Authorized Signature & Stamp</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Signature Block */}
+                <div className="p-3.5 bg-[var(--color-surface-secondary)] rounded-2xl border border-[var(--color-border)] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--color-text-primary)]">Signature</span>
+                    {form.signaturePath && (
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-md">✓ Active</span>
+                    )}
+                  </div>
+                  <div className="h-24 bg-white rounded-xl border border-[var(--color-border)] flex items-center justify-center p-2 relative overflow-hidden">
+                    {form.signaturePath ? (
+                      <>
+                        <img src={form.signaturePath} alt="Signature" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => set('signaturePath', '')}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 cursor-pointer"
+                        >
+                          <X size={10} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400">No signature</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className="w-full h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-bold text-[var(--color-primary)] hover:border-[var(--color-primary)] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <Edit3 size={12} />
+                    <span>{form.signaturePath ? 'Edit / Redraw Signature' : 'Draw or Upload Signature'}</span>
+                  </button>
                 </div>
-              </FormField>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Images */}
-        <Card>
-          <CardHeader><CardTitle>Images & Documents</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <ImageUploadField label="UPI QR Image (Fallback)" value={form.upiQrPath ?? ''} onChange={v => set('upiQrPath', v)} id="biz-upi-upload" />
-              <ImageUploadField label="Signature" value={form.signaturePath ?? ''} onChange={v => set('signaturePath', v)} id="biz-sig-upload" />
-              <ImageUploadField label="Company Seal (optional)" value={form.sealPath ?? ''} onChange={v => set('sealPath', v)} id="biz-seal-upload" />
-            </div>
-          </CardContent>
-        </Card>
+                {/* Company Seal Block */}
+                <div className="p-3.5 bg-[var(--color-surface-secondary)] rounded-2xl border border-[var(--color-border)] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--color-text-primary)]">Official Stamp / Seal</span>
+                    {form.sealPath && (
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-md">✓ Active</span>
+                    )}
+                  </div>
+                  <div className="h-24 bg-white rounded-xl border border-[var(--color-border)] flex items-center justify-center p-2 relative overflow-hidden">
+                    {form.sealPath ? (
+                      <>
+                        <img src={form.sealPath} alt="Seal" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => set('sealPath', '')}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 cursor-pointer"
+                        >
+                          <X size={10} />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400">Optional seal</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSealModalOpen(true)}
+                    className="w-full h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <Upload size={12} />
+                    <span>{form.sealPath ? 'Edit Stamp' : 'Upload Stamp Photo'}</span>
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Terms */}
-        <Card>
-          <CardHeader><CardTitle>Terms & Conditions</CardTitle></CardHeader>
-          <CardContent>
-            <Textarea
-              id="biz-terms"
-              value={form.terms ?? ''}
-              onChange={e => set('terms', e.target.value)}
-              placeholder="Enter your standard terms and conditions..."
-              className="min-h-[100px]"
-            />
-          </CardContent>
-        </Card>
+          {/* Terms */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>Terms & Conditions</CardTitle>
+              <span className="text-[11px] text-[var(--color-text-secondary)] font-medium">Click preset to add</span>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {KANNADA_TERMS_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      const cur = form.terms ? form.terms.trim() + '\n' : '';
+                      set('terms', cur + preset);
+                    }}
+                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-[var(--color-surface-secondary)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all cursor-pointer text-left"
+                    title="Click to append this preset"
+                  >
+                    + {preset}
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                id="biz-terms"
+                value={form.terms ?? ''}
+                onChange={e => set('terms', e.target.value)}
+                placeholder="Enter your standard terms and conditions..."
+                className="min-h-[100px]"
+              />
+            </CardContent>
+          </Card>
 
-        {/* Actions */}
-        <div className="flex gap-3 pb-6">
-          <Button type="button" variant="outline" onClick={() => navigate('/businesses')} className="flex-1">
-            Cancel
-          </Button>
-          <Button type="submit" id="biz-submit-btn" className="flex-1">
-            {id ? 'Update Business' : 'Create Business'}
-          </Button>
+          {/* Actions */}
+          <div className="flex gap-3 pb-6">
+            <Button type="button" variant="outline" onClick={() => navigate('/businesses')} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" id="biz-submit-btn" className="flex-1 font-bold">
+              {id ? 'Update Business' : 'Create Business'}
+            </Button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      {/* Signature Studio Modal */}
+      <SignatureEditorModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSave={(dataUrl) => set('signaturePath', dataUrl)}
+        initialValue={form.signaturePath ?? ''}
+        title="Signature Studio"
+      />
+
+      {/* Seal Studio Modal */}
+      <SignatureEditorModal
+        isOpen={isSealModalOpen}
+        onClose={() => setIsSealModalOpen(false)}
+        onSave={(dataUrl) => set('sealPath', dataUrl)}
+        initialValue={form.sealPath ?? ''}
+        title="Company Seal Studio"
+      />
+    </>
   );
 }

@@ -196,7 +196,7 @@ export const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
 
 export const DialogContent = ({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={`bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-xl)] p-6 w-full max-h-[90vh] overflow-y-auto ${className ?? ''}`}
+    className={`bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-[var(--shadow-xl)] p-4 sm:p-6 w-[calc(100vw-24px)] max-w-lg max-h-[88dvh] overflow-y-auto ${className ?? ''}`}
     {...props}
   >
     {children}
