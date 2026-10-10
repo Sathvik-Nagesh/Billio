@@ -43,6 +43,7 @@ export interface Book {
   id: string;
   name: string;
   author?: string;
+  isbn?: string;
   unitPrice: number;
   usageCount: number;
   createdAt: string;

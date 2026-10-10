@@ -51,8 +51,9 @@ export const upsert = mutation({
     // Check if book exists for this tenant
     const existing = await ctx.db
       .query("books")
-      .withIndex("by_tenant", (q) => q.eq("tenantId", args.tenantId))
-      .filter((q) => q.eq(q.field("name"), trimmedName))
+      .withIndex("by_tenant_name", (q) =>
+        q.eq("tenantId", args.tenantId).eq("name", trimmedName)
+      )
       .first();
 
     const now = new Date().toISOString();

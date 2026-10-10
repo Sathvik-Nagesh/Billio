@@ -57,7 +57,7 @@ export const updater = {
   async getVersion(): Promise<string> {
     const ipc = getIpc();
     if (ipc) return ipc.invoke('get-app-version');
-    return '1.1.24'; // current Billio release version
+    return '1.1.25'; // current Billio release version
   },
 
   /** Trigger check for updates (Electron, APK, or PWA) */
@@ -77,27 +77,47 @@ export const updater = {
       };
 
       // Check GitHub releases API for latest web/APK release
-      const res = await fetch('https://api.github.com/repos/Sathvik-Nagesh/Billio/releases/latest', {
+      let res = await fetch('https://api.github.com/repos/Sathvik-Nagesh/Billio/releases/latest', {
         headers,
       });
 
-      if (!res.ok) {
+      let release: any = null;
+      if (res.ok) {
+        release = await res.json();
+      } else {
+        // Fallback: check all releases list (for pre-releases or draft tags)
+        const listRes = await fetch('https://api.github.com/repos/Sathvik-Nagesh/Billio/releases', {
+          headers,
+        });
+        if (listRes.ok) {
+          const releasesList = await listRes.json();
+          if (Array.isArray(releasesList) && releasesList.length > 0) {
+            release = releasesList[0];
+          }
+        }
+      }
+
+      if (!release) {
         emit('updater:not-available');
         return { status: 'up-to-date', message: 'You are on the latest version.' };
       }
 
-      const release = await res.json();
       const latestTag = release.tag_name ? release.tag_name.replace(/^v/, '') : '';
       const currentVersion = await updater.getVersion();
 
       if (latestTag && latestTag !== currentVersion) {
         const apkAsset = release.assets?.find((a: any) => a.name.endsWith('.apk'));
+        const exeAsset = release.assets?.find((a: any) => a.name.endsWith('.exe'));
         const updateInfo: UpdateInfo = {
           version: latestTag,
           releaseName: release.name || `Version ${latestTag}`,
           releaseNotes: release.body || '',
           releaseDate: release.published_at,
-          downloadUrl: apkAsset ? apkAsset.browser_download_url : release.html_url,
+          downloadUrl: apkAsset
+            ? apkAsset.browser_download_url
+            : exeAsset
+            ? exeAsset.browser_download_url
+            : release.html_url || 'https://github.com/Sathvik-Nagesh/Billio/releases/latest',
         };
         emit('updater:available', updateInfo);
         return { status: 'available', info: updateInfo };
@@ -126,12 +146,25 @@ export const updater = {
       return ipc.invoke('download-update');
     }
 
-    if (downloadUrl) {
-      window.open(downloadUrl, '_blank');
-      return { status: 'downloading', message: 'Downloading latest release...' };
+    const target = downloadUrl || 'https://github.com/Sathvik-Nagesh/Billio/releases/latest';
+
+    // On Capacitor Android / Mobile, open via native system intent/browser
+    if (isCapacitor() && typeof (window as any).Capacitor?.openUrl === 'function') {
+      try {
+        await (window as any).Capacitor.openUrl({ url: target });
+        return { status: 'downloading', message: 'Downloading update APK...' };
+      } catch {
+        // fallback to window.open
+      }
     }
 
-    return { status: 'error', message: 'No download URL specified.' };
+    try {
+      window.open(target, '_system') || window.open(target, '_blank');
+    } catch {
+      window.location.href = target;
+    }
+
+    return { status: 'downloading', message: 'Opening latest release...' };
   },
 
   /** Quit and install the downloaded update */

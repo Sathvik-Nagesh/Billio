@@ -73,6 +73,15 @@ function AppInit() {
   useEffect(() => {
     // Load businesses
     load();
+
+    // Background cloud sync with Convex if connected
+    import('./lib/convex/syncEngine').then(({ convexSyncEngine }) => {
+      if (convexSyncEngine.isAvailable()) {
+        convexSyncEngine.fullSync().then(() => {
+          load(); // Refresh businesses if new ones were fetched
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, [load]);
 
   return null;

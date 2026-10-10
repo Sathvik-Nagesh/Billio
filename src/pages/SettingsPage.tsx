@@ -293,14 +293,84 @@ export function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-[var(--color-text-primary)]">Restore Backup</div>
-                <div className="text-xs text-[var(--color-text-muted)]">Restore your data from a previous backup file.</div>
+                <div className="text-xs text-[var(--color-text-muted)]">Restore your database from a previous ZIP or JSON backup file.</div>
               </div>
               <div className="relative">
-                <input type="file" id="restore-file" accept=".zip" className="hidden" onChange={handleFileSelect} />
+                <input type="file" id="restore-file" accept=".zip,.json,application/json,application/zip" className="hidden" onChange={handleFileSelect} />
                 <Button size="sm" variant="outline" className="gap-2" onClick={() => document.getElementById('restore-file')?.click()}>
                   <Upload size={14} /> Restore
                 </Button>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Convex Cloud Database & Realtime Sync */}
+        <Card className="border-indigo-200 dark:border-indigo-900/50 shadow-xs">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              <Shield size={15} /> Convex Cloud Database & Realtime Sync
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-xs text-[var(--color-text-secondary)] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-[var(--color-text-primary)]">Backend Status:</span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Connected to Convex Cloud
+                </span>
+              </div>
+              <div className="truncate text-[11px] text-[var(--color-text-muted)]">
+                Deployment: <code className="bg-white/60 dark:bg-black/40 px-1 py-0.5 rounded">dev:harmless-reindeer-189</code>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <Button
+                size="sm"
+                onClick={async () => {
+                  toast.loading('Syncing with Convex cloud...', { id: 'convex-sync' });
+                  try {
+                    const { convexSyncEngine } = await import('@/lib/convex/syncEngine');
+                    const stats = await convexSyncEngine.fullSync();
+                    if (stats.error) {
+                      toast.error(`Sync notice: ${stats.error}`, { id: 'convex-sync' });
+                    } else {
+                      toast.success(
+                        `Cloud synced: ${stats.businessesSynced} businesses, ${stats.booksSynced} books, ${stats.invoicesSynced} invoices!`,
+                        { id: 'convex-sync', duration: 4000 }
+                      );
+                    }
+                  } catch (err: any) {
+                    toast.error(`Sync failed: ${err?.message || err}`, { id: 'convex-sync' });
+                  }
+                }}
+                className="flex-1 gap-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+              >
+                <RefreshCw size={13} /> Full Cloud Sync
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  toast.loading('Uploading local records to Convex cloud...', { id: 'convex-push' });
+                  try {
+                    const { convexSyncEngine } = await import('@/lib/convex/syncEngine');
+                    const stats = await convexSyncEngine.pushLocalToCloud();
+                    toast.success(
+                      `Uploaded to Cloud: ${stats.businessesSynced} businesses, ${stats.booksSynced} books, ${stats.invoicesSynced} invoices!`,
+                      { id: 'convex-push' }
+                    );
+                  } catch (err: any) {
+                    toast.error(`Push failed: ${err?.message || err}`, { id: 'convex-push' });
+                  }
+                }}
+                className="gap-1.5 text-xs text-[var(--color-text-primary)]"
+              >
+                <Upload size={13} /> Push Local to Cloud
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -334,7 +404,7 @@ export function SettingsPage() {
                   {updateInfo?.version && (
                     <span className="text-xs text-[var(--color-primary)] font-semibold">v{updateInfo.version}</span>
                   )}
-                  <Button onClick={() => updater.downloadUpdate()} size="sm" variant="default" className="gap-2">
+                  <Button onClick={() => updater.downloadUpdate(updateInfo?.downloadUrl)} size="sm" variant="default" className="gap-2">
                     <Download size={14} /> Download Update
                   </Button>
                 </div>

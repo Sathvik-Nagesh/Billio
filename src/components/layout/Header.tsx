@@ -49,12 +49,12 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
   return (
     <header
       id="app-header"
-      className="flex items-center justify-between px-3 sm:px-6 py-2.5 bg-[var(--color-surface)] border-b border-[var(--color-border)] no-print shrink-0 h-[56px] sm:h-[60px]"
+      className="flex items-center justify-between px-2.5 sm:px-6 py-2 bg-[var(--color-surface)] border-b border-[var(--color-border)] no-print shrink-0 min-h-[56px] sm:min-h-[60px]"
     >
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 mr-2">
         <button
           onClick={onMobileMenuToggle}
-          className="md:hidden p-1.5 -ml-1 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+          className="md:hidden p-1.5 -ml-1 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer shrink-0"
           aria-label="Open menu"
         >
           <Menu size={20} />
@@ -65,15 +65,15 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
         </h1>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2.5">
+      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
         {/* Business Selector */}
         {businesses.length > 0 && (
-          <div className="flex items-center gap-1.5 max-w-[130px] sm:max-w-[200px]">
+          <div className="flex items-center max-w-[105px] xs:max-w-[135px] sm:max-w-[200px] shrink-0">
             <select
               id="header-business-selector"
               value={activeBusiness?.id ?? ''}
               onChange={(e) => setActiveBusiness(e.target.value)}
-              className="h-8 pl-2 pr-5 sm:pr-7 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all cursor-pointer truncate font-medium"
+              className="h-8 pl-1.5 pr-4 sm:pr-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-secondary)] text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all cursor-pointer truncate font-medium max-w-full"
             >
               {businesses.map(biz => (
                 <option key={biz.id} value={biz.id}>{biz.name}</option>
@@ -84,22 +84,24 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
 
         {/* New Invoice Quick Button (Only on desktop and when not already on New Invoice page) */}
         {!isNewInvoicePage && (
-          <Button
-            id="header-new-invoice-btn"
-            size="sm"
-            onClick={() => navigate('/invoice/new')}
-            className="hidden md:flex h-8 px-3 text-xs"
-          >
-            <FilePlus size={13} />
-            New Invoice
-          </Button>
+          <div className="hidden md:block shrink-0">
+            <Button
+              id="header-new-invoice-btn"
+              size="sm"
+              onClick={() => navigate('/invoice/new')}
+              className="h-8 px-3 text-xs"
+            >
+              <FilePlus size={13} />
+              New Invoice
+            </Button>
+          </div>
         )}
 
         {/* Theme Toggle */}
         <button
           id="theme-toggle"
           onClick={toggleMode}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+          className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer shrink-0"
           title={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
           {mode === 'light' ? <Moon size={15} /> : <Sun size={15} />}
@@ -109,7 +111,7 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
         <button
           id="header-help-guide-btn"
           onClick={() => openHelpModal()}
-          className="hidden sm:flex h-8 sm:h-9 px-2.5 rounded-lg border border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 bg-[var(--color-primary-50)]/60 dark:bg-[var(--color-primary-950)]/60 hover:bg-[var(--color-primary-100)]/60 text-[var(--color-primary)] items-center gap-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+          className="hidden sm:flex h-8 sm:h-9 px-2.5 rounded-lg border border-[var(--color-primary-300)]/40 dark:border-[var(--color-primary-800)]/40 bg-[var(--color-primary-50)]/60 dark:bg-[var(--color-primary-950)]/60 hover:bg-[var(--color-primary-100)]/60 text-[var(--color-primary)] items-center gap-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer shrink-0"
           title="Interactive Walkthrough & Shortcuts"
         >
           <HelpCircle size={14} />
@@ -117,10 +119,10 @@ export function Header({ title, onMobileMenuToggle }: HeaderProps) {
         </button>
 
         {/* User Profile Menu */}
-        <div className="relative" ref={menuRef}>
+        <div className="relative shrink-0" ref={menuRef}>
           <button
             onClick={() => setUserMenuOpen(prev => !prev)}
-            className="flex items-center gap-2 h-9 px-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-tertiary)] text-[var(--color-text-primary)] transition-all cursor-pointer"
+            className="flex items-center gap-1 sm:gap-2 h-8 sm:h-9 px-1.5 sm:px-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-secondary)] hover:bg-[var(--color-surface-tertiary)] text-[var(--color-text-primary)] transition-all cursor-pointer"
             title="User Profile & Settings"
           >
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-primary-700)] text-white flex items-center justify-center text-xs font-bold shrink-0">

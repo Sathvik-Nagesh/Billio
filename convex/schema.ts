@@ -43,6 +43,7 @@ export default defineSchema({
     role: v.union(
       v.literal("owner"),     // Full billing, brand config, and tenant management
       v.literal("admin"),     // Management, business profiles, and reports
+      v.literal("cashier"),   // Quick cashier & billing
       v.literal("staff"),     // Creating invoices, viewing books & history
       v.literal("operator")   // Fast POS Speed-Billing only
     ),
@@ -84,6 +85,7 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_tenant", ["tenantId"])
+    .index("by_tenant_name", ["tenantId", "name"])
     .index("by_tenant_default", ["tenantId", "isDefault"]),
 
   // 4. Customers (CRM scoped to tenant)

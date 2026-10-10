@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { businessRepository } from '@/lib/db/repositories/businessRepository';
+import { convexSyncEngine } from '@/lib/convex/syncEngine';
 
 export interface UserProfile {
   id: string;
@@ -54,6 +55,9 @@ export const useAuthStore = create<AuthState>()(
           isOfflineMode: false,
         });
 
+        // Sync user account profile to Convex
+        convexSyncEngine.syncCurrentUser(user);
+
         return { success: true };
       },
 
@@ -97,6 +101,9 @@ export const useAuthStore = create<AuthState>()(
           isOfflineMode: false,
           hasCompletedOnboarding: false,
         });
+
+        // Sync user account profile to Convex
+        convexSyncEngine.syncCurrentUser(user);
 
         return { success: true };
       },
@@ -150,7 +157,9 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: (data) => {
         const current = get().user;
         if (current) {
-          set({ user: { ...current, ...data } });
+          const updated = { ...current, ...data };
+          set({ user: updated });
+          convexSyncEngine.syncCurrentUser(updated);
         }
       },
 

@@ -74,6 +74,12 @@ export const invoiceRepository = {
     db.setCollection(ITEM_COLLECTION, allItems);
 
     this.incrementSequence(data.businessId);
+
+    // Asynchronously sync to Convex cloud
+    import('../../convex/syncEngine').then(({ convexSyncEngine }) => {
+      convexSyncEngine.syncInvoice(invoice, allItems.filter(i => i.invoiceId === id));
+    }).catch(() => {});
+
     return invoice;
   },
 

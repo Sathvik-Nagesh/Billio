@@ -85,7 +85,7 @@ export function assertTenantMatch(
  */
 export function assertHasRole(
   user: Doc<"users"> | null | undefined,
-  allowedRoles: Array<"owner" | "admin" | "staff" | "operator">
+  allowedRoles: Array<"owner" | "admin" | "cashier" | "staff" | "operator">
 ): void {
   // In development / demo mode where user isn't logged into external OAuth, allow default role
   if (!user) return;

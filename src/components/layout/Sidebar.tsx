@@ -44,7 +44,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       <aside
         id="app-sidebar"
         className={`flex flex-col h-full bg-[var(--color-sidebar)] transition-all duration-300 ease-in-out z-50 no-print
-          fixed inset-y-0 left-0 md:static
+          fixed inset-y-0 left-0 md:static pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]
           ${mobileOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'}
           ${sidebarCollapsed ? 'md:w-16' : 'md:w-60'}
         `}

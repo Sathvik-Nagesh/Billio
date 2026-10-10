@@ -96,20 +96,90 @@ export async function createBackup(): Promise<{ success: boolean; filename?: str
   }
 }
 
-// ─── Parse & Validate Backup ──────────────────────────────────────────────────
+// ─── Parse & Validate Backup (ZIP or JSON) ──────────────────────────────────
 
 export async function parseBackup(file: File): Promise<
   { success: true; preview: RestorePreview; dbData: any; settings: any } |
   { success: false; error: string }
 > {
   try {
+    const isJson = file.name.endsWith('.json') || file.type === 'application/json';
+
+    if (isJson) {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      let dbData: any = {};
+      let settings: any = {};
+
+      if (parsed.db && typeof parsed.db === 'object') {
+        dbData = parsed.db;
+        settings = parsed.settings || {};
+      } else if (parsed.businesses || parsed.invoices || parsed.books || parsed.customers) {
+        dbData = parsed;
+      } else if (Array.isArray(parsed)) {
+        // Plain array of books or items
+        dbData = { books: parsed };
+      } else {
+        dbData = parsed;
+      }
+
+      const manifest: BackupManifest = {
+        version: parsed.version || BACKUP_VERSION,
+        appVersion: parsed.appVersion || APP_VERSION,
+        createdAt: parsed.createdAt || new Date().toISOString(),
+        businessCount: Array.isArray(dbData.businesses) ? dbData.businesses.length : 0,
+        invoiceCount: Array.isArray(dbData.invoices) ? dbData.invoices.length : 0,
+        customerCount: Array.isArray(dbData.customers) ? dbData.customers.length : 0,
+        bookCount: Array.isArray(dbData.books) ? dbData.books.length : 0,
+      };
+
+      const preview: RestorePreview = {
+        manifest,
+        businessCount: manifest.businessCount,
+        invoiceCount: manifest.invoiceCount,
+        customerCount: manifest.customerCount,
+        bookCount: manifest.bookCount,
+        createdAt: manifest.createdAt,
+      };
+
+      return { success: true, preview, dbData, settings };
+    }
+
+    // Otherwise load as ZIP
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(file);
 
     // Validate manifest exists
     const manifestFile = zip.file('backup_manifest.json');
     if (!manifestFile) {
-      return { success: false, error: 'Invalid backup file: missing manifest.' };
+      // Fallback: check if db.json exists directly
+      const dbFile = zip.file('db.json');
+      if (dbFile) {
+        const raw = await dbFile.async('string');
+        const dbData = JSON.parse(raw);
+        const settingsFile = zip.file('settings.json');
+        const settings = settingsFile ? JSON.parse(await settingsFile.async('string')) : {};
+        const manifest: BackupManifest = {
+          version: BACKUP_VERSION,
+          appVersion: APP_VERSION,
+          createdAt: new Date().toISOString(),
+          businessCount: Array.isArray(dbData.businesses) ? dbData.businesses.length : 0,
+          invoiceCount: Array.isArray(dbData.invoices) ? dbData.invoices.length : 0,
+          customerCount: Array.isArray(dbData.customers) ? dbData.customers.length : 0,
+          bookCount: Array.isArray(dbData.books) ? dbData.books.length : 0,
+        };
+        const preview: RestorePreview = {
+          manifest,
+          businessCount: manifest.businessCount,
+          invoiceCount: manifest.invoiceCount,
+          customerCount: manifest.customerCount,
+          bookCount: manifest.bookCount,
+          createdAt: manifest.createdAt,
+        };
+        return { success: true, preview, dbData, settings };
+      }
+      return { success: false, error: 'Invalid backup file: missing manifest or database.' };
     }
 
     const manifest: BackupManifest = JSON.parse(await manifestFile.async('string'));
@@ -157,12 +227,26 @@ export async function restoreBackup(
       await createBackup();
     }
 
+    // Sync books into IndexedDB if available
+    if (dbData && Array.isArray(dbData.books) && dbData.books.length > 0) {
+      try {
+        const { syncBooksToIndexedDB } = await import('./db/indexedDB');
+        await syncBooksToIndexedDB(dbData.books);
+      } catch (idxErr) {
+        console.warn('Could not sync restored books to IndexedDB:', idxErr);
+      }
+    }
+
     // Restore main DB
     localStorage.setItem(DB_KEY, JSON.stringify(dbData));
 
     // Restore all settings stores
     for (const [key, value] of Object.entries(settings)) {
-      localStorage.setItem(key, value as string);
+      if (typeof value === 'string') {
+        localStorage.setItem(key, value);
+      } else if (value !== undefined && value !== null) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
     }
 
     // Reload app to pick up all restored state

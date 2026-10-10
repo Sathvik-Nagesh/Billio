@@ -153,6 +153,49 @@ export const create = mutation({
     const { tenantId, items, ...invoiceData } = args;
 
     const now = new Date().toISOString();
+
+    // Check if invoice already exists for this tenant & invoiceNumber (idempotent sync)
+    const existing = await ctx.db
+      .query("invoices")
+      .withIndex("by_tenant_number", (q) =>
+        q.eq("tenantId", tenantId).eq("invoiceNumber", args.invoiceNumber)
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...invoiceData,
+        updatedAt: now,
+      });
+
+      // Clear existing items and re-insert
+      const existingItems = await ctx.db
+        .query("invoice_items")
+        .withIndex("by_invoice", (q) => q.eq("invoiceId", existing._id))
+        .collect();
+      for (const itm of existingItems) {
+        await ctx.db.delete(itm._id);
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        await ctx.db.insert("invoice_items", {
+          tenantId,
+          invoiceId: existing._id,
+          srNo: items[i].srNo,
+          slNo: items[i].slNo,
+          productName: items[i].productName,
+          author: items[i].author,
+          isbn: items[i].isbn,
+          quantity: items[i].quantity,
+          unitPrice: items[i].unitPrice,
+          lineTotal: items[i].lineTotal,
+          sortOrder: i,
+        });
+      }
+
+      return existing._id;
+    }
+
     const invoiceId = await ctx.db.insert("invoices", {
       ...invoiceData,
       tenantId,

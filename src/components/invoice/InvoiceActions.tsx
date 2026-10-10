@@ -362,7 +362,7 @@ export function InvoiceActions({ onSaved, variant = 'all' }: InvoiceActionsProps
       toast.dismiss(toastId);
       const waUrl = getWhatsAppShareUrl(form.customerPhone, greetingMsg);
       window.open(waUrl, '_blank');
-      toast.success('WhatsApp opened with bill message!');
+      toast.success('Bill saved! PDF downloaded — attach it in WhatsApp');
     } catch (err) {
       console.error('Send bill error:', err);
       toast.dismiss(toastId);

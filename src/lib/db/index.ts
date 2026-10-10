@@ -8,6 +8,8 @@ const ACTIVE_TENANT_KEY = 'billio_active_tenant_id';
 
 let currentTenantId: string = (() => {
   try {
+    // Purge legacy bloated Zustand key if present
+    localStorage.removeItem('billio-active-business');
     return localStorage.getItem(ACTIVE_TENANT_KEY) || 'default';
   } catch {
     return 'default';

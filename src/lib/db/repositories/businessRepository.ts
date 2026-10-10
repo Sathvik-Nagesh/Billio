@@ -29,9 +29,14 @@ export const businessRepository = {
     if (business.isDefault) {
       businesses.forEach(b => { b.isDefault = false; });
     }
-    if (businesses.length === 0) business.isDefault = true;
     businesses.push(business);
     db.setCollection(COLLECTION, businesses);
+
+    // Asynchronously sync to Convex cloud
+    import('../../convex/syncEngine').then(({ convexSyncEngine }) => {
+      convexSyncEngine.syncBusiness(business);
+    }).catch(() => {});
+
     return business;
   },
 

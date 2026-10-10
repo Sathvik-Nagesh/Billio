@@ -74,29 +74,48 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const { user } = await getTenantContext(ctx, args.tenantId);
-    assertHasRole(user, ["owner", "admin"]);
+    assertHasRole(user, ["owner", "admin", "cashier"]);
 
-    const existingBusinesses = await ctx.db
+    const now = new Date().toISOString();
+    const cleanName = args.name.trim();
+
+    // Check if business with matching name exists for this tenant (selective index, 1 doc read)
+    const existing = await ctx.db
       .query("businesses")
-      .withIndex("by_tenant", (q) => q.eq("tenantId", args.tenantId))
-      .collect();
+      .withIndex("by_tenant_name", (q) =>
+        q.eq("tenantId", args.tenantId).eq("name", cleanName)
+      )
+      .first();
 
     let isDefault = args.isDefault;
-    if (existingBusinesses.length === 0) {
-      isDefault = true;
-    }
 
+    // If setting as default, unset old default using selective index (1 doc read)
     if (isDefault) {
-      for (const biz of existingBusinesses) {
-        if (biz.isDefault) {
-          await ctx.db.patch(biz._id, { isDefault: false });
-        }
+      const currentDefault = await ctx.db
+        .query("businesses")
+        .withIndex("by_tenant_default", (q) =>
+          q.eq("tenantId", args.tenantId).eq("isDefault", true)
+        )
+        .first();
+      if (currentDefault && (!existing || currentDefault._id !== existing._id)) {
+        await ctx.db.patch(currentDefault._id, { isDefault: false });
       }
     }
 
-    const now = new Date().toISOString();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...args,
+        name: cleanName,
+        isDefault: isDefault ?? existing.isDefault,
+        updatedAt: now,
+      });
+      return await ctx.db.get(existing._id);
+    }
+
+    // Insert new business
     return await ctx.db.insert("businesses", {
       ...args,
+      name: cleanName,
       isDefault,
       createdAt: now,
       updatedAt: now,
@@ -142,14 +161,14 @@ export const update = mutation({
     const { tenantId, businessId, ...updates } = args;
 
     if (updates.isDefault) {
-      const allBiz = await ctx.db
+      const currentDefault = await ctx.db
         .query("businesses")
-        .withIndex("by_tenant", (q) => q.eq("tenantId", tenantId))
-        .collect();
-      for (const b of allBiz) {
-        if (b._id !== businessId && b.isDefault) {
-          await ctx.db.patch(b._id, { isDefault: false });
-        }
+        .withIndex("by_tenant_default", (q) =>
+          q.eq("tenantId", tenantId).eq("isDefault", true)
+        )
+        .first();
+      if (currentDefault && currentDefault._id !== businessId) {
+        await ctx.db.patch(currentDefault._id, { isDefault: false });
       }
     }
 
@@ -169,7 +188,7 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const { user } = await getTenantContext(ctx, args.tenantId);
-    assertHasRole(user, ["owner", "admin"]);
+    assertHasRole(user, ["owner", "admin", "cashier"]);
 
     const doc = await ctx.db.get(args.businessId);
     assertTenantMatch(doc, args.tenantId, "Business");
@@ -177,15 +196,44 @@ export const remove = mutation({
     await ctx.db.delete(args.businessId);
 
     // If deleted business was default, promote another business
-    const remaining = await ctx.db
+    const remainingFirst = await ctx.db
       .query("businesses")
       .withIndex("by_tenant", (q) => q.eq("tenantId", args.tenantId))
-      .collect();
+      .first();
 
-    if (remaining.length > 0 && !remaining.some((b) => b.isDefault)) {
-      await ctx.db.patch(remaining[0]._id, { isDefault: true });
+    if (remainingFirst && !remainingFirst.isDefault) {
+      await ctx.db.patch(remainingFirst._id, { isDefault: true });
     }
 
     return true;
+  },
+});
+
+export const deduplicate = mutation({
+  args: { tenantId: v.string() },
+  handler: async (ctx, args) => {
+    const { user } = await getTenantContext(ctx, args.tenantId);
+    assertHasRole(user, ["owner", "admin", "cashier"]);
+
+    // Process a safe batch of 10 items at a time to stay way below the 16MB limit
+    const batch = await ctx.db
+      .query("businesses")
+      .withIndex("by_tenant", (q) => q.eq("tenantId", args.tenantId))
+      .take(10);
+
+    const seenNames = new Set<string>();
+    let deletedCount = 0;
+
+    for (const b of batch) {
+      const key = b.name.trim().toLowerCase();
+      if (seenNames.has(key)) {
+        await ctx.db.delete(b._id);
+        deletedCount++;
+      } else {
+        seenNames.add(key);
+      }
+    }
+
+    return { batchProcessed: batch.length, deletedCount };
   },
 });

@@ -71,6 +71,12 @@ export const bookRepository = {
     books.push(newBook);
     db.setCollection(COLLECTION, books);
     syncBooksToIndexedDB([newBook]).catch(() => {});
+
+    // Asynchronously sync to Convex cloud
+    import('../../convex/syncEngine').then(({ convexSyncEngine }) => {
+      convexSyncEngine.syncBook(newBook);
+    }).catch(() => {});
+
     return newBook;
   },
 
