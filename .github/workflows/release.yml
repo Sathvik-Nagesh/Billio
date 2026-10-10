@@ -33,20 +33,23 @@ jobs:
         run: npm install
 
       - name: Build Web Frontend
+        env:
+          VITE_CONVEX_URL: "https://harmless-reindeer-189.convex.cloud"
         run: npm run build
 
       - name: Package Windows Installer & EXE
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_CONVEX_URL: "https://harmless-reindeer-189.convex.cloud"
         run: npx electron-builder --win -p never
 
       - name: Prepare Windows Release Artifacts
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist-release
-          Get-ChildItem -Path release -Include *.exe, *.blockmap, latest.yml -Recurse | ForEach-Object {
-            Copy-Item $_.FullName -Destination dist-release/
-          }
+          Get-ChildItem -Path release -Filter "Billio-Setup*.exe" | Copy-Item -Destination dist-release/
+          if (Test-Path release/latest.yml) { Copy-Item release/latest.yml -Destination dist-release/ }
+          if (Test-Path release/*.blockmap) { Copy-Item release/*.blockmap -Destination dist-release/ }
           Get-ChildItem dist-release
 
       - name: Upload Windows Artifacts
@@ -81,6 +84,8 @@ jobs:
         run: npm install
 
       - name: Build Frontend & Sync Capacitor
+        env:
+          VITE_CONVEX_URL: "https://harmless-reindeer-189.convex.cloud"
         run: |
           npm run build
           npx cap sync android
@@ -107,7 +112,6 @@ jobs:
             TAG_NAME="latest"
           fi
           cp android/app/build/outputs/apk/debug/app-debug.apk dist-apk/Billio-${TAG_NAME}.apk
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist-apk/Billio.apk
           ls -la dist-apk
 
       - name: Upload APK Artifacts

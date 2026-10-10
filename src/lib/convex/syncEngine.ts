@@ -76,6 +76,19 @@ export const convexSyncEngine = {
       };
     }
 
+    const auth = useAuthStore.getState();
+    if (auth.isGuest || tenantId === 'tenant_guest_local') {
+      return {
+        businessesSynced: 0,
+        booksSynced: 0,
+        customersSynced: 0,
+        invoicesSynced: 0,
+        usersSynced: 0,
+        lastSyncedAt: null,
+        error: 'Guest / Offline mode: Data is kept purely local.',
+      };
+    }
+
     const stats: SyncStats = {
       businessesSynced: 0,
       booksSynced: 0,
@@ -523,7 +536,10 @@ export const convexSyncEngine = {
    */
   syncCurrentUser(user?: { name: string; email: string; role?: any; phone?: string; id?: string }, tenantId = db.getTenantId()) {
     if (!this.isAvailable() || !convexClient) return;
-    const targetUser = user || useAuthStore.getState().user;
+    const auth = useAuthStore.getState();
+    if (auth.isGuest || tenantId === 'tenant_guest_local') return;
+
+    const targetUser = user || auth.user;
     if (!targetUser || !targetUser.email) return;
 
     convexClient
@@ -545,6 +561,8 @@ export const convexSyncEngine = {
    */
   syncInvoice(invoice: Invoice, items: InvoiceItem[], tenantId = db.getTenantId()) {
     if (!this.isAvailable() || !convexClient) return;
+    const auth = useAuthStore.getState();
+    if (auth.isGuest || tenantId === 'tenant_guest_local') return;
 
     const invItems = items.map((i, idx) => ({
       srNo: idx + 1,
@@ -598,6 +616,8 @@ export const convexSyncEngine = {
    */
   syncBook(book: { name: string; unitPrice: number; author?: string; isbn?: string }, tenantId = db.getTenantId()) {
     if (!this.isAvailable() || !convexClient) return;
+    const auth = useAuthStore.getState();
+    if (auth.isGuest || tenantId === 'tenant_guest_local') return;
 
     convexClient
       .mutation(api.books.upsert, {
@@ -617,6 +637,8 @@ export const convexSyncEngine = {
    */
   async syncBusiness(business: Business, tenantId = db.getTenantId()) {
     if (!this.isAvailable() || !convexClient) return;
+    const auth = useAuthStore.getState();
+    if (auth.isGuest || tenantId === 'tenant_guest_local') return;
 
     try {
       const [logoPath, signaturePath, sealPath, upiQrPath] = await Promise.all([

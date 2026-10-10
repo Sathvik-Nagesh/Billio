@@ -39,6 +39,8 @@ export default defineSchema({
     tokenIdentifier: v.string(), // Auth provider ID or email-based identity
     name: v.string(),
     email: v.string(),
+    passwordHash: v.optional(v.string()), // SHA-256 secure password hash
+    pinHash: v.optional(v.string()), // Cashier PIN hash
     phone: v.optional(v.string()),
     role: v.union(
       v.literal("owner"),     // Full billing, brand config, and tenant management
@@ -52,6 +54,7 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_tenant", ["tenantId"])
+    .index("by_email", ["email"])
     .index("by_token", ["tokenIdentifier"])
     .index("by_tenant_email", ["tenantId", "email"]),
 
