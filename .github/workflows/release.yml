@@ -139,10 +139,29 @@ jobs:
       - name: List Release Assets
         run: ls -la release-assets
 
+      - name: Determine Release Tag & Version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
+            TAG="v${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            PKG_VERSION=$(node -p "require('./package.json').version")
+            TAG="v${PKG_VERSION}"
+          fi
+          # Ensure tag starts with v
+          if [[ ! "$TAG" =~ ^v ]]; then
+            TAG="v${TAG}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "name=Release ${TAG}" >> $GITHUB_OUTPUT
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.name }}
           files: release-assets/*
           generate_release_notes: true
           draft: false
