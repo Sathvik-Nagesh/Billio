@@ -57,7 +57,7 @@ export const updater = {
   async getVersion(): Promise<string> {
     const ipc = getIpc();
     if (ipc) return ipc.invoke('get-app-version');
-    return '1.1.23'; // current Billio release version
+    return '1.1.24'; // current Billio release version
   },
 
   /** Trigger check for updates (Electron, APK, or PWA) */
